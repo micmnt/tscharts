@@ -1,0 +1,36 @@
+import { Canvas, Meta } from "@storybook/blocks";
+import Example from "./example.tsx";
+import * as Line from "./line.stories.tsx";
+
+<Meta of={Line} title="Line" />
+
+# LineChart
+
+Example of Line Chart using the Line component
+
+#### Example
+
+<Canvas of={Line.Simple} />
+
+## Usage
+
+```ts
+import { Line, Chart } from "tscharts";
+
+const Example = () => {
+  return (
+    <Chart>
+      <Line name="serie1" />
+    </Chart>
+  );
+};
+
+export default Example;
+```
+
+#### Arguments
+
+- **name** - A string that represents the serie associated with this axis
+- **hideLine** - Optional. Default value: false. A boolean that determines if show or hide the line.
+- **showLabels** - Optional. Default value: false. A boolean that determines if show or hide the line's points labels.
+- **showDots** - Optional. Default value: false. A boolean that determines if show or hide the line's points.

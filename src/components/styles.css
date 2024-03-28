@@ -1,0 +1,58 @@
+.rootContainer {
+  width: 100%;
+}
+
+.tooltipContainer {
+  padding: 8px 16px;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: block;
+  position: absolute;
+  border-radius: 12px;
+}
+
+.tooltipTitle {
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: white;
+}
+
+.tooltipText {
+  color: white;
+}
+
+.tooltipSerieContainer {
+  display: flex;
+  align-items: center;
+}
+
+.tooltipCircle {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  margin-right: 8px;
+}
+
+.legendContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.legendItemContainer {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.legendItemCircle {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legendItemText {
+  font-size: 11px;
+}

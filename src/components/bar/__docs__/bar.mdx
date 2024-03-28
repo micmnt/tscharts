@@ -1,0 +1,36 @@
+import { Canvas, Meta } from "@storybook/blocks";
+import Example from "./example.tsx";
+import * as Bar from "./bar.stories.tsx";
+
+<Meta of={Bar} title="Bar" />
+
+# BarChart
+
+Example of Bar Chart using the Bar component
+
+#### Example
+
+<Canvas of={Bar.Simple} />
+
+## Usage
+
+```ts
+import { Bar, Chart } from "tscharts";
+
+const Example = () => {
+  return (
+    <Chart>
+      <Bar name="serie1" />
+    </Chart>
+  );
+};
+
+export default Example;
+```
+
+#### Arguments
+
+- **name** - A string that represents the serie associated with bars
+- **stacked** - Optional. `Default value: false`. A boolean that determines if the bars are stacked.
+- **showLabels** - Optional. `Default value: false`. A boolean that determines if show or hide the bar's points labels.
+- **config** - Optional. `Default value: {}`. A configuration object for bar serie.

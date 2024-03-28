@@ -1,0 +1,33 @@
+import { Canvas, Meta } from "@storybook/blocks";
+import Example from "./example.tsx";
+import * as Pie from "./pie.stories.tsx";
+
+<Meta of={Pie} title="Pie" />
+
+# PieChart
+
+Example of Pie Chart using the Pie component
+
+#### Example
+
+<Canvas of={Pie.Simple} />
+
+## Usage
+
+```ts
+import { Pie, Chart } from "tscharts";
+
+const Example = () => {
+  return (
+    <Chart>
+      <Pie name="serie1" />
+    </Chart>
+  );
+};
+
+export default Example;
+```
+
+#### Arguments
+
+- **name** - A string that represents the serie associated with pie slices

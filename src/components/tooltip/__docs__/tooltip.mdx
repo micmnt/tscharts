@@ -1,0 +1,38 @@
+import { Canvas, Meta } from "@storybook/blocks";
+import Example from "./example.tsx";
+import * as Tooltip from "./tooltip.stories.tsx";
+
+<Meta of={Tooltip} title="Tooltip" />
+
+# LineChart with tooltip
+
+Example of Line Chart using the Line component and Tooltip component
+
+#### Example
+
+<Canvas of={Tooltip.Simple} />
+
+## Usage
+
+```ts
+import { Line, Tooltip, Chart } from "tscharts";
+
+const Example = () => {
+  return (
+    <Chart>
+      <Line name="serie1" />
+      <Tooltip width={230} />
+    </Chart>
+  );
+};
+
+export default Example;
+```
+title?: string;
+  showGrid?: boolean;
+  width?: number;
+#### Arguments
+
+- **width** - Optional. `Default value: 150px`. A number that represents the tooltip width.
+- **showGrid** - Optional. `Default value: false`. A boolean that shows or hides the XY lines for the mouse position.
+- **title** - Optional. `Default value: ''`. The title for the tooltip.

@@ -1,0 +1,36 @@
+import { Canvas, Meta } from "@storybook/blocks";
+import Example from "./example.tsx";
+import * as Threshold from "./threshold.stories.tsx";
+
+<Meta of={Threshold} title="Threshold" />
+
+# LineChart with thresholds
+
+Example of Line Chart using the Line component and Threshold component
+
+#### Example
+
+<Canvas of={Threshold.Simple} />
+
+## Usage
+
+```ts
+import { Line, Threshold, Chart } from "tscharts";
+
+const Example = () => {
+  return (
+    <Chart>
+      <Line name="serie1" />
+      <Threshold name='threshold1' />
+    </Chart>
+  );
+};
+
+export default Example;
+```
+
+#### Arguments
+
+- **name** - A string that represents the serie associated with this axis
+- **dashed** - Optional. `Default value: false`. A boolean that determines if the threshold should be dashed or not.
+- **showLabels** - Optional. `Default value: false`. A boolean that determines if the threshold should show the label with value.
