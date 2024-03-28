@@ -14,7 +14,10 @@
     "lint": "eslint . --ext .ts,.tsx --ignore-path .gitignore --fix",
     "build": "tsc && vite build",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "build:publish": "npm run lint && npm run test && npm run build",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build:publish"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
