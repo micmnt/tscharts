@@ -11,7 +11,7 @@ import { getAxisCount, getTimeSerieMaxValue } from "../../lib/core";
 import { ChartProvider } from "../../contexts/chartContext";
 
 /* Styles Imports */
-import "../../components/styles.css";
+import "../../styles.css";
 
 /* Components Imports */
 import Svg from "../../components/svg/svg";

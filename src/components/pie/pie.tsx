@@ -42,7 +42,12 @@ const Pie = (props: PieProps) => {
   );
 
   const slices = paths.map((path, pathIndex) => (
-    <path d={path} fill={slicesColors[pathIndex]} key={path} />
+    <path
+      d={path}
+      fill={slicesColors[pathIndex]}
+      key={path}
+      shapeRendering="geometricPosition"
+    />
   ));
   const labels = serieLabels.map((label) => (
     <text

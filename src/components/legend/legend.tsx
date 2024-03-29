@@ -5,7 +5,7 @@ import { ChartState, PieSerieEl, Serie, ThemeState } from "../../types";
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
 /* Styles Imports */
-import "../../components/styles.css";
+import "../../styles.css";
 import { ReactNode } from "react";
 
 type LegendProps = {

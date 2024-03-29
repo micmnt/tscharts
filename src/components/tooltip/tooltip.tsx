@@ -5,7 +5,7 @@ import { PieSerieEl, Serie, ThemeState, TimeSerieEl } from "../../types";
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
 /* Styles Imports */
-import "../styles.css";
+import "../../styles.css";
 
 /* Utils Imports */
 import { isDefined } from "../../lib/utils";
