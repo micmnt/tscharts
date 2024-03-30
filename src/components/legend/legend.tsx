@@ -8,12 +8,14 @@ import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 import "../../styles.css";
 import { ReactNode } from "react";
 
-type LegendProps = {
+export type LegendProps = {
   showDots?: boolean;
   height?: number;
   customLabel?: (el: PieSerieEl | Serie) => ReactNode;
   direction?: "horizontal" | "vertical";
 };
+
+export const DEFAULT_LEGEND_HEIGHT = 60;
 
 // Funzione che genera la legenda per un grafico di tipo XY
 const generateXYChartLenged = (
@@ -74,7 +76,7 @@ const Legend = (props: LegendProps) => {
     showDots = true,
     customLabel = null,
     direction = "horizontal",
-    height = 60,
+    height = DEFAULT_LEGEND_HEIGHT,
   } = props;
 
   const ctx = useCharts();

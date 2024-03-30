@@ -23,6 +23,7 @@ import {
   useChartsTheme,
 } from "../../contexts/chartContext";
 import { isDefined } from "../../lib/utils";
+import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
 
 type SVGProps = {
   children: ReactNode;
@@ -30,6 +31,21 @@ type SVGProps = {
   chartID: string | null;
   leftAxisCount?: number;
   rightAxisCount?: number;
+};
+
+// Funzione che calcola ricava l'altezza della legenda
+const getLegendHeight = (children: JSX.Element[]) => {
+  /* Verfico che esista un elemento Legend */
+  const legend = children.find((childEl) => childEl.type?.name === "Legend");
+
+  if (!legend) return 0;
+
+  /* Se l'elemento Legend esiste prendo la sua altezza */
+  const legendHeight = legend.props?.height
+    ? legend?.props?.height
+    : DEFAULT_LEGEND_HEIGHT;
+
+  return legendHeight;
 };
 
 const Svg = (props: SVGProps) => {
@@ -43,6 +59,10 @@ const Svg = (props: SVGProps) => {
   const theme = useChartsTheme();
 
   const { padding } = theme ?? {};
+
+  const normalizedChildren = Array.isArray(children) ? children : [children];
+
+  const legendHeight = getLegendHeight(normalizedChildren);
 
   // Funzione che inizializza le dimensioni del grafico svg
   const intializeChart = useCallback(() => {
@@ -60,6 +80,7 @@ const Svg = (props: SVGProps) => {
         containerRef.current.clientHeight,
         leftAxisCount as number,
         rightAxisCount as number,
+        legendHeight,
       );
       dispatch({
         type: "INITIALIZE",
@@ -73,7 +94,15 @@ const Svg = (props: SVGProps) => {
         },
       });
     }
-  }, [dispatch, containerRef, padding, rightAxisCount, leftAxisCount, chartID]);
+  }, [
+    dispatch,
+    containerRef,
+    padding,
+    rightAxisCount,
+    leftAxisCount,
+    chartID,
+    legendHeight,
+  ]);
 
   useEffect(() => {
     intializeChart();

@@ -2,6 +2,7 @@ import React, { FC } from "react";
 import Bar, { BarProps } from "../bar";
 import Chart from "../../chart/chart";
 import Axis from "../../axis/axis";
+import Legend from "../../legend/legend";
 
 const elements = {
   name: "tempi migliori",
@@ -108,6 +109,7 @@ const Example: FC<BarProps> = ({
           config={config}
         />
         <Axis type="xAxis" dataPoints={dataPoints} showLine />
+        <Legend />
       </Chart>
     </div>
   );

@@ -167,12 +167,13 @@ export const getChartDimensions = (
   svgHeight: number,
   leftAxisCount: number,
   rightAxisCount: number,
+  legendHeight: number,
 ) => {
   const xPaddingMultiplier = 3;
   const yPaddingMultiplier = 4;
   const chartXStart = xPaddingMultiplier * padding * leftAxisCount;
   const chartXEnd = svgWidth - xPaddingMultiplier * padding * rightAxisCount;
-  const chartYEnd = svgHeight - yPaddingMultiplier * padding;
+  const chartYEnd = svgHeight - yPaddingMultiplier * padding - legendHeight;
 
   return { chartXStart, chartXEnd, chartYEnd };
 };
