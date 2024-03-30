@@ -157,14 +157,14 @@ const Svg = (props: SVGProps) => {
     [svgRef, dispatch, chartXStart, chartXEnd, chartYEnd, chartID],
   );
 
-  const viewBox = `0 0 ${width} ${height}`;
+  const viewBox = `0 0 ${width} ${height + legendHeight}`;
 
   return (
     <svg
       ref={rootRef}
       viewBox={viewBox}
       width={width}
-      height={height}
+      height={height + legendHeight}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
