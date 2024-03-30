@@ -41,6 +41,16 @@
   gap: 10px;
 }
 
+.legendVerticalContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
 .legendItemContainer {
   display: flex;
   align-items: center;

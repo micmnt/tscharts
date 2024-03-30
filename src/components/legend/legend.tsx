@@ -10,7 +10,9 @@ import { ReactNode } from "react";
 
 type LegendProps = {
   showDots?: boolean;
+  height?: number;
   customLabel?: (el: PieSerieEl | Serie) => ReactNode;
+  direction?: "horizontal" | "vertical";
 };
 
 // Funzione che genera la legenda per un grafico di tipo XY
@@ -68,7 +70,12 @@ const generatePieChartLegend = (
 };
 
 const Legend = (props: LegendProps) => {
-  const { showDots = true, customLabel = null } = props;
+  const {
+    showDots = true,
+    customLabel = null,
+    direction = "horizontal",
+    height = 60,
+  } = props;
 
   const ctx = useCharts();
 
@@ -90,14 +97,17 @@ const Legend = (props: LegendProps) => {
   const pieSerieElements = elements.filter((el) => el.type === "pie")?.[0]
     ?.data;
 
+  const legendContainerSyle =
+    direction === "vertical" ? "legendVerticalContainer" : "legendContainer";
+
   return (
     <foreignObject
       x={chartXStart}
       y={legendY}
       width={legendWidth > 0 ? legendWidth : 20}
-      height={60}
+      height={height}
     >
-      <div className="legendContainer">
+      <div className={legendContainerSyle}>
         {timeSerieElements.length > 0
           ? generateXYChartLenged(
               timeSerieElements,
