@@ -88,7 +88,6 @@ const generatePieSerieContent = (
           }}
         />
         <span className="tooltipText">
-          {`${element.name}: ${isDefined(element.value) ? element.value : "-"}`}
           {`${element.name}: ${isDefined(element.value) ? getFormattedValue(element.value as number, element.format) : "-"}`}
         </span>
       </div>
