@@ -1,6 +1,7 @@
 import React, { FC } from "react";
 import Pie, { PieProps } from "../pie";
 import Chart from "../../chart/chart";
+import Legend from "../../legend/legend";
 
 const series = [
   {
@@ -35,8 +36,9 @@ const Example: FC<PieProps> = ({ name = "numero utenti" }) => {
         height: "100%",
       }}
     >
-      <Chart width={400} height={400} elements={series}>
+      <Chart width={400} height={200} elements={series}>
         <Pie name={name} />
+        <Legend legendType="vertical" height={90} />
       </Chart>
     </div>
   );

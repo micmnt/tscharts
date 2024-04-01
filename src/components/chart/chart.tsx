@@ -72,6 +72,8 @@ const Chart = (props: ChartProps) => {
     [elements, height, timeSeriesMaxValue, width],
   );
 
+  if (!chartID) return null;
+
   return (
     <ChartProvider initialState={initialState}>
       <div ref={chartContainerRef} className="rootContainer">

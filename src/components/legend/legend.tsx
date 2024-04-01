@@ -12,7 +12,7 @@ export type LegendProps = {
   showDots?: boolean;
   height?: number;
   customLabel?: (el: PieSerieEl | Serie) => ReactNode;
-  direction?: "horizontal" | "vertical";
+  legendType: "horizontal" | "vertical";
 };
 
 export const DEFAULT_LEGEND_HEIGHT = 60;
@@ -75,7 +75,7 @@ const Legend = (props: LegendProps) => {
   const {
     showDots = true,
     customLabel = null,
-    direction = "horizontal",
+    legendType,
     height = DEFAULT_LEGEND_HEIGHT,
   } = props;
 
@@ -83,7 +83,12 @@ const Legend = (props: LegendProps) => {
 
   const theme = useChartsTheme();
 
-  if (!theme) return null;
+  if (
+    !theme ||
+    !legendType ||
+    (legendType !== "horizontal" && legendType !== "vertical")
+  )
+    return null;
 
   const { padding } = theme;
 
@@ -100,7 +105,7 @@ const Legend = (props: LegendProps) => {
     ?.data;
 
   const legendContainerSyle =
-    direction === "vertical" ? "legendVerticalContainer" : "legendContainer";
+    legendType === "vertical" ? "legendVerticalContainer" : "legendContainer";
 
   return (
     <foreignObject

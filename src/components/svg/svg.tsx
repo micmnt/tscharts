@@ -36,7 +36,11 @@ type SVGProps = {
 // Funzione che calcola ricava l'altezza della legenda
 const getLegendHeight = (children: JSX.Element[]) => {
   /* Verfico che esista un elemento Legend */
-  const legend = children.find((childEl) => childEl.type?.name === "Legend");
+  const legend = children.find(
+    (childEl) =>
+      childEl.props.legendType !== null &&
+      childEl.props.legendType !== undefined,
+  );
 
   if (!legend) return 0;
 
@@ -46,6 +50,8 @@ const getLegendHeight = (children: JSX.Element[]) => {
     : DEFAULT_LEGEND_HEIGHT;
 
   return legendHeight;
+
+  return 0;
 };
 
 const Svg = (props: SVGProps) => {
@@ -156,6 +162,8 @@ const Svg = (props: SVGProps) => {
     },
     [svgRef, dispatch, chartXStart, chartXEnd, chartYEnd, chartID],
   );
+
+  if (!height) return null;
 
   const viewBox = `0 0 ${width} ${height + legendHeight}`;
 
