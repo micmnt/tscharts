@@ -7,6 +7,7 @@ export type PieSerieEl = {
   value: number;
   name: string;
   color?: string;
+  format?: (value: number) => string;
 };
 
 export type Serie = {
