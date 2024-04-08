@@ -94,7 +94,7 @@ const Legend = (props: LegendProps) => {
 
   const { elements, chartXStart, chartXEnd, chartYEnd } = ctx as ChartState;
 
-  const legendY = 1.5 * padding + chartYEnd!;
+  const legendY = 2 * padding + chartYEnd!;
   const legendWidth = chartXEnd! - chartXStart!;
 
   if (!elements) return null;

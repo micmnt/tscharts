@@ -231,8 +231,8 @@ export const generateYAxis = (
 
   // creazione delle label degli assi e del nome verticale degli assi
   const axisLabelsX = isOppositeAxis
-    ? axisX + (3 / 2) * padding * (serieIndex - 1) + padding / 3
-    : axisX - (3 / 2) * padding * serieIndex - padding / 3;
+    ? axisX + (3 / 2) * padding * (serieIndex - 1) + padding / 2
+    : axisX - (3 / 2) * padding * serieIndex - padding / 2;
 
   const nameLabelX = isOppositeAxis
     ? axisLabelsX + 2 * padding
