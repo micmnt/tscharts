@@ -1,8 +1,8 @@
 /* Types Imports */
-import { ChartState, ThemeState } from "../../types";
+import { ChartState, ThemeState, TimeSerieEl } from "../../types";
 
 /* Core Imports */
-import { getValuePosition } from "../../lib/core";
+import { getTimeSerieMaxValue, getValuePosition } from "../../lib/core";
 
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
@@ -10,6 +10,7 @@ import { isDefined } from "../../lib/utils";
 
 type ThresholdProps = {
   name: string;
+  axisName?: string;
   dashed?: boolean;
   type?: "vertical" | "horizontal";
   showLabel?: boolean;
@@ -23,6 +24,7 @@ const Threshold = (props: ThresholdProps) => {
     type = "horizontal",
     name,
     showLabel = false,
+    axisName = "",
   } = props;
 
   const { chartXStart, chartXEnd, chartYEnd, timeSeriesMaxValue, elements } =
@@ -38,8 +40,16 @@ const Threshold = (props: ThresholdProps) => {
 
   const { padding } = theme;
 
+  let serieMax = timeSeriesMaxValue;
+
+  const referenceAxisSerie = elements?.find((el) => el.name === axisName);
+
+  if (referenceAxisSerie) {
+    serieMax = getTimeSerieMaxValue(referenceAxisSerie?.data as TimeSerieEl[]);
+  }
+
   const position = getValuePosition(
-    timeSeriesMaxValue!,
+    serieMax!,
     thresholdValue,
     chartYEnd! - padding,
   );
