@@ -50,8 +50,6 @@ const getLegendHeight = (children: JSX.Element[]) => {
     : DEFAULT_LEGEND_HEIGHT;
 
   return legendHeight;
-
-  return 0;
 };
 
 const Svg = (props: SVGProps) => {

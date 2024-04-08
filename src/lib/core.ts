@@ -473,7 +473,7 @@ export const generateDataPaths = (
       const point =
         value < 14
           ? [-1, -1]
-          : [serieElX + barWidth / 2, chartYEnd! - value / 2 + padding];
+          : [serieElX + barWidth / 2, chartYEnd! - value / 2 + 2 * padding];
 
       const allDataPoints = dataPoints.get(serie.name);
 
