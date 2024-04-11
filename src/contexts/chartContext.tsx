@@ -48,8 +48,15 @@ function chartReducer(
 ): ChartState {
   switch (action.type) {
     case "INITIALIZE": {
-      const { svgRef, width, chartXStart, chartXEnd, chartYEnd, chartID } =
-        action.payload;
+      const {
+        svgRef,
+        width,
+        chartXStart,
+        chartXEnd,
+        chartYEnd,
+        chartID,
+        globalConfig,
+      } = action.payload;
       return {
         ...chart,
         svgRef,
@@ -58,6 +65,7 @@ function chartReducer(
         chartXEnd,
         chartYEnd,
         chartID,
+        globalConfig,
       };
     }
     case "SET_HOVER_ELEMENT": {

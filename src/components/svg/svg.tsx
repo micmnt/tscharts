@@ -33,6 +33,27 @@ type SVGProps = {
   rightAxisCount?: number;
 };
 
+// Funzione che prende tutte le props di config degli elementi grafici e le setta net context globale
+const computeConfigs = (children: JSX.Element[]) => {
+  const elementsWithConfig = children.filter(
+    (childEl) => childEl.props?.config,
+  );
+
+  if (elementsWithConfig.length <= 0) return {};
+
+  const globalConfig = elementsWithConfig.reduce((acc, el) => {
+    const elConfig = el.props.config;
+    const newAcc = {
+      ...acc,
+      ...elConfig,
+    };
+
+    return newAcc;
+  }, {});
+
+  return globalConfig;
+};
+
 // Funzione che calcola ricava l'altezza della legenda
 const getLegendHeight = (children: JSX.Element[]) => {
   /* Verfico che esista un elemento Legend */
@@ -68,6 +89,8 @@ const Svg = (props: SVGProps) => {
 
   const legendHeight = getLegendHeight(normalizedChildren);
 
+  const globalConfig = computeConfigs(normalizedChildren);
+
   // Funzione che inizializza le dimensioni del grafico svg
   const intializeChart = useCallback(() => {
     if (
@@ -95,6 +118,7 @@ const Svg = (props: SVGProps) => {
           chartXEnd,
           chartYEnd,
           chartID,
+          globalConfig,
         },
       });
     }
@@ -106,6 +130,7 @@ const Svg = (props: SVGProps) => {
     leftAxisCount,
     chartID,
     legendHeight,
+    globalConfig,
   ]);
 
   useEffect(() => {

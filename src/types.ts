@@ -33,6 +33,7 @@ export type ChartState = {
   chartYEnd?: number;
   timeSeriesMaxValue?: number;
   chartID?: string | null;
+  globalConfig?: { [key: string]: number | string };
 };
 
 export type ThemeState = {

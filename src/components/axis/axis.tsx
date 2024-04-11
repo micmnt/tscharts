@@ -49,6 +49,7 @@ const Axis = (props: AxisProps) => {
     elements,
     hoveredElement,
     chartID,
+    globalConfig,
   } = ctx;
 
   const tooltipElement = document?.getElementById(`cts-tooltip-${chartID}`);
@@ -62,11 +63,17 @@ const Axis = (props: AxisProps) => {
 
     const xAxisInterval = (chartXEnd! - chartXStart!) / serieData.length || 1;
 
-    const labels = dataPoints.map((label, labelIndex) => ({
-      value: label,
-      x: xAxisInterval * labelIndex + chartXStart! + padding,
-      y: chartYEnd! + padding,
-    }));
+    const labels = dataPoints.map((label, labelIndex) => {
+      const xSpacing = globalConfig?.barWidth
+        ? Number(globalConfig?.barWidth) / 2
+        : padding;
+
+      return {
+        value: label,
+        x: xAxisInterval * labelIndex + chartXStart! + xSpacing,
+        y: chartYEnd! + padding,
+      };
+    });
 
     const xPoints = labels.map((label, labelIndex) => {
       const hoverRectX = label.x - (xAxisInterval - padding) / 2;

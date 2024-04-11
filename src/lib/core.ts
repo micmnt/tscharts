@@ -453,6 +453,7 @@ export const generateDataPaths = (
     chartYEnd,
     padding,
     barWidth: ctxBarWidth,
+    globalConfig,
   } = ctx;
 
   const xAxisInterval = (chartXEnd! - chartXStart!) / timeSerieData.length || 1;
@@ -481,7 +482,11 @@ export const generateDataPaths = (
 
       return generateVerticalBarPath(serieElX, serieY, barWidth, chartYEnd!);
     } else {
-      const serieElX = xAxisInterval * serieElIndex + padding + chartXStart!;
+      const xSpacing = globalConfig?.barWidth
+        ? Number(globalConfig?.barWidth) / 2
+        : padding;
+
+      const serieElX = xAxisInterval * serieElIndex + xSpacing + chartXStart!;
       const point = [serieElX, serieY];
 
       const allDataPoints = dataPoints.get(serie.name);

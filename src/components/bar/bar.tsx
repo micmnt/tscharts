@@ -59,28 +59,28 @@ const Bar = (props: BarProps) => {
       ))}
       {showLabels &&
         barPoints
-          .filter(
-            (point: [x: number, y: number]) => point[0] > -1 && point[1] > -1,
+          .map((point: [x: number, y: number], dataPointIndex: number) =>
+            point[0] > -1 ? (
+              <text
+                textAnchor="middle"
+                fontSize={12}
+                fontWeight="bold"
+                fill="white"
+                key={`${serieElement.name}-${point[0]}-${point[1]}`}
+                x={point[0]}
+                y={point[1]}
+              >
+                {serieElement.format
+                  ? serieElement.format(
+                      (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
+                        ?.value,
+                    )
+                  : (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
+                      ?.value}
+              </text>
+            ) : null,
           )
-          .map((point: [x: number, y: number], dataPointIndex: number) => (
-            <text
-              textAnchor="middle"
-              fontSize={12}
-              fontWeight="bold"
-              fill="white"
-              key={`${serieElement.name}-${point[0]}-${point[1]}`}
-              x={point[0]}
-              y={point[1]}
-            >
-              {serieElement.format
-                ? serieElement.format(
-                    (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-                      ?.value,
-                  )
-                : (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-                    ?.value}
-            </text>
-          ))}
+          .filter((el: [x: number, y: number]) => el !== null)}
     </>
   );
 };
