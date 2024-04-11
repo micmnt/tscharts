@@ -89,7 +89,7 @@ const Svg = (props: SVGProps) => {
 
   const legendHeight = getLegendHeight(normalizedChildren);
 
-  const globalConfig = computeConfigs(normalizedChildren);
+  const globalConfig = useRef(computeConfigs(normalizedChildren));
 
   // Funzione che inizializza le dimensioni del grafico svg
   const intializeChart = useCallback(() => {
@@ -118,7 +118,7 @@ const Svg = (props: SVGProps) => {
           chartXEnd,
           chartYEnd,
           chartID,
-          globalConfig,
+          globalConfig: globalConfig.current,
         },
       });
     }
@@ -130,7 +130,6 @@ const Svg = (props: SVGProps) => {
     leftAxisCount,
     chartID,
     legendHeight,
-    globalConfig,
   ]);
 
   useEffect(() => {
