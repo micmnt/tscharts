@@ -135,14 +135,14 @@ export const calculateTooltipPosition = (
   const tooltipX =
     svgPoint.x < (chartXEnd - chartXStart) / 2
       ? svgPoint.x + 50
-      : svgPoint.x - 50 - tooltipElement.clientWidth / 2;
+      : svgPoint.x - 50 - tooltipElement.clientWidth;
 
   const tooltipY =
     svgPoint.y < (chartYEnd - 10) / 2
       ? svgPoint.y + 10
       : svgPoint.y - 20 - tooltipElement.clientHeight / 2;
 
-  return { x: tooltipX, y: tooltipY };
+  return { x: tooltipX < 0 ? 0 : tooltipX, y: tooltipY };
 };
 
 //Funzione che dato un array di serie, calcola il numero di assi che devono essere a sinistra e a destra del grafico
