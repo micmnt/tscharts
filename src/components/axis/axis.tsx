@@ -161,6 +161,18 @@ const Axis = (props: AxisProps) => {
           />
         ) : null}
         {xPoints}
+        {showName ? (
+          <text
+            x={chartXEnd! / 2}
+            y={chartYEnd! + 45}
+            textAnchor="middle"
+            fontSize={theme?.axis?.titleSize}
+            fill={theme?.axis?.titleColor}
+            fontWeight={600}
+          >
+            {name}
+          </text>
+        ) : null}
       </>
     );
   }

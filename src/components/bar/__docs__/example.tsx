@@ -101,15 +101,21 @@ const Example: FC<BarProps> = ({
       }}
     >
       <Chart width={400} height={400} elements={[elements]}>
-        <Axis type="yAxis" name="tempi migliori" showLine />
+        <Axis type="yAxis" name="tempi migliori" showLine showName />
         <Bar
           name={name}
           stacked={stacked}
           showLabels={showLabels}
           config={config}
         />
-        <Axis type="xAxis" dataPoints={dataPoints} showLine />
-        <Legend />
+        <Axis
+          type="xAxis"
+          dataPoints={dataPoints}
+          showLine
+          showName
+          name="Data di riferimento per i valori"
+        />
+        <Legend legendType="horizontal" height={90} />
       </Chart>
     </div>
   );
