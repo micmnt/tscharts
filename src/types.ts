@@ -16,6 +16,7 @@ export type Serie = {
   data: TimeSerieEl[] | PieSerieEl[] | number;
   labels?: { name: string; value?: string }[];
   type?: string;
+  axisName?: string;
   color?: string;
   format?: (value: number) => string;
 };

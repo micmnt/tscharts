@@ -2,7 +2,11 @@
 import { ChartState, ThemeState, TimeSerieEl } from "../../types";
 
 /* Core Imports */
-import { getTimeSerieMaxValue, getValuePosition } from "../../lib/core";
+import {
+  getSerieAssociatedThresholds,
+  getTimeSerieMaxValue,
+  getValuePosition,
+} from "../../lib/core";
 
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
@@ -44,8 +48,12 @@ const Threshold = (props: ThresholdProps) => {
 
   const referenceAxisSerie = elements?.find((el) => el.name === axisName);
 
-  if (referenceAxisSerie) {
-    serieMax = getTimeSerieMaxValue(referenceAxisSerie?.data as TimeSerieEl[]);
+  if (referenceAxisSerie && elements) {
+    const otherThresholds = getSerieAssociatedThresholds(elements, axisName);
+    serieMax = getTimeSerieMaxValue([
+      ...(referenceAxisSerie?.data as TimeSerieEl[]),
+      ...otherThresholds,
+    ]);
   }
 
   const position = getValuePosition(
