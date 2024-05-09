@@ -11,6 +11,7 @@ export type LineProps = {
   name: string;
   hideLine?: boolean;
   showDots?: boolean;
+  labelSize?: number;
   showLabels?: boolean;
 };
 
@@ -20,6 +21,7 @@ const Line = (props: LineProps) => {
     showDots = false,
     showLabels = false,
     hideLine = false,
+    labelSize = 12,
   } = props;
 
   const ctx = useCharts();
@@ -71,7 +73,7 @@ const Line = (props: LineProps) => {
           (point: [x: number, y: number], dataPointIndex: number) => (
             <text
               textAnchor="middle"
-              fontSize={12}
+              fontSize={labelSize}
               fontWeight="bold"
               fill={serieColor}
               key={`${serieElement.name}-${point[0]}-${point[1]}`}

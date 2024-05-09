@@ -17,6 +17,7 @@ export type AxisProps = {
   type: "xAxis" | "yAxis";
   name?: string;
   dataPoints?: string[];
+  labelSize?: number;
   showGrid?: boolean;
   showLine?: boolean;
   showName?: boolean;
@@ -28,6 +29,7 @@ const Axis = (props: AxisProps) => {
     name,
     dataPoints = [],
     showGrid = false,
+    labelSize = undefined,
     showName = false,
     showLine = false,
   } = props;
@@ -109,7 +111,7 @@ const Axis = (props: AxisProps) => {
               textAnchor="middle"
               x={label.x}
               y={label.y}
-              fontSize={theme?.axis?.labelSize}
+              fontSize={labelSize ?? theme?.axis?.labelSize}
               fill={theme?.axis?.labelColor}
             >
               {label.value}
@@ -214,7 +216,7 @@ const Axis = (props: AxisProps) => {
         <Fragment key={`${yAxis.name}-${label.value}`}>
           <text
             textAnchor={yAxis.isOpposite ? "start" : "end"}
-            fontSize={theme?.axis?.labelSize}
+            fontSize={labelSize ?? theme?.axis?.labelSize}
             x={label.x}
             y={label.y}
             fill={theme?.axis?.labelColor}
