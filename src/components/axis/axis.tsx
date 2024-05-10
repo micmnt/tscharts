@@ -18,6 +18,7 @@ export type AxisProps = {
   name?: string;
   dataPoints?: string[];
   labelSize?: number;
+  titleSize?: number;
   showGrid?: boolean;
   showLine?: boolean;
   showName?: boolean;
@@ -30,6 +31,7 @@ const Axis = (props: AxisProps) => {
     dataPoints = [],
     showGrid = false,
     labelSize = undefined,
+    titleSize = undefined,
     showName = false,
     showLine = false,
   } = props;
@@ -168,7 +170,7 @@ const Axis = (props: AxisProps) => {
             x={chartXEnd! / 2}
             y={chartYEnd! + 45}
             textAnchor="middle"
-            fontSize={theme?.axis?.titleSize}
+            fontSize={titleSize ?? theme?.axis?.titleSize}
             fill={theme?.axis?.titleColor}
             fontWeight={600}
           >
@@ -197,7 +199,7 @@ const Axis = (props: AxisProps) => {
           </defs>
           <use href={`#axis-${yAxis.nameLabelPath}`} fill="none" />
           <text
-            fontSize={theme?.axis?.titleSize}
+            fontSize={titleSize ?? theme?.axis?.titleSize}
             fill={theme?.axis?.titleColor}
             fontWeight={600}
           >

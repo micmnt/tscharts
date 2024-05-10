@@ -24,6 +24,8 @@ const generateXYChartLenged = (
   showDots: boolean,
   customLabel: ((el: PieSerieEl | Serie) => ReactNode) | null,
 ) => {
+  console.log("Legend title");
+
   return timeSeriesElements?.map((element, elementIndex) => (
     <div className="legendItemContainer" key={`${element.name}-legend`}>
       {showDots && (
