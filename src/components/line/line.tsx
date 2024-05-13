@@ -12,12 +12,14 @@ export type LineProps = {
   hideLine?: boolean;
   showDots?: boolean;
   labelSize?: number;
+  dashed?: boolean;
   showLabels?: boolean;
 };
 
 const Line = (props: LineProps) => {
   const {
     name,
+    dashed = false,
     showDots = false,
     showLabels = false,
     hideLine = false,
@@ -61,6 +63,7 @@ const Line = (props: LineProps) => {
       {!hideLine && (
         <path
           strokeLinecap="round"
+          strokeDasharray={dashed ? theme.threshold?.dash : 0}
           strokeLinejoin="round"
           d={linePath}
           strokeWidth={theme?.line?.size}
