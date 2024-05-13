@@ -246,7 +246,7 @@ export const generateYAxis = (
   const isOppositeAxis = serieIndex % 2 !== 0;
 
   /* Creazione degli assi */
-  const axisX = isOppositeAxis ? chartXEnd! : chartXStart!;
+  const axisX = isOppositeAxis ? chartXEnd! : chartXStart! + padding / 2;
   const axisPath = generateVerticalLine(axisX, chartYEnd!, 0);
 
   // creazione delle label degli assi e del nome verticale degli assi
@@ -256,7 +256,7 @@ export const generateYAxis = (
 
   const nameLabelX = isOppositeAxis
     ? axisLabelsX + 2 * padding
-    : axisLabelsX - 2 * padding;
+    : axisLabelsX - (5 / 2) * padding;
 
   const nameLabelAxisPath = generateVerticalLine(
     nameLabelX,
@@ -426,7 +426,8 @@ export const generateStackedDataPaths = (
     const serieY = chartYEnd! - value - prevPosition;
 
     const barWidth = ctxBarWidth ?? padding;
-    const serieElX = xAxisInterval * serieElIndex + chartXStart!;
+    const serieElX =
+      xAxisInterval * serieElIndex + (chartXStart! + padding / 2);
 
     const point =
       value < 14
@@ -496,7 +497,8 @@ export const generateDataPaths = (
 
     if (type === "bar") {
       const barWidth = ctxBarWidth ?? padding;
-      const serieElX = xAxisInterval * serieElIndex + chartXStart!;
+      const serieElX =
+        xAxisInterval * serieElIndex + (chartXStart! + padding / 2);
 
       const point =
         value < 14
@@ -513,7 +515,8 @@ export const generateDataPaths = (
         ? Number(globalConfig?.barWidth) / 2
         : padding;
 
-      const serieElX = xAxisInterval * serieElIndex + xSpacing + chartXStart!;
+      const serieElX =
+        xAxisInterval * serieElIndex + xSpacing + (chartXStart! + padding / 2);
       const point = [serieElX, serieY];
 
       const allDataPoints = dataPoints.get(serie.name);

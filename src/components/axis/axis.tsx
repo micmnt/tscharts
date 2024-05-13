@@ -69,7 +69,7 @@ const Axis = (props: AxisProps) => {
 
     const labels = dataPoints.map((label, labelIndex) => {
       const xSpacing = globalConfig?.barWidth
-        ? Number(globalConfig?.barWidth) / 2
+        ? (Number(globalConfig?.barWidth) + padding) / 2
         : padding;
 
       return {
