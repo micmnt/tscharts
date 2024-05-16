@@ -11,6 +11,7 @@ export type LineProps = {
   name: string;
   hideLine?: boolean;
   showDots?: boolean;
+  labelYOffset?: number;
   labelSize?: number;
   dashed?: boolean;
   showLabels?: boolean;
@@ -22,6 +23,7 @@ const Line = (props: LineProps) => {
     dashed = false,
     showDots = false,
     showLabels = false,
+    labelYOffset = 0,
     hideLine = false,
     labelSize = 12,
   } = props;
@@ -58,6 +60,8 @@ const Line = (props: LineProps) => {
 
   const dotRadius = showDots ? 3 : 0;
 
+  const labelYSpacing = padding / 2 + labelYOffset;
+
   return (
     <>
       {!hideLine && (
@@ -81,7 +85,7 @@ const Line = (props: LineProps) => {
               fill={serieColor}
               key={`${serieElement.name}-${point[0]}-${point[1]}`}
               x={point[0]}
-              y={point[1] - padding / 2}
+              y={point[1] - labelYSpacing}
             >
               {serieElement.format
                 ? serieElement.format(
