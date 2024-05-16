@@ -39,7 +39,7 @@
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
+  gap: 5px 20px;
 }
 
 .legendVerticalContainer {

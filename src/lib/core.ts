@@ -1,4 +1,5 @@
 import { ChartState, PieSerieEl, Serie, TimeSerieEl } from "../types";
+import { isDefined } from "./utils";
 
 // Funzione che prende in ingresso il valore massimo di una serie, il valore di un elemento della serie e la dimensione effettiva del grafico e ritorna la posizione sul grafico del valore
 export const getValuePosition = (
@@ -517,7 +518,15 @@ export const generateDataPaths = (
 
       const serieElX =
         xAxisInterval * serieElIndex + xSpacing + (chartXStart! + padding / 2);
-      const point = [serieElX, serieY];
+
+      const formattedX =
+        isDefined(serieElX) && !isNaN(serieElX) ? serieElX : null;
+      const formattedY = isDefined(serieY) && !isNaN(serieY) ? serieY : null;
+
+      const point =
+        isDefined(formattedX) && isDefined(formattedY)
+          ? [serieElX, serieY]
+          : [];
 
       const allDataPoints = dataPoints.get(serie.name);
 

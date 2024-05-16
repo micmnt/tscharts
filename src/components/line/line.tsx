@@ -98,8 +98,9 @@ const Line = (props: LineProps) => {
           ),
         )}
       {!hideLine &&
-        linePoints.map(
-          (point: [x: number, y: number], dataPointIndex: number) => (
+        linePoints
+          .filter((el: [x: number, y: number]) => el.length > 0)
+          .map((point: [x: number, y: number], dataPointIndex: number) => (
             <circle
               key={`${serieElement.name}-${point[0]}-${point[1]}`}
               cx={point[0]}
@@ -112,8 +113,7 @@ const Line = (props: LineProps) => {
               stroke={serieColor}
               strokeWidth={2}
             />
-          ),
-        )}
+          ))}
     </>
   );
 };
