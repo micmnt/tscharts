@@ -2,7 +2,7 @@ const seriesColors = ["#3376bd", "#edae49", "#e63946", "#0079bc"];
 
 const defaultTheme = {
   padding: 25,
-  yInterval: 8,
+  yInterval: 5,
   grid: {
     color: "#e3e3e3",
     size: 1,

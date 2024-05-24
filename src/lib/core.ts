@@ -199,6 +199,19 @@ const calculateStackedSeriesMax = (series: Serie[]) =>
     return acc;
   }, 0);
 
+// Funzione che prende in ingresso le serie del grafico e ritorna le serie a linea e a barre presenti associate ad un determinato asse
+export const getSeriesByAxisName = (elements: Serie[], axisName: string) => {
+  if (!elements || !axisName) return [];
+  // Prendo i valori delle serie presenti associate all'asse da graficare
+  const axisSeries = elements
+    .filter(
+      (el) =>
+        (el.type === "line" || el.type === "bar") && el.axisName === axisName,
+    )
+    .map((el) => el.data);
+  return axisSeries;
+};
+
 // Funzione che prende in ingresso le serie del grafico e ritorna le soglie presenti associate ad un determinato asse
 export const getSerieAssociatedThresholds = (
   elements: Serie[],
@@ -219,7 +232,7 @@ export const generateYAxis = (
   ctx: ChartState & { padding: number; yInterval: number },
 ) => {
   // Prendo i dati della serie da garficare
-  const serieData = serie.data as TimeSerieEl[];
+  // const serieData = serie.data as TimeSerieEl[];
 
   const isStacked = serie.type === "bar-stacked";
 
@@ -230,11 +243,21 @@ export const generateYAxis = (
     serie.name,
   );
 
+  const axisSeries = getSeriesByAxisName(
+    ctx.elements,
+    serie.axisName ?? serie.name,
+  );
+
+  const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
+
   const serieMaxValue = isStacked
     ? calculateStackedSeriesMax(
         ctx.elements.filter((el) => el.type === "bar-stacked"),
       )
-    : getTimeSerieMaxValue([...(serieData ?? []), ...(seriesThresholds ?? [])]);
+    : getTimeSerieMaxValue([
+        ...flatAxisSeriesData,
+        ...(seriesThresholds ?? []),
+      ]);
 
   const serieIndex = ctx.elements.findIndex((el) => el.name === serie.name);
 
@@ -266,13 +289,13 @@ export const generateYAxis = (
   );
 
   const lastValue = serie.format
-    ? serie.format(Math.round(serieMaxValue * 10) / 10)
-    : Math.round(serieMaxValue * 10) / 10;
+    ? serie.format(Math.ceil(serieMaxValue / 10) * 10)
+    : Math.ceil(serieMaxValue / 10) * 10;
 
   const yAxisLabels = [...Array(yInterval)]
     .map((_, index) => {
       const axisValue =
-        Math.round((serieMaxValue / yInterval) * index * 10) / 10;
+        Math.ceil(((serieMaxValue / yInterval) * index) / 10) * 10;
       const serieValue = serie.format ? serie.format(axisValue) : axisValue;
 
       return {
@@ -405,9 +428,10 @@ export const generateStackedDataPaths = (
     barWidth: ctxBarWidth,
   } = ctx;
 
-  const xAxisInterval = (chartXEnd! - chartXStart!) / timeSerieData.length || 1;
+  const xAxisInterval =
+    (chartXEnd! - chartXStart!) / (timeSerieData?.length || 1);
 
-  const paths = timeSerieData.map((serieEl, serieElIndex) => {
+  const paths = timeSerieData?.map((serieEl, serieElIndex) => {
     const value = getValuePosition(
       stackedMaxValue,
       serieEl.value,
@@ -463,12 +487,19 @@ export const generateDataPaths = (
 
   const timeSerieData = serie.data as TimeSerieEl[];
 
+  const axisSeries = getSeriesByAxisName(
+    ctx.elements,
+    serie.axisName ?? serie.name,
+  );
+
+  const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
+
   const seriesThresholds = getSerieAssociatedThresholds(
     ctx.elements,
     serie.name,
   );
   const serieMaxValue = getTimeSerieMaxValue([
-    ...(timeSerieData ?? []),
+    ...(flatAxisSeriesData ?? []),
     ...(seriesThresholds ?? []),
   ]);
 
@@ -485,11 +516,14 @@ export const generateDataPaths = (
     globalConfig,
   } = ctx;
 
-  const xAxisInterval = (chartXEnd! - chartXStart!) / timeSerieData.length || 1;
+  const xAxisInterval =
+    (chartXEnd! - chartXStart!) / timeSerieData?.length || 1;
 
-  const paths = timeSerieData.map((serieEl, serieElIndex) => {
+  const flatMaxValue = Math.ceil(serieMaxValue / 10) * 10;
+
+  const paths = timeSerieData?.map((serieEl, serieElIndex) => {
     const value = getValuePosition(
-      serieMaxValue,
+      flatMaxValue,
       serieEl.value,
       chartYEnd! - padding,
     );

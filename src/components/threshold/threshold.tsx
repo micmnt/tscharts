@@ -72,7 +72,7 @@ const Threshold = (props: ThresholdProps) => {
   const path =
     type === "vertical"
       ? `M ${svgValue} ${chartYEnd} V ${0}`
-      : `M ${chartXStart} ${svgValue} H ${chartXEnd}`;
+      : `M ${chartXStart! + padding / 2} ${svgValue} H ${chartXEnd}`;
 
   return (
     <>

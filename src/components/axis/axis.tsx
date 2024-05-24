@@ -57,6 +57,9 @@ const Axis = (props: AxisProps) => {
   } = ctx;
 
   const tooltipElement = document?.getElementById(`cts-tooltip-${chartID}`);
+
+  const labelFontSize = labelSize ?? theme?.axis?.labelSize;
+
   // Creazione dell'asse X
   if (type === "xAxis") {
     const xAxis = generateXAxis(ctx);
@@ -65,7 +68,8 @@ const Axis = (props: AxisProps) => {
 
     const serieData = serie.data as TimeSerieEl[];
 
-    const xAxisInterval = (chartXEnd! - chartXStart!) / serieData.length || 1;
+    const xAxisInterval =
+      (chartXEnd! - chartXStart!) / (serieData?.length || 1);
 
     const labels = dataPoints.map((label, labelIndex) => {
       const xSpacing = globalConfig?.barWidth
@@ -113,7 +117,7 @@ const Axis = (props: AxisProps) => {
               textAnchor="middle"
               x={label.x}
               y={label.y}
-              fontSize={labelSize ?? theme?.axis?.labelSize}
+              fontSize={labelFontSize}
               fill={theme?.axis?.labelColor}
             >
               {label.value}
@@ -218,16 +222,16 @@ const Axis = (props: AxisProps) => {
         <Fragment key={`${yAxis.name}-${label.value}`}>
           <text
             textAnchor={yAxis.isOpposite ? "start" : "end"}
-            fontSize={labelSize ?? theme?.axis?.labelSize}
+            fontSize={labelFontSize}
             x={label.x}
-            y={label.y}
+            y={label.y + (labelFontSize ?? 0) / 2}
             fill={theme?.axis?.labelColor}
           >
             {label.value}
           </text>
           {showGrid && labelIndex > 0 ? (
             <path
-              d={`M ${chartXStart! - padding / 4} ${label.y} H ${chartXEnd! + padding / 4}`}
+              d={`M ${chartXStart! + padding / 4} ${label.y} H ${chartXEnd! - padding / 4}`}
               strokeWidth={theme?.grid?.size}
               strokeDasharray={theme?.grid?.dashed ? 5 : 0}
               stroke={theme?.grid?.color}
