@@ -12,6 +12,7 @@ import {
   useChartsDispatch,
   useChartsTheme,
 } from "../../contexts/chartContext";
+import { nanoid } from "nanoid";
 
 export type AxisProps = {
   type: "xAxis" | "yAxis";
@@ -88,7 +89,7 @@ const Axis = (props: AxisProps) => {
       const hoverRectWidth = xAxisInterval - padding;
 
       return (
-        <Fragment key={label.value}>
+        <Fragment key={`${label.value}-${nanoid()}`}>
           {dataPoints.length > 20 ? (
             <>
               <defs>
@@ -219,7 +220,7 @@ const Axis = (props: AxisProps) => {
         </>
       ) : null}
       {yAxis.valueLabels.map((label, labelIndex) => (
-        <Fragment key={`${yAxis.name}-${label.value}`}>
+        <Fragment key={`${yAxis.name}-${label.value}-${nanoid()}`}>
           <text
             textAnchor={yAxis.isOpposite ? "start" : "end"}
             fontSize={labelFontSize}

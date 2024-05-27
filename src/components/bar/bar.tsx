@@ -6,6 +6,7 @@ import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
 /* Core Imports */
 import { generateDataPaths, generateStackedDataPaths } from "../../lib/core";
+import { nanoid } from "nanoid";
 
 export type BarProps = {
   name: string;
@@ -55,7 +56,7 @@ const Bar = (props: BarProps) => {
   return (
     <>
       {paths.map((p) => (
-        <path key={p} d={p} fill={serieColor} />
+        <path key={`${p}-${nanoid()}`} d={p} fill={serieColor} />
       ))}
       {showLabels &&
         barPoints
@@ -66,7 +67,7 @@ const Bar = (props: BarProps) => {
                 fontSize={12}
                 fontWeight="bold"
                 fill="white"
-                key={`${serieElement.name}-${point[0]}-${point[1]}`}
+                key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
                 x={point[0]}
                 y={point[1]}
               >

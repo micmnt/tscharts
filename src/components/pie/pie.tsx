@@ -1,4 +1,5 @@
 /* Context Imports */
+import { nanoid } from "nanoid";
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
 /* Core Imports */
@@ -45,7 +46,7 @@ const Pie = (props: PieProps) => {
     <path
       d={path}
       fill={slicesColors[pathIndex]}
-      key={path}
+      key={`${path}-${nanoid()}`}
       shapeRendering="geometricPrecision"
     />
   ));
@@ -55,7 +56,7 @@ const Pie = (props: PieProps) => {
       fontSize={14}
       fontWeight="bold"
       fill={"white"}
-      key={label.name}
+      key={`${label.name}-${nanoid()}`}
       x={dataPoints.get(label.name)?.x}
       y={dataPoints.get(label.name)?.y}
     >

@@ -6,6 +6,7 @@ import { generateDataPaths } from "../../lib/core";
 
 /*  */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+import { nanoid } from "nanoid";
 
 export type LineProps = {
   name: string;
@@ -83,7 +84,7 @@ const Line = (props: LineProps) => {
               fontSize={labelSize}
               fontWeight="bold"
               fill={serieColor}
-              key={`${serieElement.name}-${point[0]}-${point[1]}`}
+              key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
               x={point[0]}
               y={point[1] - labelYSpacing}
             >
@@ -102,7 +103,7 @@ const Line = (props: LineProps) => {
           .filter((el: [x: number, y: number]) => el.length > 0)
           .map((point: [x: number, y: number], dataPointIndex: number) => (
             <circle
-              key={`${serieElement.name}-${point[0]}-${point[1]}`}
+              key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
               cx={point[0]}
               cy={point[1]}
               r={
