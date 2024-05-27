@@ -410,6 +410,9 @@ export const generateStackedDataPaths = (
   const dataPoints = new Map();
   dataPoints.set(serie.name, []);
 
+  const topLabelsPoints = new Map();
+  topLabelsPoints.set(serie.name, []);
+
   const timeSerieData = serie.data as TimeSerieEl[];
 
   const barSeries = ctx.elements.filter((el) => el.type === "bar-stacked");
@@ -463,6 +466,18 @@ export const generateStackedDataPaths = (
 
     dataPoints.set(serie.name, [...allDataPoints, point]);
 
+    const topLabelsPoint = [
+      serieElX + barWidth / 2,
+      serieY + value + padding / 4,
+    ];
+
+    const allTopLabelsDataPoints = topLabelsPoints.get(serie.name);
+
+    topLabelsPoints.set(serie.name, [
+      ...allTopLabelsDataPoints,
+      topLabelsPoint,
+    ]);
+
     return generateVerticalBarPath(
       serieElX,
       serieY,
@@ -471,7 +486,7 @@ export const generateStackedDataPaths = (
     );
   });
 
-  return { paths, dataPoints };
+  return { paths, dataPoints, topLabelsPoints };
 };
 
 // funzione che genera i dataPaths in base al tipo di serie da graficare
@@ -484,6 +499,9 @@ export const generateDataPaths = (
 
   const dataPoints = new Map();
   dataPoints.set(serie.name, []);
+
+  const topLabelsPoints = new Map();
+  topLabelsPoints.set(serie.name, []);
 
   const timeSerieData = serie.data as TimeSerieEl[];
 
@@ -544,6 +562,15 @@ export const generateDataPaths = (
 
       dataPoints.set(serie.name, [...allDataPoints, point]);
 
+      const topLabelPoint = [
+        serieElX + barWidth / 2,
+        chartYEnd! - value - padding / 2,
+      ];
+
+      const allTopLabelsPoints = topLabelsPoints.get(serie.name);
+
+      topLabelsPoints.set(serie.name, [...allTopLabelsPoints, topLabelPoint]);
+
       return generateVerticalBarPath(serieElX, serieY, barWidth, chartYEnd!);
     } else {
       const xSpacing = globalConfig?.barWidth
@@ -572,5 +599,5 @@ export const generateDataPaths = (
     }
   });
 
-  return { paths, dataPoints };
+  return { paths, dataPoints, topLabelsPoints };
 };
