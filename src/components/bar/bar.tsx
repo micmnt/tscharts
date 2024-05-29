@@ -77,9 +77,11 @@ const Bar = (props: BarProps) => {
 
   return (
     <>
-      {paths.map((p) => (
-        <path key={`${p}-${nanoid()}`} d={p} fill={serieColor} />
-      ))}
+      {paths
+        .filter((p) => !p.includes("NaN"))
+        .map((p) => (
+          <path key={`${p}-${nanoid()}`} d={p} fill={serieColor} />
+        ))}
       {topLabelSerie &&
         labelsPoints.map(
           (point: [x: number, y: number], dataPointIndex: number) =>
@@ -91,7 +93,7 @@ const Bar = (props: BarProps) => {
                 fill={topLabelColor}
                 key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
                 x={point[0]}
-                y={point[1]}
+                y={isNaN(point[1]) ? 0 : point[1]}
               >
                 {topLabelSerieElement?.format
                   ? topLabelSerieElement.format(
@@ -116,7 +118,7 @@ const Bar = (props: BarProps) => {
                 fill={labelColor}
                 key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
                 x={point[0]}
-                y={point[1]}
+                y={isNaN(point[1]) ? 0 : point[1]}
               >
                 {serieElement.format
                   ? serieElement.format(

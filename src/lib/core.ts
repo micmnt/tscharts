@@ -1,5 +1,5 @@
 import { ChartState, PieSerieEl, Serie, TimeSerieEl } from "../types";
-import { isDefined } from "./utils";
+import { calculateFlatValue, isDefined } from "./utils";
 
 // Funzione che prende in ingresso il valore massimo di una serie, il valore di un elemento della serie e la dimensione effettiva del grafico e ritorna la posizione sul grafico del valore
 export const getValuePosition = (
@@ -289,13 +289,14 @@ export const generateYAxis = (
   );
 
   const lastValue = serie.format
-    ? serie.format(Math.ceil(serieMaxValue / 10) * 10)
-    : Math.ceil(serieMaxValue / 10) * 10;
+    ? serie.format(calculateFlatValue(serieMaxValue))
+    : calculateFlatValue(serieMaxValue);
 
   const yAxisLabels = [...Array(yInterval)]
     .map((_, index) => {
-      const axisValue =
-        Math.ceil(((serieMaxValue / yInterval) * index) / 10) * 10;
+      const flatInterval = calculateFlatValue(serieMaxValue) / yInterval;
+      const axisValue = flatInterval * index;
+
       const serieValue = serie.format ? serie.format(axisValue) : axisValue;
 
       return {
@@ -537,7 +538,7 @@ export const generateDataPaths = (
   const xAxisInterval =
     (chartXEnd! - chartXStart!) / timeSerieData?.length || 1;
 
-  const flatMaxValue = Math.ceil(serieMaxValue / 10) * 10;
+  const flatMaxValue = calculateFlatValue(serieMaxValue);
 
   const paths = timeSerieData?.map((serieEl, serieElIndex) => {
     const value = getValuePosition(

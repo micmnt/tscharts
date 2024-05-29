@@ -10,7 +10,7 @@ import {
 
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
-import { isDefined } from "../../lib/utils";
+import { calculateFlatValue, isDefined } from "../../lib/utils";
 
 type ThresholdProps = {
   name: string;
@@ -56,8 +56,9 @@ const Threshold = (props: ThresholdProps) => {
     ]);
   }
 
+  const flatMax = calculateFlatValue(serieMax!);
   const position = getValuePosition(
-    serieMax!,
+    flatMax!,
     thresholdValue,
     chartYEnd! - padding,
   );
