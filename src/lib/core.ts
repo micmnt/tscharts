@@ -1,5 +1,5 @@
 import { ChartState, PieSerieEl, Serie, TimeSerieEl } from "../types";
-import { calculateFlatValue, isDefined } from "./utils";
+import { calculateFlatValue, isDefined, normalizeBarRadius } from "./utils";
 
 // Funzione che prende in ingresso il valore massimo di una serie, il valore di un elemento della serie e la dimensione effettiva del grafico e ritorna la posizione sul grafico del valore
 export const getValuePosition = (
@@ -21,7 +21,63 @@ export const generateVerticalBarPath = (
   y: number,
   barWidth: number,
   startY: number,
+  radius?: number,
+  topLeftRadius?: number,
+  topRightRadius?: number,
+  bottomRightRadius?: number,
+  bottomLeftRadius?: number,
 ) => {
+  if (
+    (radius ||
+      topLeftRadius ||
+      bottomLeftRadius ||
+      topRightRadius ||
+      bottomRightRadius) &&
+    !(y === startY)
+  ) {
+    const normalizedRadius = normalizeBarRadius(radius, startY - y);
+    const normalizedTopLeftRadius = normalizeBarRadius(
+      topLeftRadius,
+      startY - y,
+    );
+    const normalizedBottomLeftRadius = normalizeBarRadius(
+      bottomLeftRadius,
+      startY - y,
+    );
+    const normalizedTopRightRadius = normalizeBarRadius(
+      topRightRadius,
+      startY - y,
+    );
+    const normalizedBottomRightRadius = normalizeBarRadius(
+      bottomRightRadius,
+      startY - y,
+    );
+
+    const topLeftCorner =
+      normalizedRadius || normalizedTopLeftRadius
+        ? `Q${x},${y} ${x + (normalizedRadius || normalizedTopLeftRadius || 0)},${y}`
+        : "";
+    const topRightCorner =
+      normalizedRadius || normalizedTopRightRadius
+        ? `Q${x + barWidth},${y} ${x + barWidth},${y + (normalizedRadius || normalizedTopRightRadius || 0)}`
+        : "";
+    const bottomRightCorner =
+      normalizedRadius || normalizedBottomRightRadius
+        ? `Q${x + barWidth},${startY} ${x + barWidth - (normalizedRadius || normalizedBottomRightRadius || 0)},${startY}`
+        : "";
+    const bottomLeftCorner =
+      normalizedRadius || normalizedBottomLeftRadius
+        ? `Q${x},${startY} ${x},${startY - (normalizedRadius || normalizedBottomLeftRadius || 0)}`
+        : "";
+
+    const startPosition = `M ${x} ${startY + (normalizedRadius || normalizedTopLeftRadius || 0)}`;
+    const topLeftPoint = `V ${y + (normalizedRadius || normalizedTopLeftRadius || 0)}`;
+    const topRightPoint = `H ${x + barWidth - (normalizedRadius || normalizedTopRightRadius || 0)}`;
+    const bottomRightPoint = `V ${startY - (normalizedRadius || normalizedBottomRightRadius || 0)}`;
+    const bottomLeftPoint = `H ${x + (normalizedRadius || normalizedBottomLeftRadius || 0)}`;
+
+    return `${startPosition} ${topLeftPoint} ${topLeftCorner} ${topRightPoint} ${topRightCorner} ${bottomRightPoint} ${bottomRightCorner} ${bottomLeftPoint} ${bottomLeftCorner}`;
+  }
   return `M ${x} ${startY} V ${y} H ${x + barWidth} V ${startY} Z`;
 };
 
@@ -405,7 +461,15 @@ const getStackedBarStartValue = (
 // Funzione che genera i dataPaths per le barre stacked
 export const generateStackedDataPaths = (
   serie: Serie,
-  ctx: ChartState & { padding: number; barWidth?: number },
+  ctx: ChartState & {
+    padding: number;
+    barWidth?: number;
+    radius?: number;
+    topLeftRadius?: number;
+    topRightRadius?: number;
+    bottomRightRadius?: number;
+    bottomLeftRadius?: number;
+  },
 ) => {
   if (!ctx.elements) return null;
   const dataPoints = new Map();
@@ -430,6 +494,11 @@ export const generateStackedDataPaths = (
     chartYEnd,
     padding,
     barWidth: ctxBarWidth,
+    radius,
+    topLeftRadius,
+    topRightRadius,
+    bottomRightRadius,
+    bottomLeftRadius,
   } = ctx;
 
   const xAxisInterval =
@@ -484,6 +553,11 @@ export const generateStackedDataPaths = (
       serieY,
       barWidth,
       chartYEnd! - prevPosition,
+      radius,
+      topLeftRadius,
+      topRightRadius,
+      bottomRightRadius,
+      bottomLeftRadius,
     );
   });
 
@@ -493,7 +567,15 @@ export const generateStackedDataPaths = (
 // funzione che genera i dataPaths in base al tipo di serie da graficare
 export const generateDataPaths = (
   serie: Serie,
-  ctx: ChartState & { padding: number; barWidth?: number },
+  ctx: ChartState & {
+    padding: number;
+    barWidth?: number;
+    radius?: number;
+    topLeftRadius?: number;
+    topRightRadius?: number;
+    bottomRightRadius?: number;
+    bottomLeftRadius?: number;
+  },
   type: "line" | "bar",
 ) => {
   if (!ctx.elements) return null;
@@ -532,6 +614,11 @@ export const generateDataPaths = (
     chartYEnd,
     padding,
     barWidth: ctxBarWidth,
+    radius,
+    topLeftRadius,
+    topRightRadius,
+    bottomRightRadius,
+    bottomLeftRadius,
     globalConfig,
   } = ctx;
 
@@ -572,7 +659,17 @@ export const generateDataPaths = (
 
       topLabelsPoints.set(serie.name, [...allTopLabelsPoints, topLabelPoint]);
 
-      return generateVerticalBarPath(serieElX, serieY, barWidth, chartYEnd!);
+      return generateVerticalBarPath(
+        serieElX,
+        serieY,
+        barWidth,
+        chartYEnd!,
+        radius,
+        topLeftRadius,
+        topRightRadius,
+        bottomRightRadius,
+        bottomLeftRadius,
+      );
     } else {
       const xSpacing = globalConfig?.barWidth
         ? Number(globalConfig?.barWidth) / 2

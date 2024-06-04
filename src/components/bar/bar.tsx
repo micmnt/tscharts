@@ -14,6 +14,11 @@ export type BarProps = {
   showLabels?: boolean;
   topLabelSerie?: string;
   config?: {
+    radius?: number;
+    topLeftRadius?: number;
+    topRightRadius?: number;
+    bottomRightRadius?: number;
+    bottomLeftRadius?: number;
     barWidth?: number;
     labelSize?: number;
     topLabelSize?: number;
@@ -42,6 +47,11 @@ const Bar = (props: BarProps) => {
   const { padding } = theme;
 
   const {
+    radius = 0,
+    topLeftRadius = 0,
+    topRightRadius = 0,
+    bottomRightRadius = 0,
+    bottomLeftRadius = 0,
     barWidth = padding,
     labelSize = 12,
     topLabelSize = 12,
@@ -58,10 +68,30 @@ const Bar = (props: BarProps) => {
   if (!serieElement) return null;
 
   const { paths, dataPoints, topLabelsPoints } = stacked
-    ? generateStackedDataPaths(serieElement, { ...ctx, padding, barWidth }) ??
-      {}
-    : generateDataPaths(serieElement, { ...ctx, padding, barWidth }, "bar") ??
-      {};
+    ? generateStackedDataPaths(serieElement, {
+        ...ctx,
+        padding,
+        barWidth,
+        radius,
+        topLeftRadius,
+        topRightRadius,
+        bottomRightRadius,
+        bottomLeftRadius,
+      }) ?? {}
+    : generateDataPaths(
+        serieElement,
+        {
+          ...ctx,
+          padding,
+          barWidth,
+          radius,
+          topLeftRadius,
+          topRightRadius,
+          bottomRightRadius,
+          bottomLeftRadius,
+        },
+        "bar",
+      ) ?? {};
 
   const serieIndex = elements?.findIndex((el) => el.name === serieElement.name);
 

@@ -14,3 +14,14 @@ export const calculateFlatValue = (value: number) => {
 
   return Math.ceil(value / multiplier) * multiplier;
 };
+
+export const normalizeBarRadius = (
+  radius: number | undefined,
+  dimension: number,
+) => {
+  if (!radius) return 0;
+
+  if (dimension < radius / 2) return radius / 2;
+
+  return radius;
+};
