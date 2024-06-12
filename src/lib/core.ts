@@ -33,7 +33,7 @@ export const generateVerticalBarPath = (
       bottomLeftRadius ||
       topRightRadius ||
       bottomRightRadius) &&
-    !(y === startY)
+    y !== startY
   ) {
     const normalizedRadius = normalizeBarRadius(radius, startY - y);
     const normalizedTopLeftRadius = normalizeBarRadius(
@@ -504,9 +504,11 @@ export const generateStackedDataPaths = (
   const xAxisInterval =
     (chartXEnd! - chartXStart!) / (timeSerieData?.length || 1);
 
+  const flatMaxValue = calculateFlatValue(stackedMaxValue);
+
   const paths = timeSerieData?.map((serieEl, serieElIndex) => {
     const value = getValuePosition(
-      stackedMaxValue,
+      flatMaxValue,
       serieEl.value,
       chartYEnd! - padding,
     );
@@ -518,7 +520,7 @@ export const generateStackedDataPaths = (
     );
     const prevPosition =
       prevValue > 0
-        ? getValuePosition(stackedMaxValue, prevValue, chartYEnd! - padding)
+        ? getValuePosition(flatMaxValue, prevValue, chartYEnd! - padding)
         : 0;
 
     const serieY = chartYEnd! - value - prevPosition;
