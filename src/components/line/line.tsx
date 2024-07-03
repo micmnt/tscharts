@@ -16,6 +16,7 @@ export type LineProps = {
   labelSize?: number;
   dashed?: boolean;
   showLabels?: boolean;
+  higlightLabels?: boolean;
 };
 
 const Line = (props: LineProps) => {
@@ -24,6 +25,7 @@ const Line = (props: LineProps) => {
     dashed = false,
     showDots = false,
     showLabels = false,
+    higlightLabels = false,
     labelYOffset = 0,
     hideLine = false,
     labelSize = 12,
@@ -76,10 +78,17 @@ const Line = (props: LineProps) => {
           stroke={serieColor}
         />
       )}
-      {showLabels &&
+      {(showLabels || higlightLabels) &&
         linePoints.map(
           (point: [x: number, y: number], dataPointIndex: number) => (
             <text
+              display={
+                (higlightLabels &&
+                  hoveredElement?.elementIndex === dataPointIndex) ||
+                showLabels
+                  ? "block"
+                  : "none"
+              }
               textAnchor="middle"
               fontSize={labelSize}
               fontWeight="bold"
