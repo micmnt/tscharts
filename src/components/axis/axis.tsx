@@ -98,7 +98,7 @@ const Axis = (props: AxisProps) => {
                   d={`M ${label.x - 40} ${label.y + 20} L ${label.x} ${label.y}`}
                 />
               </defs>
-              <use href={`#xAxisLabel-${labelIndex}`} fill="none" />
+              {/* <use href={`#xAxisLabel-${labelIndex}`} fill="none" /> */}
               <text
                 fontSize={theme?.axis?.labelSize}
                 fill={theme?.axis?.labelColor}
@@ -202,18 +202,14 @@ const Axis = (props: AxisProps) => {
           <defs>
             <path d={yAxis.nameLabelPath} id={`axis-${yAxis.nameLabelPath}`} />
           </defs>
-          <use href={`#axis-${yAxis.nameLabelPath}`} fill="none" />
           <text
             fontSize={titleSize ?? theme?.axis?.titleSize}
             fill={theme?.axis?.titleColor}
             fontWeight={600}
+            textAnchor="middle"
+            dominantBaseline="middle"
           >
-            <textPath
-              startOffset="50%"
-              textAnchor="middle"
-              href={`#axis-${yAxis.nameLabelPath}`}
-              alignmentBaseline="central"
-            >
+            <textPath startOffset="50%" href={`#axis-${yAxis.nameLabelPath}`}>
               {yAxis.uom ? `${yAxis.name} (${yAxis.uom})` : `${yAxis.name}`}
             </textPath>
           </text>
