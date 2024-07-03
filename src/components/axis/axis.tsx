@@ -22,6 +22,8 @@ export type AxisProps = {
   titleSize?: number;
   showGrid?: boolean;
   showLine?: boolean;
+  titleDx?: number;
+  titleDy?: number;
   showName?: boolean;
 };
 
@@ -34,6 +36,8 @@ const Axis = (props: AxisProps) => {
     labelSize = undefined,
     titleSize = undefined,
     showName = false,
+    titleDx = 0,
+    titleDy = 0,
     showLine = false,
   } = props;
 
@@ -100,6 +104,8 @@ const Axis = (props: AxisProps) => {
               </defs>
               {/* <use href={`#xAxisLabel-${labelIndex}`} fill="none" /> */}
               <text
+                dx={titleDx}
+                dy={titleDy}
                 fontSize={theme?.axis?.labelSize}
                 fill={theme?.axis?.labelColor}
               >
@@ -203,6 +209,8 @@ const Axis = (props: AxisProps) => {
             <path d={yAxis.nameLabelPath} id={`axis-${yAxis.nameLabelPath}`} />
           </defs>
           <text
+            dy={titleDy}
+            dx={titleDx}
             fontSize={titleSize ?? theme?.axis?.titleSize}
             fill={theme?.axis?.titleColor}
             fontWeight={600}
