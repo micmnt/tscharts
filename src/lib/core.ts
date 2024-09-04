@@ -1,5 +1,10 @@
 import { ChartState, PieSerieEl, Serie, TimeSerieEl } from "../types";
-import { calculateFlatValue, isDefined, normalizeBarRadius } from "./utils";
+import {
+  calculateFlatValue,
+  isDefined,
+  normalizeBarRadius,
+  trimZerosLinePath,
+} from "./utils";
 
 // Funzione che prende in ingresso il valore massimo di una serie, il valore di un elemento della serie e la dimensione effettiva del grafico e ritorna la posizione sul grafico del valore
 export const getValuePosition = (
@@ -573,6 +578,7 @@ export const generateDataPaths = (
     padding: number;
     barWidth?: number;
     radius?: number;
+    trimZeros?: boolean;
     topLeftRadius?: number;
     topRightRadius?: number;
     bottomRightRadius?: number;
@@ -588,7 +594,12 @@ export const generateDataPaths = (
   const topLabelsPoints = new Map();
   topLabelsPoints.set(serie.name, []);
 
-  const timeSerieData = serie.data as TimeSerieEl[];
+  const timeSerieData = ctx.trimZeros
+    ? (serie.data as TimeSerieEl[]).map((el) => ({
+        ...el,
+        value: el.value === 0 ? null : el.value,
+      }))
+    : (serie.data as TimeSerieEl[]);
 
   const axisSeries = getSeriesByAxisName(
     ctx.elements,
@@ -616,6 +627,7 @@ export const generateDataPaths = (
     chartYEnd,
     padding,
     barWidth: ctxBarWidth,
+    trimZeros,
     radius,
     topLeftRadius,
     topRightRadius,
@@ -632,11 +644,11 @@ export const generateDataPaths = (
   const paths = timeSerieData?.map((serieEl, serieElIndex) => {
     const value = getValuePosition(
       flatMaxValue,
-      serieEl.value,
+      serieEl.value ?? 0,
       chartYEnd! - padding,
     );
 
-    const serieY = chartYEnd! - value;
+    const serieY = isDefined(serieEl.value) ? chartYEnd! - value : null;
 
     if (type === "bar") {
       const barWidth = ctxBarWidth ?? padding;
@@ -663,7 +675,7 @@ export const generateDataPaths = (
 
       return generateVerticalBarPath(
         serieElX,
-        serieY,
+        serieY ?? 0,
         barWidth,
         chartYEnd!,
         radius,
@@ -686,18 +698,23 @@ export const generateDataPaths = (
 
       const point =
         isDefined(formattedX) && isDefined(formattedY)
-          ? [serieElX, serieY]
-          : [];
+          ? [serieElX, formattedY]
+          : [0, -10];
 
       const allDataPoints = dataPoints.get(serie.name);
 
       dataPoints.set(serie.name, [...allDataPoints, point]);
 
+      if (!isDefined(formattedY)) {
+        return "";
+      }
       return serieElIndex === 0
-        ? `M ${serieElX} ${serieY}`
-        : generateLine(serieElX, serieY);
+        ? `M ${serieElX} ${formattedY}`
+        : generateLine(serieElX, formattedY);
     }
   });
 
-  return { paths, dataPoints, topLabelsPoints };
+  const normalizedPaths = trimZeros ? trimZerosLinePath(paths) : paths;
+
+  return { paths: normalizedPaths, dataPoints, topLabelsPoints };
 };

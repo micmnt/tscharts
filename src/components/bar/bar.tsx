@@ -108,7 +108,7 @@ const Bar = (props: BarProps) => {
   return (
     <>
       {paths
-        .filter((p) => !p.includes("NaN"))
+        .filter((p) => p !== null && p !== undefined && !p.includes("NaN"))
         .map((p) => (
           <path key={`${p}-${nanoid()}`} d={p} fill={serieColor} />
         ))}

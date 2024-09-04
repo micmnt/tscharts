@@ -15,6 +15,7 @@ export type LineProps = {
   labelYOffset?: number;
   labelSize?: number;
   dashed?: boolean;
+  trimZeros?: boolean;
   showLabels?: boolean;
   higlightLabels?: boolean;
 };
@@ -23,6 +24,7 @@ const Line = (props: LineProps) => {
   const {
     name,
     dashed = false,
+    trimZeros = false,
     showDots = false,
     showLabels = false,
     higlightLabels = false,
@@ -48,9 +50,10 @@ const Line = (props: LineProps) => {
   if (!serieElement) return null;
 
   const { paths, dataPoints } =
-    generateDataPaths(serieElement, { ...ctx, padding }, "line") ?? {};
+    generateDataPaths(serieElement, { ...ctx, padding, trimZeros }, "line") ??
+    {};
 
-  const linePath = paths?.join() ?? "";
+  const linePath = paths?.filter((p) => p !== "").join() ?? "";
 
   const linePoints = dataPoints?.get(serieElement.name) ?? [];
 

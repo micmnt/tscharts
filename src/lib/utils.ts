@@ -25,3 +25,23 @@ export const normalizeBarRadius = (
 
   return radius;
 };
+
+export const trimZerosLinePath = (paths: string[]) => {
+  return paths
+    .join(",")
+    .split(",,")
+    .map((el, index) => {
+      if (index === 0) return el;
+      const arrayEl = el.split(",");
+      if (arrayEl.length > 0) {
+        // Convertire il valore da L a M
+        const trimPath = arrayEl[0];
+        const convertedTrimPath = trimPath.replace("L", "M");
+        arrayEl.splice(0, 1, convertedTrimPath);
+      }
+      const newEl = arrayEl.join(",");
+      return newEl;
+    })
+    .filter((el) => el !== "")
+    .flat();
+};
