@@ -58,7 +58,7 @@ const Threshold = (props: ThresholdProps) => {
 
   const flatMax = calculateFlatValue(serieMax!);
   const position = getValuePosition(
-    flatMax!,
+    flatMax,
     thresholdValue,
     chartYEnd! - padding,
   );
