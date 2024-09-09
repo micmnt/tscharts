@@ -31,7 +31,13 @@ export const trimZerosLinePath = (paths: string[]) => {
     .join(",")
     .split(",,")
     .map((el, index) => {
-      if (index === 0) return el;
+      // Se la serie inizia con uno 0
+      if (index === 0 && el.startsWith(",")) {
+        // Converto il comando di Line in comando di moveto e tolgo la , iniziale
+        return el.replace("L", "M").replace(",", "");
+      } else if (index === 0) {
+        return el;
+      }
       const arrayEl = el.split(",");
       if (arrayEl.length > 0) {
         // Convertire il valore da L a M
