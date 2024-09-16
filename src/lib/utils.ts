@@ -26,6 +26,17 @@ export const normalizeBarRadius = (
   return radius;
 };
 
+export const getFirstValorizedElementIndex = (
+  arr: {
+    date: string;
+    value: number | null;
+  }[],
+) => {
+  return arr.findIndex((el: { date: string; value: number | null }) =>
+    isDefined(el.value),
+  );
+};
+
 export const trimZerosLinePath = (paths: string[]) => {
   return paths
     .join(",")

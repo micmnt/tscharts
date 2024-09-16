@@ -1,6 +1,7 @@
 import { ChartState, PieSerieEl, Serie, TimeSerieEl } from "../types";
 import {
   calculateFlatValue,
+  getFirstValorizedElementIndex,
   isDefined,
   normalizeBarRadius,
   trimZerosLinePath,
@@ -656,9 +657,9 @@ export const generateDataPaths = (
         xAxisInterval * serieElIndex + (chartXStart! + padding / 2);
 
       const point =
-        value < 14
+        value < 16
           ? [-1, -1]
-          : [serieElX + barWidth / 2, chartYEnd! - value / 2 + padding / 2];
+          : [serieElX + barWidth / 2, chartYEnd! - value / 2 + padding / 4];
 
       const allDataPoints = dataPoints.get(serie.name);
 
@@ -708,7 +709,7 @@ export const generateDataPaths = (
       if (!isDefined(formattedY)) {
         return "";
       }
-      return serieElIndex === 0
+      return serieElIndex === getFirstValorizedElementIndex(timeSerieData)
         ? `M ${serieElX} ${formattedY}`
         : generateLine(serieElX, formattedY);
     }

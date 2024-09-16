@@ -68,7 +68,7 @@ const Bar = (props: BarProps) => {
   if (!serieElement) return null;
 
   const { paths, dataPoints, topLabelsPoints } = stacked
-    ? generateStackedDataPaths(serieElement, {
+    ? (generateStackedDataPaths(serieElement, {
         ...ctx,
         padding,
         barWidth,
@@ -77,8 +77,8 @@ const Bar = (props: BarProps) => {
         topRightRadius,
         bottomRightRadius,
         bottomLeftRadius,
-      }) ?? {}
-    : generateDataPaths(
+      }) ?? {})
+    : (generateDataPaths(
         serieElement,
         {
           ...ctx,
@@ -91,7 +91,7 @@ const Bar = (props: BarProps) => {
           bottomLeftRadius,
         },
         "bar",
-      ) ?? {};
+      ) ?? {});
 
   const serieIndex = elements?.findIndex((el) => el.name === serieElement.name);
 
