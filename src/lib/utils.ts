@@ -38,27 +38,28 @@ export const getFirstValorizedElementIndex = (
 };
 
 export const trimZerosLinePath = (paths: string[]) => {
-  return paths
-    .join(",")
-    .split(",,")
-    .map((el, index) => {
-      // Se la serie inizia con uno 0
-      if (index === 0 && el.startsWith(",")) {
-        // Converto il comando di Line in comando di moveto e tolgo la , iniziale
-        return el.replace("L", "M").replace(",", "");
-      } else if (index === 0) {
-        return el;
+  const validPaths = [];
+  // variabile che indica se sono in una sequenza di elementi vuoti
+  let inEmptySequence = false;
+  for (const pathIndex in paths) {
+    if (paths[pathIndex] === "") {
+      // Se non sono in una sequenza di elementi vuoti e l'elemento è vuoto inserisco un placeholder e inizio la sequenza di elementi vuoti
+      if (!inEmptySequence) {
+        validPaths.push("*");
+        inEmptySequence = true;
       }
-      const arrayEl = el.split(",");
-      if (arrayEl.length > 0) {
-        // Convertire il valore da L a M
-        const trimPath = arrayEl[0];
-        const convertedTrimPath = trimPath.replace("L", "M");
-        arrayEl.splice(0, 1, convertedTrimPath);
+    } else {
+      // Se l'elemento non è nullo ma l'ultimo elemento dei path validi è un placeholder di una sequenza di elementi vuoti
+      if (validPaths.slice(-1)?.[0] === "*") {
+        // rimuovo il placeholder
+        validPaths.pop();
+        // creo un path con il comando di move con le stesse coordinate del comando di line e lo inserisco nella stessa posizione del placeholder
+        const movePath = paths[pathIndex]?.replace("L", "M");
+        validPaths.push(movePath);
       }
-      const newEl = arrayEl.join(",");
-      return newEl;
-    })
-    .filter((el) => el !== "")
-    .flat();
+      validPaths.push(paths[pathIndex]);
+    }
+  }
+
+  return validPaths;
 };
