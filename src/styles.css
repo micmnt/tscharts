@@ -32,6 +32,10 @@
   margin-right: 8px;
 }
 
+.tooltipFooter {
+  margin-top: 16px;
+}
+
 .legendContainer {
   width: 100%;
   height: 100%;

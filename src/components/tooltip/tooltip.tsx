@@ -12,7 +12,12 @@ import { isDefined } from "../../lib/utils";
 
 export type TooltipProps = {
   title?: string;
+  reverseOrder?: boolean;
   showGrid?: boolean;
+  cumulatedSeriesValue?: {
+    series: string[];
+    label: string;
+  };
   width?: number;
 };
 
@@ -22,9 +27,9 @@ const getFormattedValue = (
 ) => {
   if (!isDefined(value)) return "";
 
-  if (formatFn) return formatFn(value as number);
+  if (formatFn) return formatFn(value);
 
-  return `${value as number}`;
+  return `${value}`;
 };
 
 const getElementValueByType = (
@@ -47,8 +52,14 @@ const generateTimeSerieContent = (
   timeSeriesElements: Serie[],
   theme: ThemeState | null,
   hoveredElement: { elementIndex: number; label: string } | null,
+  reverseOrder: boolean,
 ) => {
-  return timeSeriesElements.map((element, serieIndex) => {
+  // Ordino l'array di valori in base all'ordinamento scelto
+  const orderedTimeSeriesElements = reverseOrder
+    ? [...timeSeriesElements].reverse()
+    : timeSeriesElements;
+
+  return orderedTimeSeriesElements.map((element, serieIndex) => {
     const elementValue = getElementValueByType(
       element.data,
       element.type as string,
@@ -66,7 +77,7 @@ const generateTimeSerieContent = (
           }}
         />
         <span className="tooltipText">
-          {`${element.name}: ${isDefined(elementValue) ? getFormattedValue(elementValue as number, element.format) : "-"}`}
+          {`${element.name}: ${isDefined(elementValue) ? getFormattedValue(elementValue, element.format) : "-"}`}
         </span>
       </div>
     );
@@ -88,15 +99,49 @@ const generatePieSerieContent = (
           }}
         />
         <span className="tooltipText">
-          {`${element.name}: ${isDefined(element.value) ? getFormattedValue(element.value as number, element.format) : "-"}`}
+          {`${element.name}: ${isDefined(element.value) ? getFormattedValue(element.value, element.format) : "-"}`}
         </span>
       </div>
     );
   });
 };
 
+// Funzione che genera i valori dei totali dei singoli elementi di una Serie stacked
+const computeStackedSeriesElementsTotal = (
+  timeSeriesElements: Serie[],
+  hoveredElement: { elementIndex: number; label: string } | null,
+  enabledSeries?: string[],
+  totalLabel?: string,
+) => {
+  const filteredTimeSeriesElements =
+    enabledSeries !== undefined &&
+    enabledSeries !== null &&
+    enabledSeries.length > 0
+      ? timeSeriesElements.filter((serie) => enabledSeries.includes(serie.name))
+      : timeSeriesElements;
+
+  const totalValue = filteredTimeSeriesElements.reduce((acc, element) => {
+    const elementValue = getElementValueByType(
+      element.data,
+      element.type as string,
+      hoveredElement?.elementIndex ?? -1,
+    );
+
+    acc += Number(elementValue);
+    return acc;
+  }, 0);
+
+  return <span className="tooltipTitle">{`${totalLabel}: ${totalValue}`}</span>;
+};
+
 const Tooltip = (props: TooltipProps) => {
-  const { title = "", showGrid = false, width = 150 } = props;
+  const {
+    title = "",
+    cumulatedSeriesValue,
+    reverseOrder = false,
+    showGrid = false,
+    width = 150,
+  } = props;
 
   const ctx = useCharts();
 
@@ -124,6 +169,20 @@ const Tooltip = (props: TooltipProps) => {
   const pieSeriesElements = elements.filter((el) => el.type === "pie")?.[0]
     ?.data;
 
+  const tooltipTitle = title || hoveredElement?.label;
+
+  const tooltipTotal = computeStackedSeriesElementsTotal(
+    timeSeriesElements,
+    hoveredElement!,
+    cumulatedSeriesValue?.series ?? [],
+    cumulatedSeriesValue?.label ?? "",
+  );
+
+  const showTotal =
+    cumulatedSeriesValue !== undefined &&
+    cumulatedSeriesValue !== null &&
+    Object.keys(cumulatedSeriesValue)?.length > 0;
+
   return (
     <>
       <foreignObject
@@ -131,18 +190,20 @@ const Tooltip = (props: TooltipProps) => {
         x={tooltipPosition!.x}
         y={tooltipPosition!.y}
         width={width}
-        height={160}
+        height={showTotal ? 200 : 160}
         style={{ display: "none" }}
       >
         <div className="tooltipContainer">
-          <span className="tooltipTitle">{title || hoveredElement?.label}</span>
+          <span className="tooltipTitle">{tooltipTitle}</span>
           {timeSeriesElements.length > 0
             ? generateTimeSerieContent(
                 timeSeriesElements,
                 theme,
                 hoveredElement!,
+                reverseOrder,
               )
             : generatePieSerieContent(pieSeriesElements as PieSerieEl[], theme)}
+          <div className="tooltipFooter">{showTotal ? tooltipTotal : null}</div>
         </div>
       </foreignObject>
       {showGrid &&
