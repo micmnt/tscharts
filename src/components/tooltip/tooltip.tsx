@@ -19,6 +19,7 @@ export type TooltipProps = {
     label: string;
   };
   width?: number;
+  height?: number;
 };
 
 const getFormattedValue = (
@@ -141,6 +142,7 @@ const Tooltip = (props: TooltipProps) => {
     reverseOrder = false,
     showGrid = false,
     width = 150,
+    height = 0,
   } = props;
 
   const ctx = useCharts();
@@ -190,7 +192,7 @@ const Tooltip = (props: TooltipProps) => {
         x={tooltipPosition!.x}
         y={tooltipPosition!.y}
         width={width}
-        height={showTotal ? 200 : 160}
+        height={height ? height : showTotal ? 200 : 160}
         style={{ display: "none" }}
       >
         <div className="tooltipContainer">

@@ -17,6 +17,7 @@ export type Serie = {
   labels?: { name: string; value?: string }[];
   type?: string;
   axisName?: string;
+  stackedName?: string;
   color?: string;
   format?: (value: number) => string;
 };

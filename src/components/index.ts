@@ -1,5 +1,6 @@
 export * from "./axis";
 export * from "./bar";
+export * from "./groupBar";
 export * from "./chart";
 export * from "./legend";
 export * from "./line";

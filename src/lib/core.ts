@@ -297,6 +297,7 @@ export const generateYAxis = (
   // const serieData = serie.data as TimeSerieEl[];
 
   const isStacked = serie.type === "bar-stacked";
+  const isGroupStacked = serie.stackedName;
 
   if (!ctx.elements) return null;
 
@@ -312,14 +313,47 @@ export const generateYAxis = (
 
   const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
 
-  const serieMaxValue = isStacked
-    ? calculateStackedSeriesMax(
-        ctx.elements.filter((el) => el.type === "bar-stacked"),
-      )
-    : getTimeSerieMaxValue([
-        ...flatAxisSeriesData,
-        ...(seriesThresholds ?? []),
-      ]);
+  let serieMaxValue = 0;
+  if (isStacked) {
+    serieMaxValue = calculateStackedSeriesMax(
+      ctx.elements.filter((el) => el.type === "bar-stacked"),
+    );
+  } else if (isGroupStacked) {
+    // Listo tutte le serie non stacked
+    const nonStackedSeries = ctx.elements.filter(
+      (el) => el.type === "group-bar" && !el.stackedName,
+    );
+
+    const allStackedSeries = ctx.elements.filter(
+      (el) => el.type === "group-bar" && el.stackedName,
+    );
+
+    const allStackedNames = allStackedSeries.map((el) => el.stackedName);
+    const uniqueStackedNames = Array.from(new Set(allStackedNames));
+
+    const stackedSeriesMaxArray = uniqueStackedNames.map((name) => {
+      const involvedSeries = allStackedSeries.filter(
+        (serie) => serie.stackedName === name,
+      );
+
+      const maxValue = calculateStackedSeriesMax(involvedSeries);
+      return maxValue;
+    });
+
+    const nonStackedSeriesMaxArray = nonStackedSeries.map((serie) =>
+      getTimeSerieMaxValue(serie.data as TimeSerieEl[]),
+    );
+    const stackedMaxValue = Math.max(
+      ...stackedSeriesMaxArray,
+      ...nonStackedSeriesMaxArray,
+    );
+    serieMaxValue = stackedMaxValue;
+  } else {
+    serieMaxValue = getTimeSerieMaxValue([
+      ...flatAxisSeriesData,
+      ...(seriesThresholds ?? []),
+    ]);
+  }
 
   const serieIndex = ctx.elements.findIndex((el) => el.name === serie.name);
 
@@ -718,4 +752,274 @@ export const generateDataPaths = (
   const normalizedPaths = trimZeros ? trimZerosLinePath(paths) : paths;
 
   return { paths: normalizedPaths, dataPoints, topLabelsPoints };
+};
+
+// Funzione che genera i dataPaths per le barre raggruppate
+export const generateGroupDataPaths = (
+  serie: Serie,
+  ctx: ChartState & {
+    padding: number;
+    barWidth?: number;
+    radius?: number;
+    topLeftRadius?: number;
+    topRightRadius?: number;
+    bottomRightRadius?: number;
+    bottomLeftRadius?: number;
+  },
+) => {
+  if (!ctx.elements) return null;
+  const dataPoints = new Map();
+  dataPoints.set(serie.name, []);
+
+  const topLabelsPoints = new Map();
+  topLabelsPoints.set(serie.name, []);
+
+  const timeSerieData = serie.data as TimeSerieEl[];
+
+  const barSeries = ctx.elements.filter((el) => el.type === "group-bar");
+
+  const flatSeries = [...barSeries.map((serie) => serie.data)].flat();
+
+  const serieMaxValue = getTimeSerieMaxValue(flatSeries as TimeSerieEl[]);
+
+  const serieIndex = barSeries.findIndex((el) => el.name === serie.name);
+
+  if (serieIndex < 0) return null;
+
+  const {
+    chartXStart,
+    chartXEnd,
+    chartYEnd,
+    padding,
+    barWidth: ctxBarWidth,
+    radius,
+    topLeftRadius,
+    topRightRadius,
+    bottomRightRadius,
+    bottomLeftRadius,
+  } = ctx;
+
+  const xAxisGroupInterval =
+    (chartXEnd! - chartXStart!) / timeSerieData?.length || 1;
+
+  const xAxisInterval = xAxisGroupInterval / barSeries?.length;
+
+  const flatMaxValue = calculateFlatValue(serieMaxValue);
+
+  const paths = timeSerieData?.map((serieEl, serieElIndex) => {
+    const value = getValuePosition(
+      flatMaxValue,
+      serieEl.value ?? 0,
+      chartYEnd! - padding,
+    );
+
+    const serieY = isDefined(serieEl.value) ? chartYEnd! - value : null;
+
+    const barWidth = ctxBarWidth ?? padding;
+    const serieElX =
+      serieElIndex * xAxisGroupInterval +
+      (xAxisInterval - padding / 6) * serieIndex +
+      (chartXStart! + padding / 4);
+
+    const point =
+      value < 16
+        ? [-1, -1]
+        : [serieElX + barWidth / 2, chartYEnd! - value / 2 + padding / 4];
+
+    const allDataPoints = dataPoints.get(serie.name);
+
+    dataPoints.set(serie.name, [...allDataPoints, point]);
+
+    const topLabelPoint = [
+      serieElX + barWidth / 2,
+      chartYEnd! - value - padding / 2,
+    ];
+
+    const allTopLabelsPoints = topLabelsPoints.get(serie.name);
+
+    topLabelsPoints.set(serie.name, [...allTopLabelsPoints, topLabelPoint]);
+
+    return generateVerticalBarPath(
+      serieElX,
+      serieY ?? 0,
+      barWidth,
+      chartYEnd!,
+      radius,
+      topLeftRadius,
+      topRightRadius,
+      bottomRightRadius,
+      bottomLeftRadius,
+    );
+  });
+
+  return { paths, dataPoints, topLabelsPoints };
+};
+
+// Funzione che genera i dataPaths per le barre raggruppate stacked
+export const generateStackedGroupDataPaths = (
+  serie: Serie,
+  ctx: ChartState & {
+    padding: number;
+    barWidth?: number;
+    radius?: number;
+    topLeftRadius?: number;
+    topRightRadius?: number;
+    bottomRightRadius?: number;
+    bottomLeftRadius?: number;
+  },
+) => {
+  if (!ctx.elements) return null;
+  const dataPoints = new Map();
+  dataPoints.set(serie.name, []);
+
+  const topLabelsPoints = new Map();
+  topLabelsPoints.set(serie.name, []);
+
+  const timeSerieData = serie.data as TimeSerieEl[];
+
+  // Prendo le altre serie che vanno impilate con quella corrente
+  const stackedSeries = ctx.elements.filter(
+    (el) => el.stackedName === serie.stackedName,
+  );
+
+  // Listo tutte le serie non stacked
+  const nonStackedSeries = ctx.elements.filter(
+    (el) => el.type === "group-bar" && !el.stackedName,
+  );
+
+  // Listo tutte le serie stacked
+  const allStackedSeries = ctx.elements.filter(
+    (el) => el.type === "group-bar" && el.stackedName,
+  );
+
+  // Prendo tutti gli stackedName delle serie
+  const allStackedNames = allStackedSeries.map((el) => el.stackedName);
+
+  // Filtro tutti i nomi per avere una sola occorrenza
+  const uniqueStackedNames = Array.from(new Set(allStackedNames));
+
+  const stackedSeriesMaxArray = uniqueStackedNames.map((name) => {
+    const involvedSeries = allStackedSeries.filter(
+      (serie) => serie.stackedName === name,
+    );
+
+    const maxValue = calculateStackedSeriesMax(involvedSeries);
+    return maxValue;
+  });
+
+  const nonStackedSeriesMaxArray = nonStackedSeries.map((serie) =>
+    getTimeSerieMaxValue(serie.data as TimeSerieEl[]),
+  );
+
+  // Numero di barre del gruppo
+  const groupBarNumber = nonStackedSeries.length + uniqueStackedNames.length;
+
+  const stackedMaxValue = Math.max(
+    ...stackedSeriesMaxArray,
+    ...nonStackedSeriesMaxArray,
+  );
+
+  const serieStackedIndex = stackedSeries.findIndex(
+    (el) => el.name === serie.name,
+  );
+
+  const serieGroupIndex = ctx.elements
+    .reduce((acc, el) => {
+      if (
+        el.stackedName &&
+        uniqueStackedNames.includes(el.stackedName) &&
+        !Object.keys(acc).includes(el.stackedName)
+      ) {
+        acc.push(el.stackedName);
+      } else {
+        acc.push(el.name);
+      }
+      return acc;
+    }, [] as string[])
+    .findIndex((el) => el === serie.stackedName || el === serie.name);
+
+  if (serieGroupIndex < 0) return null;
+
+  const {
+    chartXStart,
+    chartXEnd,
+    chartYEnd,
+    padding,
+    barWidth: ctxBarWidth,
+    radius,
+    topLeftRadius,
+    topRightRadius,
+    bottomRightRadius,
+    bottomLeftRadius,
+  } = ctx;
+
+  const xAxisGroupInterval =
+    (chartXEnd! - chartXStart!) / timeSerieData?.length || 1;
+
+  const xAxisInterval =
+    groupBarNumber > 0 ? xAxisGroupInterval / groupBarNumber : 0;
+
+  const flatMaxValue = calculateFlatValue(stackedMaxValue);
+
+  const paths = timeSerieData?.map((serieEl, serieElIndex) => {
+    const value = getValuePosition(
+      flatMaxValue,
+      serieEl.value,
+      chartYEnd! - padding,
+    );
+
+    const prevValue = getStackedBarStartValue(
+      stackedSeries,
+      serieStackedIndex,
+      serieElIndex,
+    );
+    const prevPosition =
+      prevValue > 0
+        ? getValuePosition(flatMaxValue, prevValue, chartYEnd! - padding)
+        : 0;
+
+    const serieY = chartYEnd! - value - prevPosition;
+
+    const barWidth = ctxBarWidth ?? padding;
+
+    const serieElX =
+      serieElIndex * xAxisGroupInterval +
+      (xAxisInterval - padding / 2.5) * serieGroupIndex +
+      (chartXStart! + padding / 4);
+
+    const point =
+      value < 14
+        ? [-1, -1]
+        : [serieElX + barWidth / 2, serieY + value / 2 + padding / 4];
+
+    const allDataPoints = dataPoints.get(serie.name);
+
+    dataPoints.set(serie.name, [...allDataPoints, point]);
+
+    const topLabelsPoint = [
+      serieElX + barWidth / 2,
+      serieY + value + padding / 4,
+    ];
+
+    const allTopLabelsDataPoints = topLabelsPoints.get(serie.name);
+
+    topLabelsPoints.set(serie.name, [
+      ...allTopLabelsDataPoints,
+      topLabelsPoint,
+    ]);
+
+    return generateVerticalBarPath(
+      serieElX,
+      serieY,
+      barWidth,
+      chartYEnd! - prevPosition,
+      radius,
+      topLeftRadius,
+      topRightRadius,
+      bottomRightRadius,
+      bottomLeftRadius,
+    );
+  });
+
+  return { paths, dataPoints, topLabelsPoints };
 };
