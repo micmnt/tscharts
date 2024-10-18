@@ -984,8 +984,9 @@ export const generateStackedGroupDataPaths = (
 
     const serieElX =
       serieElIndex * xAxisGroupInterval +
-      (xAxisInterval - padding / 2.5) * serieGroupIndex +
-      (chartXStart! + padding / 4);
+      (xAxisInterval - barWidth + padding / 2 / groupBarNumber) *
+        serieGroupIndex +
+      (chartXStart! + padding / 2);
 
     const point =
       value < 14
