@@ -56,8 +56,10 @@ export const trimZerosLinePath = (paths: string[]) => {
         // creo un path con il comando di move con le stesse coordinate del comando di line e lo inserisco nella stessa posizione del placeholder
         const movePath = paths[pathIndex]?.replace("L", "M");
         validPaths.push(movePath);
+      } else {
+        validPaths.push(paths[pathIndex]);
       }
-      validPaths.push(paths[pathIndex]);
+      inEmptySequence = false;
     }
   }
 
