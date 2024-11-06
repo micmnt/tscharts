@@ -450,12 +450,15 @@ export const generatePiePaths = (
 
     const valueAngle =
       (Number(serieEl.value) * 360) / Number(pieTotalValue) + startAngle;
+
+    const normalizedValueAngle = valueAngle >= 360 ? 359.9 : valueAngle;
+
     const path = generatePieSlice(
       centerX,
       centerY,
       radius,
       startAngle,
-      valueAngle,
+      normalizedValueAngle,
     );
 
     const sliceValue = valueAngle - startAngle;
