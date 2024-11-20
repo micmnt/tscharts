@@ -37,7 +37,7 @@ export const getFirstValorizedElementIndex = (
   );
 };
 
-export const trimZerosLinePath = (paths: string[]) => {
+export const trimZerosAndNullLinePath = (paths: string[]) => {
   const validPaths = [];
   // variabile che indica se sono in una sequenza di elementi vuoti
   let inEmptySequence = false;

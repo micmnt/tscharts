@@ -4,7 +4,7 @@ import {
   getFirstValorizedElementIndex,
   isDefined,
   normalizeBarRadius,
-  trimZerosLinePath,
+  trimZerosAndNullLinePath,
 } from "./utils";
 
 // Funzione che prende in ingresso il valore massimo di una serie, il valore di un elemento della serie e la dimensione effettiva del grafico e ritorna la posizione sul grafico del valore
@@ -665,7 +665,6 @@ export const generateDataPaths = (
     chartYEnd,
     padding,
     barWidth: ctxBarWidth,
-    trimZeros,
     radius,
     topLeftRadius,
     topRightRadius,
@@ -752,7 +751,7 @@ export const generateDataPaths = (
     }
   });
 
-  const normalizedPaths = trimZeros ? trimZerosLinePath(paths) : paths;
+  const normalizedPaths = trimZerosAndNullLinePath(paths);
 
   return { paths: normalizedPaths, dataPoints, topLabelsPoints };
 };
