@@ -197,8 +197,8 @@ export const calculateTooltipPosition = (
 
   const tooltipX =
     svgPoint.x < (chartXEnd - chartXStart) / 2
-      ? svgPoint.x + 10
-      : svgPoint.x - tooltipElement.clientWidth;
+      ? svgPoint.x + 50
+      : svgPoint.x - tooltipElement.clientWidth - 50;
 
   const tooltipY =
     svgPoint.y < (chartYEnd - 10) / 2

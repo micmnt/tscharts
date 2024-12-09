@@ -7,6 +7,7 @@ import {
   useRef,
   RefObject,
   ReactNode,
+  JSX,
 } from "react";
 
 /* Core Imports */
@@ -27,13 +28,13 @@ import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
 
 type SVGProps = {
   children: ReactNode;
-  containerRef: RefObject<HTMLDivElement>;
+  containerRef: RefObject<HTMLDivElement | null>;
   chartID: string | null;
   leftAxisCount?: number;
   rightAxisCount?: number;
 };
 
-// Funzione che prende tutte le props di config degli elementi grafici e le setta net context globale
+// Funzione che prende tutte le props di config degli elementi grafici e le setta nel context globale
 const computeConfigs = (children: JSX.Element[]) => {
   const elementsWithConfig = children.filter(
     (childEl) => childEl.props?.config,

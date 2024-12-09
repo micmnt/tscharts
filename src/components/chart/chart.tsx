@@ -2,7 +2,7 @@
 import { Serie, TimeSerieEl } from "../../types";
 
 /* React Imports */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { JSX, useEffect, useMemo, useRef, useState } from "react";
 
 /* Core Imports */
 import { getAxisCount, getTimeSerieMaxValue } from "../../lib/core";

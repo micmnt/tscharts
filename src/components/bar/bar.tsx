@@ -14,6 +14,7 @@ export type BarProps = {
   showLabels?: boolean;
   topLabelSerie?: string;
   config?: {
+    barClickAction?: (value: unknown) => void;
     radius?: number;
     topLeftRadius?: number;
     topRightRadius?: number;

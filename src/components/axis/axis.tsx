@@ -6,6 +6,9 @@ import { TimeSerieEl } from "../../types";
 /* Core Imports */
 import { generateXAxis, generateYAxis } from "../../lib/core";
 
+/* Utils Imports */
+import { isFunction } from "../../lib/utils";
+
 /* Context Imports */
 import {
   useCharts,
@@ -141,6 +144,15 @@ const Axis = (props: AxisProps) => {
             ) : null}
             {tooltipElement ? (
               <rect
+                onClick={() => {
+                  if (
+                    globalConfig?.barClickAction &&
+                    isFunction(globalConfig.barClickAction)
+                  ) {
+                    const serieEl = serieData[labelIndex];
+                    globalConfig.barClickAction(serieEl);
+                  }
+                }}
                 onMouseEnter={() => {
                   if (dispatch && labelIndex !== hoveredElement?.elementIndex) {
                     dispatch({
@@ -158,7 +170,12 @@ const Axis = (props: AxisProps) => {
                 y={0}
                 width={hoverRectWidth > 0 ? hoverRectWidth : 1}
                 height={chartYEnd}
-                fill="transparent"
+                fill={
+                  hoveredElement?.elementIndex === labelIndex &&
+                  globalConfig?.barClickAction
+                    ? "rgb(148,163,184,0.1)"
+                    : "transparent"
+                }
               />
             ) : null}
           </>

@@ -1,6 +1,12 @@
 export const isDefined = (value: number | undefined | null) =>
   value !== null && value !== undefined;
 
+export const isFunction = (
+  value: unknown,
+): value is (value: string) => void => {
+  return typeof value === "function";
+};
+
 export const calculateFlatValue = (value: number) => {
   if (value === 0) return 0;
   const orderOfMagnitude = Math.floor(Math.log10(Math.abs(value)));
