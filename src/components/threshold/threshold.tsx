@@ -1,5 +1,5 @@
 /* Types Imports */
-import { ChartState, ThemeState, TimeSerieEl } from "../../types";
+import type { ChartState, ThemeState, TimeSerieEl } from "../../types";
 
 /* Core Imports */
 import {
@@ -18,6 +18,8 @@ type ThresholdProps = {
   dashed?: boolean;
   type?: "vertical" | "horizontal";
   showLabel?: boolean;
+  dx?: number;
+  dy?: number;
 };
 const Threshold = (props: ThresholdProps) => {
   const theme = useChartsTheme() as ThemeState;
@@ -29,6 +31,8 @@ const Threshold = (props: ThresholdProps) => {
     name,
     showLabel = false,
     axisName = "",
+    dx = 0,
+    dy = 0,
   } = props;
 
   const { chartXStart, chartXEnd, chartYEnd, timeSeriesMaxValue, elements } =
@@ -66,9 +70,9 @@ const Threshold = (props: ThresholdProps) => {
   const svgValue = chartYEnd! - position;
 
   const textY =
-    svgValue - padding / 2 < padding
-      ? svgValue + padding
-      : svgValue - padding / 2;
+    svgValue < chartYEnd! / 2 - padding
+      ? svgValue - padding / 2
+      : svgValue + padding / 2;
 
   const path =
     type === "vertical"
@@ -86,6 +90,8 @@ const Threshold = (props: ThresholdProps) => {
       />
       {showLabel && (
         <text
+          dx={dx}
+          dy={dy}
           textAnchor="end"
           x={chartXEnd! - padding}
           y={textY}
