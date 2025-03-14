@@ -1,12 +1,12 @@
 /* Types Imports */
-import { ThemeState, TimeSerieEl } from "../../types";
+import type { ThemeState, TimeSerieEl } from "../../types";
 
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
+import { nanoid } from "nanoid";
 /* Core Imports */
 import { generateDataPaths, generateStackedDataPaths } from "../../lib/core";
-import { nanoid } from "nanoid";
 
 export type BarProps = {
   name: string;
@@ -14,6 +14,8 @@ export type BarProps = {
   showLabels?: boolean;
   topLabelSerie?: string;
   config?: {
+    selectedColor?: string;
+    selectedValue?: string;
     barClickAction?: (value: unknown) => void;
     radius?: number;
     topLeftRadius?: number;

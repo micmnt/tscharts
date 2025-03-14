@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 
 /* Type Imports */
-import { TimeSerieEl } from "../../types";
+import type { TimeSerieEl } from "../../types";
 
 /* Core Imports */
 import { generateXAxis, generateYAxis } from "../../lib/core";
@@ -9,13 +9,13 @@ import { generateXAxis, generateYAxis } from "../../lib/core";
 /* Utils Imports */
 import { isFunction } from "../../lib/utils";
 
+import { nanoid } from "nanoid";
 /* Context Imports */
 import {
   useCharts,
   useChartsDispatch,
   useChartsTheme,
 } from "../../contexts/chartContext";
-import { nanoid } from "nanoid";
 
 export type AxisProps = {
   type: "xAxis" | "yAxis";
@@ -79,6 +79,9 @@ const Axis = (props: AxisProps) => {
     const xAxisInterval =
       (chartXEnd! - chartXStart!) / (serieData?.length || 1);
 
+    const selectionColor = globalConfig?.selectedColor as string;
+    const selectionValue = globalConfig?.selectedValue as string;
+
     const labels = dataPoints.map((label, labelIndex) => {
       const xSpacing = globalConfig?.barWidth
         ? (Number(globalConfig?.barWidth) + padding) / 2
@@ -95,44 +98,24 @@ const Axis = (props: AxisProps) => {
       const hoverRectX = label.x - (xAxisInterval - padding) / 2;
       const hoverRectWidth = xAxisInterval - padding;
 
+      const selectionFill =
+        label.value === selectionValue ? `${selectionColor}26` : undefined;
+
+      const height =
+        label.value === selectionValue ? (chartYEnd ?? 0) + 35 : chartYEnd;
+
+      const labelFontWeight = label.value === selectionValue ? 700 : 400;
+
+      const fill: string =
+        hoveredElement?.elementIndex === labelIndex &&
+        globalConfig?.barClickAction
+          ? "rgb(148,163,184,0.1)"
+          : selectionFill
+            ? selectionFill
+            : "transparent";
+
       return (
         <Fragment key={`${label.value}-${nanoid()}`}>
-          {dataPoints.length > 20 ? (
-            <>
-              <defs>
-                <path
-                  id={`xAxisLabel-${labelIndex}`}
-                  d={`M ${label.x - 40} ${label.y + 20} L ${label.x} ${label.y}`}
-                />
-              </defs>
-              {/* <use href={`#xAxisLabel-${labelIndex}`} fill="none" /> */}
-              <text
-                dx={titleDx}
-                dy={titleDy}
-                fontSize={theme?.axis?.labelSize}
-                fill={theme?.axis?.labelColor}
-              >
-                <textPath
-                  textAnchor="start"
-                  x={label.x}
-                  y={label.y}
-                  href={`#xAxisLabel-${labelIndex}`}
-                >
-                  {label.value}
-                </textPath>
-              </text>
-            </>
-          ) : (
-            <text
-              textAnchor="middle"
-              x={label.x}
-              y={label.y}
-              fontSize={labelFontSize}
-              fill={theme?.axis?.labelColor}
-            >
-              {label.value}
-            </text>
-          )}
           <>
             {showGrid ? (
               <path
@@ -169,16 +152,49 @@ const Axis = (props: AxisProps) => {
                 x={hoverRectX > 0 ? hoverRectX : 0}
                 y={0}
                 width={hoverRectWidth > 0 ? hoverRectWidth : 1}
-                height={chartYEnd}
-                fill={
-                  hoveredElement?.elementIndex === labelIndex &&
-                  globalConfig?.barClickAction
-                    ? "rgb(148,163,184,0.1)"
-                    : "transparent"
-                }
+                height={height}
+                fill={fill}
               />
             ) : null}
           </>
+          {dataPoints.length > 20 ? (
+            <>
+              <defs>
+                <path
+                  id={`xAxisLabel-${labelIndex}`}
+                  d={`M ${label.x - 40} ${label.y + 20} L ${label.x} ${label.y}`}
+                />
+              </defs>
+              {/* <use href={`#xAxisLabel-${labelIndex}`} fill="none" /> */}
+              <text
+                dx={titleDx}
+                dy={titleDy}
+                fontSize={theme?.axis?.labelSize}
+                fontWeight={labelFontWeight}
+                fill={theme?.axis?.labelColor}
+              >
+                <textPath
+                  textAnchor="start"
+                  x={label.x}
+                  y={label.y}
+                  href={`#xAxisLabel-${labelIndex}`}
+                >
+                  {label.value}
+                </textPath>
+              </text>
+            </>
+          ) : (
+            <text
+              textAnchor="middle"
+              x={label.x}
+              y={label.y}
+              fontSize={labelFontSize}
+              fontWeight={labelFontWeight}
+              fill={theme?.axis?.labelColor}
+            >
+              {label.value}
+            </text>
+          )}
         </Fragment>
       );
     });
