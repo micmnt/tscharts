@@ -10,8 +10,7 @@
     "/dist"
   ],
   "scripts": {
-    "format": "prettier --write --parser typescript '**/*.{ts,tsx}'",
-    "lint": "eslint . --ext .ts,.tsx --ignore-path .gitignore --fix",
+    "lint": "npx biome check --write",
     "build": "tsc && vite build",
     "storybook": "storybook dev -p 6006",
     "build:publish": "npm run lint && npm run build",
@@ -20,7 +19,6 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "npm run format",
       "npm run lint"
     ]
   },
@@ -28,6 +26,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@chromatic-com/storybook": "^3.2.2",
     "@storybook/addon-essentials": "^8.4.7",
     "@storybook/addon-interactions": "^8.4.7",
@@ -38,17 +37,8 @@
     "@storybook/react-vite": "^8.4.4",
     "@storybook/test": "^8.4.4",
     "@types/react": "^19.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.17.0",
-    "@typescript-eslint/parser": "^8.17.0",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "eslint-plugin-react": "^7.37.2",
-    "eslint-plugin-react-hooks": "^4.6.2",
-    "eslint-plugin-storybook": "^0.11.1",
     "husky": "^9.1.7",
     "lint-staged": "^15.2.10",
-    "prettier": "^3.4.2",
     "storybook": "^8.4.7",
     "typescript": "^5.8.2",
     "vite": "^6.0.3",
