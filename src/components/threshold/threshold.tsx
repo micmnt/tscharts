@@ -3,9 +3,9 @@ import type { ChartState, ThemeState, TimeSerieEl } from "../../types";
 
 /* Core Imports */
 import {
-  getSerieAssociatedThresholds,
-  getTimeSerieMaxValue,
-  getValuePosition,
+	getSerieAssociatedThresholds,
+	getTimeSerieMaxValue,
+	getValuePosition,
 } from "../../lib/core";
 
 /* Context Imports */
@@ -13,99 +13,108 @@ import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 import { calculateFlatValue, isDefined } from "../../lib/utils";
 
 type ThresholdProps = {
-  name: string;
-  axisName?: string;
-  dashed?: boolean;
-  type?: "vertical" | "horizontal";
-  showLabel?: boolean;
-  dx?: number;
-  dy?: number;
+	name: string;
+	axisName?: string;
+	dashed?: boolean;
+	type?: "vertical" | "horizontal";
+	showLabel?: boolean;
+	dx?: number;
+	dy?: number;
 };
 const Threshold = (props: ThresholdProps) => {
-  const theme = useChartsTheme() as ThemeState;
-  const ctx = useCharts() as ChartState;
+	const theme = useChartsTheme() as ThemeState;
+	const ctx = useCharts() as ChartState;
 
-  const {
-    dashed = false,
-    type = "horizontal",
-    name,
-    showLabel = false,
-    axisName = "",
-    dx = 0,
-    dy = 0,
-  } = props;
+	const {
+		dashed = false,
+		type = "horizontal",
+		name,
+		showLabel = false,
+		axisName = "",
+		dx = 0,
+		dy = 0,
+	} = props;
 
-  const { chartXStart, chartXEnd, chartYEnd, timeSeriesMaxValue, elements } =
-    ctx;
+	const {
+		chartXStart: _chartXStart,
+		chartXEnd: _chartXEnd,
+		chartYEnd: _chartYEnd,
+		timeSeriesMaxValue,
+		elements,
+	} = ctx;
 
-  const thresholdElement = elements?.find((el) => el.name === name);
+	const thresholdElement = elements?.find((el) => el.name === name);
 
-  if (!thresholdElement) return null;
+	if (!thresholdElement) return null;
 
-  const thresholdValue = thresholdElement.data as number;
+	const thresholdValue = thresholdElement.data as number;
 
-  if (!isDefined(thresholdValue)) return null;
+	if (!isDefined(thresholdValue)) return null;
 
-  const { padding } = theme;
+	const { padding } = theme;
 
-  let serieMax = timeSeriesMaxValue;
+	let serieMax = timeSeriesMaxValue as number;
 
-  const referenceAxisSerie = elements?.find((el) => el.name === axisName);
+	const referenceAxisSerie = elements?.find((el) => el.name === axisName);
 
-  if (referenceAxisSerie && elements) {
-    const otherThresholds = getSerieAssociatedThresholds(elements, axisName);
-    serieMax = getTimeSerieMaxValue([
-      ...(referenceAxisSerie?.data as TimeSerieEl[]),
-      ...otherThresholds,
-    ]);
-  }
+	if (referenceAxisSerie && elements) {
+		const otherThresholds = getSerieAssociatedThresholds(elements, axisName);
+		serieMax = getTimeSerieMaxValue([
+			...(referenceAxisSerie?.data as TimeSerieEl[]),
+			...otherThresholds,
+		]);
+	}
 
-  const flatMax = calculateFlatValue(serieMax!);
-  const position = getValuePosition(
-    flatMax,
-    thresholdValue,
-    chartYEnd! - padding,
-  );
+	const chartYEnd = _chartYEnd as number;
+	const chartXStart = _chartXStart as number;
+	const chartXEnd = _chartXEnd as number;
 
-  const svgValue = chartYEnd! - position;
+	const flatMax = calculateFlatValue(serieMax);
+	const position = getValuePosition(
+		flatMax,
+		thresholdValue,
+		chartYEnd - padding,
+	);
 
-  const textY =
-    svgValue < chartYEnd! / 2 - padding
-      ? svgValue - padding / 2
-      : svgValue + padding / 2;
+	const svgValue = chartYEnd - position;
 
-  const path =
-    type === "vertical"
-      ? `M ${svgValue} ${chartYEnd} V ${0}`
-      : `M ${chartXStart! + padding / 2} ${svgValue} H ${chartXEnd}`;
+	const textY =
+		svgValue < chartYEnd / 2 - padding
+			? svgValue - padding / 2
+			: svgValue + padding / 2;
 
-  return (
-    <>
-      <path
-        d={path}
-        strokeDasharray={dashed ? theme.threshold?.dash : 0}
-        strokeLinecap="round"
-        strokeWidth={theme.threshold?.size}
-        stroke={thresholdElement.color ?? theme.seriesColors?.[1]}
-      />
-      {showLabel && (
-        <text
-          dx={dx}
-          dy={dy}
-          textAnchor="end"
-          x={chartXEnd! - padding}
-          y={textY}
-          fontSize={theme.threshold?.textSize}
-          fontWeight={600}
-          fill={thresholdElement.color}
-        >
-          {thresholdElement.format
-            ? thresholdElement.format(thresholdValue)
-            : thresholdValue}
-        </text>
-      )}
-    </>
-  );
+	const path =
+		type === "vertical"
+			? `M ${svgValue} ${chartYEnd} V ${0}`
+			: `M ${chartXStart + padding / 2} ${svgValue} H ${chartXEnd}`;
+
+	return (
+		<>
+			<path
+				d={path}
+				strokeDasharray={dashed ? theme.threshold?.dash : 0}
+				strokeLinecap="round"
+				strokeWidth={theme.threshold?.size}
+				stroke={thresholdElement.color ?? theme.seriesColors?.[1]}
+			/>
+			{showLabel && (
+				<text
+					dx={dx}
+					dy={dy}
+					textAnchor="end"
+					x={chartXEnd - padding}
+					y={textY}
+					fontSize={theme.threshold?.textSize}
+					fontWeight={600}
+					fill={thresholdElement.color}
+				>
+					{thresholdElement.format
+						? thresholdElement.format(thresholdValue)
+						: thresholdValue}
+				</text>
+			)}
+		</>
+	);
 };
 
 export default Threshold;

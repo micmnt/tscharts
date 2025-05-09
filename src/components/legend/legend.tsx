@@ -1,136 +1,145 @@
 /* Types Imports */
-import { ChartState, PieSerieEl, Serie, ThemeState } from "../../types";
+import type { ChartState, PieSerieEl, Serie, ThemeState } from "../../types";
 
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
 /* Styles Imports */
 import "../../styles.css";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export type LegendProps = {
-  showDots?: boolean;
-  height?: number;
-  customLabel?: (el: PieSerieEl | Serie) => ReactNode;
-  legendType: "horizontal" | "vertical";
+	showDots?: boolean;
+	height?: number;
+	customLabel?: (el: PieSerieEl | Serie) => ReactNode;
+	legendType: "horizontal" | "vertical";
 };
 
 export const DEFAULT_LEGEND_HEIGHT = 60;
 
 // Funzione che genera la legenda per un grafico di tipo XY
 const generateXYChartLenged = (
-  timeSeriesElements: Serie[],
-  theme: ThemeState | null,
-  showDots: boolean,
-  customLabel: ((el: PieSerieEl | Serie) => ReactNode) | null,
+	timeSeriesElements: Serie[],
+	theme: ThemeState | null,
+	showDots: boolean,
+	customLabel: ((el: PieSerieEl | Serie) => ReactNode) | null,
 ) => {
-  return timeSeriesElements?.map((element, elementIndex) => (
-    <div className="legendItemContainer" key={`${element.name}-legend`}>
-      {showDots && (
-        <div
-          className="legendItemCircle"
-          style={{
-            backgroundColor:
-              element.color ?? theme?.seriesColors?.[elementIndex],
-          }}
-        />
-      )}
-      {customLabel ? (
-        customLabel(element)
-      ) : (
-        <span className="legendItemText">{element.name}</span>
-      )}
-    </div>
-  ));
+	return timeSeriesElements?.map((element, elementIndex) => (
+		<div className="legendItemContainer" key={`${element.name}-legend`}>
+			{showDots && (
+				<div
+					className="legendItemCircle"
+					style={{
+						backgroundColor:
+							element.color ?? theme?.seriesColors?.[elementIndex],
+					}}
+				/>
+			)}
+			{customLabel ? (
+				customLabel(element)
+			) : (
+				<span className="legendItemText">{element.name}</span>
+			)}
+		</div>
+	));
 };
 
 // Funzione che genera la legenda per un grafico a torta
 const generatePieChartLegend = (
-  pieSerieElements: PieSerieEl[],
-  theme: ThemeState | null,
-  showDots: boolean,
-  customLabel: ((el: PieSerieEl | Serie) => ReactNode) | null,
+	pieSerieElements: PieSerieEl[],
+	theme: ThemeState | null,
+	showDots: boolean,
+	customLabel: ((el: PieSerieEl | Serie) => ReactNode) | null,
 ) => {
-  return pieSerieElements?.map((element, elementIndex) => (
-    <div className="legendItemContainer" key={`${element.name}-legend`}>
-      {showDots && (
-        <div
-          className="legendItemCircle"
-          style={{
-            backgroundColor:
-              element.color ?? theme?.seriesColors?.[elementIndex],
-          }}
-        />
-      )}
-      {customLabel ? (
-        customLabel(element)
-      ) : (
-        <span className="legendItemText">{element.name}</span>
-      )}
-    </div>
-  ));
+	return pieSerieElements?.map((element, elementIndex) => (
+		<div className="legendItemContainer" key={`${element.name}-legend`}>
+			{showDots && (
+				<div
+					className="legendItemCircle"
+					style={{
+						backgroundColor:
+							element.color ?? theme?.seriesColors?.[elementIndex],
+					}}
+				/>
+			)}
+			{customLabel ? (
+				customLabel(element)
+			) : (
+				<span className="legendItemText">{element.name}</span>
+			)}
+		</div>
+	));
 };
 
 const Legend = (props: LegendProps) => {
-  const {
-    showDots = true,
-    customLabel = null,
-    legendType,
-    height = DEFAULT_LEGEND_HEIGHT,
-  } = props;
+	const {
+		showDots = true,
+		customLabel = null,
+		legendType,
+		height = DEFAULT_LEGEND_HEIGHT,
+	} = props;
 
-  const ctx = useCharts();
+	const ctx = useCharts();
 
-  const theme = useChartsTheme();
+	const theme = useChartsTheme();
 
-  if (
-    !theme ||
-    !legendType ||
-    (legendType !== "horizontal" && legendType !== "vertical")
-  )
-    return null;
+	if (
+		!theme ||
+		!legendType ||
+		(legendType !== "horizontal" && legendType !== "vertical")
+	)
+		return null;
 
-  const { padding } = theme;
+	const { padding } = theme;
 
-  const { elements, chartXStart, chartXEnd, chartYEnd } = ctx as ChartState;
+	const {
+		elements,
+		chartXStart: _chartXStart,
+		chartXEnd: _chartXEnd,
+		chartYEnd: _chartYEnd,
+	} = ctx as ChartState;
 
-  const legendY = 2 * padding + chartYEnd!;
-  const legendWidth = chartXEnd! - chartXStart!;
+	const chartXStart = _chartXStart as number;
+	const chartXEnd = _chartXEnd as number;
+	const chartYEnd = _chartYEnd as number;
 
-  if (!elements) return null;
+	const legendY = 2 * padding + chartYEnd;
+	const legendWidth = chartXEnd - chartXStart;
 
-  const timeSerieElements = elements.filter((el) => el.type !== "pie");
+	if (!elements) return null;
 
-  const pieSerieElements = elements.filter((el) => el.type === "pie")?.[0]
-    ?.data;
+	const timeSerieElements = elements.filter((el) => el.type !== "pie");
 
-  const legendContainerSyle =
-    legendType === "vertical" ? "legendVerticalContainer" : "legendContainer";
+	const pieSerieElements = elements.filter((el) => el.type === "pie")?.[0]
+		?.data;
 
-  return (
-    <foreignObject
-      x={chartXStart}
-      y={legendY}
-      width={legendWidth > 0 ? legendWidth : 20}
-      height={height}
-    >
-      <div className={legendContainerSyle}>
-        {timeSerieElements.length > 0
-          ? generateXYChartLenged(
-              timeSerieElements,
-              theme,
-              showDots,
-              customLabel,
-            )
-          : generatePieChartLegend(
-              pieSerieElements as PieSerieEl[],
-              theme,
-              showDots,
-              customLabel,
-            )}
-      </div>
-    </foreignObject>
-  );
+	const legendContainerSyle =
+		legendType === "vertical" ? "legendVerticalContainer" : "legendContainer";
+
+	return (
+		<foreignObject
+			x={chartXStart}
+			y={legendY}
+			width={legendWidth > 0 ? legendWidth : 20}
+			height={height}
+		>
+			<div className={legendContainerSyle}>
+				{timeSerieElements.length > 0
+					? generateXYChartLenged(
+							timeSerieElements,
+							theme,
+							showDots,
+							customLabel,
+						)
+					: generatePieChartLegend(
+							pieSerieElements as PieSerieEl[],
+							theme,
+							showDots,
+							customLabel,
+						)}
+			</div>
+		</foreignObject>
+	);
 };
 
 export default Legend;

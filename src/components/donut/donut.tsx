@@ -87,7 +87,7 @@ const Donut = (props: DonutProps) => {
 	if (centerPoint && isDefined(centerElement?.value)) {
 		const centerTextValue = (
 			<text
-        key={`centerTextValue-${nanoid()}`}
+				key={`centerTextValue-${nanoid()}`}
 				textAnchor="middle"
 				fontSize={centerElement?.valueSize ?? 30}
 				fontWeight="bold"
@@ -97,7 +97,7 @@ const Donut = (props: DonutProps) => {
 			>
 				{centerElement?.value}
 				<tspan
-          dx={centerElement?.uomDx ?? 0}
+					dx={centerElement?.uomDx ?? 0}
 					fontSize={centerElement?.uomSize ?? 30}
 					fill={centerElement?.uomColor ?? "white"}
 				>
@@ -107,7 +107,7 @@ const Donut = (props: DonutProps) => {
 		);
 		const centerTextLabel = (
 			<text
-        key={`centerTextLabel-${nanoid()}`}
+				key={`centerTextLabel-${nanoid()}`}
 				dy={centerElement?.labelDy ?? 0}
 				textAnchor="middle"
 				fontSize={centerElement?.labelSize ?? 20}

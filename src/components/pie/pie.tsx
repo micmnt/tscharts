@@ -11,7 +11,6 @@ export type PieProps = {
 };
 
 const Pie = (props: PieProps) => {
-
 	const { name } = props;
 
 	const ctx = useCharts();

@@ -402,15 +402,27 @@ export const generateYAxis = (
 
 	if (serieIndex < 0) return null;
 
-	const { height, chartXStart, chartXEnd, chartYEnd, padding, yInterval } = ctx;
+	const {
+		height: _height,
+		chartXStart: _chartXStart,
+		chartXEnd: _chartXEnd,
+		chartYEnd: _chartYEnd,
+		padding,
+		yInterval,
+	} = ctx;
 
-	const yAxisInterval = (chartYEnd! - padding) / yInterval;
+	const chartXStart = _chartXStart as number;
+	const chartXEnd = _chartXEnd as number;
+	const chartYEnd = _chartYEnd as number;
+	const height = _height as number;
+
+	const yAxisInterval = (chartYEnd - padding) / yInterval;
 
 	const isOppositeAxis = serieIndex % 2 !== 0;
 
 	/* Creazione degli assi */
-	const axisX = isOppositeAxis ? chartXEnd! : chartXStart! + padding / 2;
-	const axisPath = generateVerticalLine(axisX, chartYEnd!, 0);
+	const axisX = isOppositeAxis ? chartXEnd : chartXStart + padding / 2;
+	const axisPath = generateVerticalLine(axisX, chartYEnd, 0);
 
 	// creazione delle label degli assi e del nome verticale degli assi
 	const axisLabelsX = isOppositeAxis
@@ -424,7 +436,7 @@ export const generateYAxis = (
 	const nameLabelAxisPath = generateVerticalLine(
 		nameLabelX,
 		0,
-		height! - 3 * padding,
+		height - 3 * padding,
 	);
 
 	const lastValue = serie.format
@@ -441,13 +453,13 @@ export const generateYAxis = (
 			return {
 				value: serieValue,
 				x: axisLabelsX,
-				y: chartYEnd! - yAxisInterval * index,
+				y: chartYEnd - yAxisInterval * index,
 			};
 		})
 		.concat({
 			value: lastValue,
 			x: axisLabelsX,
-			y: chartYEnd! - yAxisInterval * yInterval,
+			y: chartYEnd - yAxisInterval * yInterval,
 		});
 
 	return {
@@ -562,15 +574,19 @@ export const generatePiePaths = (
 	const dataPoints = new Map();
 
 	const pieTotalValue = serieData.reduce(
+		// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
 		(acc, dataEl) => (acc += dataEl.value),
 		0,
 	);
 
-	const { width, height, padding } = ctx;
+	const { width: _width, height: _height, padding } = ctx;
 
-	const centerX = width! / 2;
-	const centerY = height! / 2 - 1.5 * padding;
-	const radius = (height! - 3 * padding) / 2;
+	const width = _width as number;
+	const height = _height as number;
+
+	const centerX = width / 2;
+	const centerY = height / 2 - 1.5 * padding;
+	const radius = (height - 3 * padding) / 2;
 
 	const startAngles = serieData.map(
 		(serieEl) => (Number(serieEl.value) * 360) / Number(pieTotalValue),
@@ -579,7 +595,10 @@ export const generatePiePaths = (
 	const paths = serieData.map((serieEl, serieElIndex) => {
 		const startAngle =
 			serieElIndex > 0
-				? startAngles.slice(0, serieElIndex).reduce((acc, el) => (acc += el), 0)
+				? startAngles
+						.slice(0, serieElIndex)
+						// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+						.reduce((acc, el) => (acc += el), 0)
 				: 0;
 
 		const valueAngle =
@@ -666,9 +685,9 @@ export const generateStackedDataPaths = (
 	if (serieIndex < 0) return null;
 
 	const {
-		chartXStart,
-		chartXEnd,
-		chartYEnd,
+		chartXStart: _chartXStart,
+		chartXEnd: _chartXEnd,
+		chartYEnd: _chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
 		radius,
@@ -678,8 +697,12 @@ export const generateStackedDataPaths = (
 		bottomLeftRadius,
 	} = ctx;
 
+	const chartXEnd = _chartXEnd as number;
+	const chartXStart = _chartXStart as number;
+	const chartYEnd = _chartYEnd as number;
+
 	const xAxisInterval =
-		(chartXEnd! - chartXStart!) / (timeSerieData?.length || 1);
+		(chartXEnd - chartXStart) / (timeSerieData?.length || 1);
 
 	const flatMaxValue = calculateFlatValue(stackedMaxValue);
 
@@ -687,7 +710,7 @@ export const generateStackedDataPaths = (
 		const value = getValuePosition(
 			flatMaxValue,
 			serieEl.value,
-			chartYEnd! - padding,
+			chartYEnd - padding,
 		);
 
 		const prevValue = getStackedBarStartValue(
@@ -697,14 +720,13 @@ export const generateStackedDataPaths = (
 		);
 		const prevPosition =
 			prevValue > 0
-				? getValuePosition(flatMaxValue, prevValue, chartYEnd! - padding)
+				? getValuePosition(flatMaxValue, prevValue, chartYEnd - padding)
 				: 0;
 
-		const serieY = chartYEnd! - value - prevPosition;
+		const serieY = chartYEnd - value - prevPosition;
 
 		const barWidth = ctxBarWidth ?? padding;
-		const serieElX =
-			xAxisInterval * serieElIndex + (chartXStart! + padding / 2);
+		const serieElX = xAxisInterval * serieElIndex + (chartXStart + padding / 2);
 
 		const point =
 			value < 14
@@ -731,7 +753,7 @@ export const generateStackedDataPaths = (
 			serieElX,
 			serieY,
 			barWidth,
-			chartYEnd! - prevPosition,
+			chartYEnd - prevPosition,
 			radius,
 			topLeftRadius,
 			topRightRadius,
@@ -794,9 +816,9 @@ export const generateDataPaths = (
 	if (serieIndex < 0) return null;
 
 	const {
-		chartXStart,
-		chartXEnd,
-		chartYEnd,
+		chartXStart: _chartXStart,
+		chartXEnd: _chartXEnd,
+		chartYEnd: _chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
 		radius,
@@ -807,8 +829,11 @@ export const generateDataPaths = (
 		globalConfig,
 	} = ctx;
 
-	const xAxisInterval =
-		(chartXEnd! - chartXStart!) / timeSerieData?.length || 1;
+	const chartXStart = _chartXStart as number;
+	const chartXEnd = _chartXEnd as number;
+	const chartYEnd = _chartYEnd as number;
+
+	const xAxisInterval = (chartXEnd - chartXStart) / timeSerieData?.length || 1;
 
 	const flatMaxValue = calculateFlatValue(serieMaxValue);
 
@@ -816,20 +841,20 @@ export const generateDataPaths = (
 		const value = getValuePosition(
 			flatMaxValue,
 			serieEl.value ?? 0,
-			chartYEnd! - padding,
+			chartYEnd - padding,
 		);
 
-		const serieY = isDefined(serieEl.value) ? chartYEnd! - value : null;
+		const serieY = isDefined(serieEl.value) ? chartYEnd - value : null;
 
 		if (type === "bar") {
 			const barWidth = ctxBarWidth ?? padding;
 			const serieElX =
-				xAxisInterval * serieElIndex + (chartXStart! + padding / 2);
+				xAxisInterval * serieElIndex + (chartXStart + padding / 2);
 
 			const point =
 				value < 16
 					? [-1, -1]
-					: [serieElX + barWidth / 2, chartYEnd! - value / 2 + padding / 4];
+					: [serieElX + barWidth / 2, chartYEnd - value / 2 + padding / 4];
 
 			const allDataPoints = dataPoints.get(serie.name);
 
@@ -837,7 +862,7 @@ export const generateDataPaths = (
 
 			const topLabelPoint = [
 				serieElX + barWidth / 2,
-				chartYEnd! - value - padding / 2,
+				chartYEnd - value - padding / 2,
 			];
 
 			const allTopLabelsPoints = topLabelsPoints.get(serie.name);
@@ -848,41 +873,41 @@ export const generateDataPaths = (
 				serieElX,
 				serieY ?? 0,
 				barWidth,
-				chartYEnd!,
+				chartYEnd,
 				radius,
 				topLeftRadius,
 				topRightRadius,
 				bottomRightRadius,
 				bottomLeftRadius,
 			);
-		} else {
-			const xSpacing = globalConfig?.barWidth
-				? Number(globalConfig?.barWidth) / 2
-				: padding;
-
-			const serieElX =
-				xAxisInterval * serieElIndex + xSpacing + (chartXStart! + padding / 2);
-
-			const formattedX =
-				isDefined(serieElX) && !isNaN(serieElX) ? serieElX : null;
-			const formattedY = isDefined(serieY) && !isNaN(serieY) ? serieY : null;
-
-			const point =
-				isDefined(formattedX) && isDefined(formattedY)
-					? [serieElX, formattedY]
-					: [0, -10];
-
-			const allDataPoints = dataPoints.get(serie.name);
-
-			dataPoints.set(serie.name, [...allDataPoints, point]);
-
-			if (!isDefined(formattedY)) {
-				return "";
-			}
-			return serieElIndex === getFirstValorizedElementIndex(timeSerieData)
-				? `M ${serieElX} ${formattedY}`
-				: generateLine(serieElX, formattedY);
 		}
+		const xSpacing = globalConfig?.barWidth
+			? Number(globalConfig?.barWidth) / 2
+			: padding;
+
+		const serieElX =
+			xAxisInterval * serieElIndex + xSpacing + (chartXStart + padding / 2);
+
+		const formattedX =
+			isDefined(serieElX) && !Number.isNaN(serieElX) ? serieElX : null;
+		const formattedY =
+			isDefined(serieY) && !Number.isNaN(serieY) ? serieY : null;
+
+		const point =
+			isDefined(formattedX) && isDefined(formattedY)
+				? [serieElX, formattedY]
+				: [0, -10];
+
+		const allDataPoints = dataPoints.get(serie.name);
+
+		dataPoints.set(serie.name, [...allDataPoints, point]);
+
+		if (!isDefined(formattedY)) {
+			return "";
+		}
+		return serieElIndex === getFirstValorizedElementIndex(timeSerieData)
+			? `M ${serieElX} ${formattedY}`
+			: generateLine(serieElX, formattedY);
 	});
 
 	const normalizedPaths = trimZerosAndNullLinePath(paths);
@@ -923,9 +948,9 @@ export const generateGroupDataPaths = (
 	if (serieIndex < 0) return null;
 
 	const {
-		chartXStart,
-		chartXEnd,
-		chartYEnd,
+		chartXStart: _chartXStart,
+		chartXEnd: _chartXEnd,
+		chartYEnd: _chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
 		radius,
@@ -935,8 +960,12 @@ export const generateGroupDataPaths = (
 		bottomLeftRadius,
 	} = ctx;
 
+	const chartXStart = _chartXStart as number;
+	const chartXEnd = _chartXEnd as number;
+	const chartYEnd = _chartYEnd as number;
+
 	const xAxisGroupInterval =
-		(chartXEnd! - chartXStart!) / timeSerieData?.length || 1;
+		(chartXEnd - chartXStart) / timeSerieData?.length || 1;
 
 	const xAxisInterval = xAxisGroupInterval / barSeries?.length;
 
@@ -946,21 +975,21 @@ export const generateGroupDataPaths = (
 		const value = getValuePosition(
 			flatMaxValue,
 			serieEl.value ?? 0,
-			chartYEnd! - padding,
+			chartYEnd - padding,
 		);
 
-		const serieY = isDefined(serieEl.value) ? chartYEnd! - value : null;
+		const serieY = isDefined(serieEl.value) ? chartYEnd - value : null;
 
 		const barWidth = ctxBarWidth ?? padding;
 		const serieElX =
 			serieElIndex * xAxisGroupInterval +
 			(xAxisInterval - padding / 6) * serieIndex +
-			(chartXStart! + padding / 4);
+			(chartXStart + padding / 4);
 
 		const point =
 			value < 16
 				? [-1, -1]
-				: [serieElX + barWidth / 2, chartYEnd! - value / 2 + padding / 4];
+				: [serieElX + barWidth / 2, chartYEnd - value / 2 + padding / 4];
 
 		const allDataPoints = dataPoints.get(serie.name);
 
@@ -968,7 +997,7 @@ export const generateGroupDataPaths = (
 
 		const topLabelPoint = [
 			serieElX + barWidth / 2,
-			chartYEnd! - value - padding / 2,
+			chartYEnd - value - padding / 2,
 		];
 
 		const allTopLabelsPoints = topLabelsPoints.get(serie.name);
@@ -979,7 +1008,7 @@ export const generateGroupDataPaths = (
 			serieElX,
 			serieY ?? 0,
 			barWidth,
-			chartYEnd!,
+			chartYEnd,
 			radius,
 			topLeftRadius,
 			topRightRadius,
@@ -1077,9 +1106,9 @@ export const generateStackedGroupDataPaths = (
 	if (serieGroupIndex < 0) return null;
 
 	const {
-		chartXStart,
-		chartXEnd,
-		chartYEnd,
+		chartXStart: _chartXStart,
+		chartXEnd: _chartXEnd,
+		chartYEnd: _chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
 		radius,
@@ -1089,8 +1118,12 @@ export const generateStackedGroupDataPaths = (
 		bottomLeftRadius,
 	} = ctx;
 
+	const chartXStart = _chartXStart as number;
+	const chartXEnd = _chartXEnd as number;
+	const chartYEnd = _chartYEnd as number;
+
 	const xAxisGroupInterval =
-		(chartXEnd! - chartXStart!) / timeSerieData?.length || 1;
+		(chartXEnd - chartXStart) / timeSerieData?.length || 1;
 
 	const xAxisInterval =
 		groupBarNumber > 0 ? xAxisGroupInterval / groupBarNumber : 0;
@@ -1101,7 +1134,7 @@ export const generateStackedGroupDataPaths = (
 		const value = getValuePosition(
 			flatMaxValue,
 			serieEl.value,
-			chartYEnd! - padding,
+			chartYEnd - padding,
 		);
 
 		const prevValue = getStackedBarStartValue(
@@ -1111,10 +1144,10 @@ export const generateStackedGroupDataPaths = (
 		);
 		const prevPosition =
 			prevValue > 0
-				? getValuePosition(flatMaxValue, prevValue, chartYEnd! - padding)
+				? getValuePosition(flatMaxValue, prevValue, chartYEnd - padding)
 				: 0;
 
-		const serieY = chartYEnd! - value - prevPosition;
+		const serieY = chartYEnd - value - prevPosition;
 
 		const barWidth = ctxBarWidth ?? padding;
 
@@ -1122,7 +1155,7 @@ export const generateStackedGroupDataPaths = (
 			serieElIndex * xAxisGroupInterval +
 			(xAxisInterval - barWidth + padding / 2 / groupBarNumber) *
 				serieGroupIndex +
-			(chartXStart! + padding / 2);
+			(chartXStart + padding / 2);
 
 		const point =
 			value < 14
@@ -1149,7 +1182,7 @@ export const generateStackedGroupDataPaths = (
 			serieElX,
 			serieY,
 			barWidth,
-			chartYEnd! - prevPosition,
+			chartYEnd - prevPosition,
 			radius,
 			topLeftRadius,
 			topRightRadius,
