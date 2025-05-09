@@ -1,4 +1,4 @@
-export const isDefined = (value: number | undefined | null) =>
+export const isDefined = (value: number | string | undefined | null) =>
   value !== null && value !== undefined;
 
 export const isFunction = (

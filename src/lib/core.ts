@@ -107,6 +107,7 @@ export const generatePieSlice = (
 		centerX,
 		centerY,
 		radius,
+		undefined,
 		startAngle,
 		endAngle,
 	);
@@ -114,11 +115,33 @@ export const generatePieSlice = (
 	return `${startRadius} ${arc} ${endRadius}`;
 };
 
+// Funzione che genera il valore d di un path svg per uno spicchio di grafico a ciambella
+export const generateDonutSlice = (
+	centerX: number,
+	centerY: number,
+	radius: number,
+	innerRadius: number,
+	startAngle: number,
+	endAngle: number,
+) => {
+	const arc = generateArcBarPath(
+		centerX,
+		centerY,
+		radius,
+		innerRadius,
+		startAngle,
+		endAngle,
+	);
+
+	return arc;
+};
+
 // Funzione che genera il valore d di un path svg per una barra ad arco
 export const generateArcBarPath = (
 	centerX: number,
 	centerY: number,
 	radius: number,
+	innerRadius: number | undefined,
 	startAngle: number,
 	endAngle: number,
 ) => {
@@ -126,6 +149,26 @@ export const generateArcBarPath = (
 	const endPoint = polarToCartesian(centerX, centerY, radius, endAngle);
 
 	const isLargeArc = endAngle - startAngle <= 180 ? 0 : 1;
+
+	if (innerRadius) {
+		const startInnerPoint = polarToCartesian(
+			centerX,
+			centerY,
+			innerRadius,
+			startAngle,
+		);
+		const endInnerPoint = polarToCartesian(
+			centerX,
+			centerY,
+			innerRadius,
+			endAngle,
+		);
+		return `M ${startPoint.x} ${startPoint.y}
+			A ${radius} ${radius} 0 ${isLargeArc} 1 ${endPoint.x} ${endPoint.y}
+			L ${endInnerPoint.x} ${endInnerPoint.y}
+			A ${innerRadius} ${innerRadius} 0 ${isLargeArc} 0 ${startInnerPoint.x} ${startInnerPoint.y}
+			Z`;
+	}
 
 	return `M ${startPoint.x} ${startPoint.y} A ${radius} ${radius} 0 ${isLargeArc} 1 ${endPoint.x} ${endPoint.y}`;
 };
@@ -415,6 +458,97 @@ export const generateYAxis = (
 		path: axisPath,
 		nameLabelPath: nameLabelAxisPath,
 	};
+};
+
+// Funzioen che genera i path per una serie di un grafico a ciambella
+export const generateDonutPaths = (
+	serie: Serie,
+	ctx: ChartState & {
+		padding: number;
+		innerRadius?: number;
+		centerElement?: {
+			value?: string;
+			valueColor?: string;
+			valueSize?: number;
+			uom?: string;
+			uomColor?: string;
+			uomSize?: number;
+			uomDx?: number;
+			label?: string;
+			labelColor?: string;
+			labelSize?: number;
+			labelDy?: number;
+		};
+	},
+) => {
+	const MIN_SLICE_VALUE = 31;
+	const serieData = serie.data as PieSerieEl[];
+
+	const dataPoints = new Map();
+
+	const donutTotalValue = serieData.reduce(
+		(acc, dataEl) => acc + dataEl.value,
+		0,
+	);
+
+	const { width, height, padding, centerElement } = ctx;
+
+	const { value: centerValue } = centerElement ?? {};
+
+	const centerX = (width as number) / 2;
+	const centerY = (height as number) / 2 - padding;
+	const radius = ((height as number) - 2 * padding) / 2;
+	const innerRadius = radius - (ctx.innerRadius ?? radius / 2);
+
+	const startAngles = serieData.map(
+		(serieEl) => (Number(serieEl.value) * 360) / Number(donutTotalValue),
+	);
+
+	const paths = serieData.map((serieEl, serieElIndex) => {
+		const startAngle =
+			serieElIndex > 0
+				? startAngles.slice(0, serieElIndex).reduce((acc, el) => acc + el, 0)
+				: 0;
+
+		const valueAngle =
+			(Number(serieEl.value) * 360) / Number(donutTotalValue) + startAngle;
+
+		const normalizedValueAngle = valueAngle >= 360 ? 359.9 : valueAngle;
+
+		const path = generateDonutSlice(
+			centerX,
+			centerY,
+			radius,
+			innerRadius,
+			startAngle,
+			normalizedValueAngle,
+		);
+
+		const sliceValue = valueAngle - startAngle;
+		const bisectorAngle = sliceValue / 2 + startAngle;
+		const labelRadius = radius / 2;
+		const bisectorPoint = polarToCartesian(
+			centerX,
+			centerY,
+			labelRadius,
+			bisectorAngle,
+		);
+
+		const labelPoint = { x: bisectorPoint.x, y: bisectorPoint.y };
+
+		if (sliceValue >= MIN_SLICE_VALUE) {
+			dataPoints.set(serieEl.name, labelPoint);
+		}
+
+		return path;
+	});
+
+	if (isDefined(centerValue)) {
+		const centerPoint = { x: centerX, y: centerY };
+		return { paths, dataPoints, centerPoint };
+	}
+
+	return { paths, dataPoints };
 };
 
 // Funzione che genera i path per una serie di un grafico a torta

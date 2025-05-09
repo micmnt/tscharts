@@ -126,7 +126,7 @@ const Bar = (props: BarProps) => {
                 fill={topLabelColor}
                 key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
                 x={point[0]}
-                y={isNaN(point[1]) ? 0 : point[1]}
+                y={Number.isNaN(point[1]) ? 0 : point[1]}
               >
                 {topLabelSerieElement?.format
                   ? topLabelSerieElement.format(
@@ -151,7 +151,7 @@ const Bar = (props: BarProps) => {
                 fill={labelColor}
                 key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
                 x={point[0]}
-                y={isNaN(point[1]) ? 0 : point[1]}
+                y={Number.isNaN(point[1]) ? 0 : point[1]}
               >
                 {serieElement.format
                   ? serieElement.format(

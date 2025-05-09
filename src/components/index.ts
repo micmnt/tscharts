@@ -5,6 +5,7 @@ export * from "./chart";
 export * from "./legend";
 export * from "./line";
 export * from "./pie";
+export * from "./donut";
 export * from "./svg";
 export * from "./threshold";
 export * from "./tooltip";

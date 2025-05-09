@@ -4,67 +4,68 @@ import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
 /* Core Imports */
 import { generatePiePaths } from "../../lib/core";
-import { PieSerieEl } from "../../types";
+import type { PieSerieEl } from "../../types";
 
 export type PieProps = {
-  name: string;
+	name: string;
 };
 
 const Pie = (props: PieProps) => {
-  const { name } = props;
 
-  const ctx = useCharts();
+	const { name } = props;
 
-  const theme = useChartsTheme();
+	const ctx = useCharts();
 
-  if (!ctx || !theme) return null;
+	const theme = useChartsTheme();
 
-  const { elements } = ctx;
+	if (!ctx || !theme) return null;
 
-  const { padding } = theme;
+	const { elements } = ctx;
 
-  if (!elements) return null;
+	const { padding } = theme;
 
-  const serieElement = elements.find((el) => el.name === name);
+	if (!elements) return null;
 
-  if (!serieElement) return null;
+	const serieElement = elements.find((el) => el.name === name);
 
-  const { paths, dataPoints } = generatePiePaths(serieElement, {
-    ...ctx,
-    padding,
-  });
+	if (!serieElement) return null;
 
-  const serieLabels = serieElement.labels ?? [];
+	const { paths, dataPoints } = generatePiePaths(serieElement, {
+		...ctx,
+		padding,
+	});
 
-  const serieData = serieElement.data as PieSerieEl[];
+	const serieLabels = serieElement.labels ?? [];
 
-  const slicesColors = serieData.map(
-    (el, elIndex) => el.color ?? theme.seriesColors?.[elIndex],
-  );
+	const serieData = serieElement.data as PieSerieEl[];
 
-  const slices = paths.map((path, pathIndex) => (
-    <path
-      d={path}
-      fill={slicesColors[pathIndex]}
-      key={`${path}-${nanoid()}`}
-      shapeRendering="geometricPrecision"
-    />
-  ));
-  const labels = serieLabels.map((label) => (
-    <text
-      textAnchor="middle"
-      fontSize={14}
-      fontWeight="bold"
-      fill={"white"}
-      key={`${label.name}-${nanoid()}`}
-      x={dataPoints.get(label.name)?.x}
-      y={dataPoints.get(label.name)?.y}
-    >
-      {label.value}
-    </text>
-  ));
+	const slicesColors = serieData.map(
+		(el, elIndex) => el.color ?? theme.seriesColors?.[elIndex],
+	);
 
-  return [...slices, ...labels];
+	const slices = paths.map((path, pathIndex) => (
+		<path
+			d={path}
+			fill={slicesColors[pathIndex]}
+			key={`${path}-${nanoid()}`}
+			shapeRendering="geometricPrecision"
+		/>
+	));
+	const labels = serieLabels.map((label) => (
+		<text
+			textAnchor="middle"
+			fontSize={14}
+			fontWeight="bold"
+			fill={"white"}
+			key={`${label.name}-${nanoid()}`}
+			x={dataPoints.get(label.name)?.x}
+			y={dataPoints.get(label.name)?.y}
+		>
+			{label.value}
+		</text>
+	));
+
+	return [...slices, ...labels];
 };
 
 export default Pie;
