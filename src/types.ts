@@ -33,6 +33,7 @@ export type ChartState = {
 	chartXStart?: number;
 	chartXEnd?: number;
 	chartYEnd?: number;
+	negative?: boolean;
 	timeSeriesMaxValue?: number;
 	chartID?: string | null;
 	globalConfig?: {

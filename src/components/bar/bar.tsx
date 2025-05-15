@@ -6,7 +6,11 @@ import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
 import { nanoid } from "nanoid";
 /* Core Imports */
-import { generateDataPaths, generateStackedDataPaths } from "../../lib/core";
+import {
+	generateDataPaths,
+	generateNegativeDataPaths,
+	generateStackedDataPaths,
+} from "../../lib/core";
 
 export type BarProps = {
 	name: string;
@@ -70,31 +74,33 @@ const Bar = (props: BarProps) => {
 
 	if (!serieElement) return null;
 
-	const { paths, dataPoints, topLabelsPoints } = stacked
-		? (generateStackedDataPaths(serieElement, {
-				...ctx,
-				padding,
-				barWidth,
-				radius,
-				topLeftRadius,
-				topRightRadius,
-				bottomRightRadius,
-				bottomLeftRadius,
-			}) ?? {})
-		: (generateDataPaths(
-				serieElement,
-				{
-					...ctx,
-					padding,
-					barWidth,
-					radius,
-					topLeftRadius,
-					topRightRadius,
-					bottomRightRadius,
-					bottomLeftRadius,
-				},
-				"bar",
-			) ?? {});
+	// Oggetto di configurazione per il calcolo dei paths svg
+	const pathsConfig = {
+		...ctx,
+		padding,
+		barWidth,
+		radius,
+		topLeftRadius,
+		topRightRadius,
+		bottomRightRadius,
+		bottomLeftRadius,
+	};
+
+	let result: {
+		paths: string[];
+		dataPoints: Map<any, any>;
+		topLabelsPoints: Map<any, any>;
+	} | null = null;
+
+	if (stacked) {
+		result = generateStackedDataPaths(serieElement, pathsConfig);
+	} else if (ctx.negative) {
+		result = generateNegativeDataPaths(serieElement, pathsConfig, "bar");
+	} else {
+		result = generateDataPaths(serieElement, pathsConfig, "bar");
+	}
+
+	const { paths, dataPoints, topLabelsPoints } = result ?? {};
 
 	const serieIndex = elements?.findIndex((el) => el.name === serieElement.name);
 

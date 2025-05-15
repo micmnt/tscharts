@@ -185,7 +185,9 @@ export const formatLabels = (
 export const getTimeSerieMaxValue = (serie: TimeSerieEl[] = []) => {
 	if (serie?.length > 0) {
 		return Math.max(
-			...serie.filter((el) => el !== null).map((serieEl) => serieEl.value),
+			...serie
+				.filter((el) => el !== null)
+				.map((serieEl) => Math.abs(serieEl.value)),
 		);
 	}
 
@@ -285,11 +287,14 @@ export const getChartDimensions = (
 };
 
 // Funzione che genera l'asse x
-export const generateXAxis = (ctx: ChartState) => {
-	const { chartXStart, chartXEnd, chartYEnd } = ctx;
+export const generateXAxis = (ctx: ChartState & {padding: number}) => {
+	const { chartXStart, chartXEnd, chartYEnd: _chartYEnd, negative, padding } = ctx;
+	const chartYEnd = _chartYEnd as number
+
+	const normalizedChartYEnd = negative ? (chartYEnd + 2 * padding) / 2 : chartYEnd
 
 	return {
-		path: `M ${chartXStart} ${chartYEnd} H ${chartXEnd}`,
+		path: `M ${chartXStart} ${normalizedChartYEnd} H ${chartXEnd}`,
 	};
 };
 
@@ -765,14 +770,14 @@ export const generateStackedDataPaths = (
 	return { paths, dataPoints, topLabelsPoints };
 };
 
-// funzione che genera i dataPaths in base al tipo di serie da graficare
-export const generateDataPaths = (
+// Funzione che genera i dataPaths per grafici che ammettono valori negativi in base al tipo di serie da graficare
+export const generateNegativeDataPaths = (
 	serie: Serie,
 	ctx: ChartState & {
 		padding: number;
 		barWidth?: number;
 		radius?: number;
-		trimZeros?: boolean;
+		trimZeros?: number;
 		topLeftRadius?: number;
 		topRightRadius?: number;
 		bottomRightRadius?: number;
@@ -782,12 +787,15 @@ export const generateDataPaths = (
 ) => {
 	if (!ctx.elements) return null;
 
+	// Preparo la struttura per i dataPoints da mostrare dentro le barre
 	const dataPoints = new Map();
 	dataPoints.set(serie.name, []);
 
+	// Preparo la struttura per i topLabelPoints da mostrare sopra le barre
 	const topLabelsPoints = new Map();
 	topLabelsPoints.set(serie.name, []);
 
+	// Converto gli zeri in null per ottenere delle spezzate in caso di ctx.trimZeros === true
 	const timeSerieData = ctx.trimZeros
 		? (serie.data as TimeSerieEl[]).map((el) => ({
 				...el,
@@ -795,17 +803,22 @@ export const generateDataPaths = (
 			}))
 		: (serie.data as TimeSerieEl[]);
 
+	// raggruppo le serie per asse Y
 	const axisSeries = getSeriesByAxisName(
 		ctx.elements,
 		serie.axisName ?? serie.name,
 	);
 
+	// Ottengo un unico array di punti da graficare
 	const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
 
+	// Prendo le soglie associate ad una serie
 	const seriesThresholds = getSerieAssociatedThresholds(
 		ctx.elements,
 		serie.name,
 	);
+
+	// Calcolo il valore massimo tra serie e soglie associate ad essa
 	const serieMaxValue = getTimeSerieMaxValue([
 		...(flatAxisSeriesData ?? []),
 		...(seriesThresholds ?? []),
@@ -833,8 +846,175 @@ export const generateDataPaths = (
 	const chartXEnd = _chartXEnd as number;
 	const chartYEnd = _chartYEnd as number;
 
+	// Calcolo l'intervallo tra un punto/barra e l'altro sull'asse X
 	const xAxisInterval = (chartXEnd - chartXStart) / timeSerieData?.length || 1;
 
+	// Calcolo il valore massimo della serie arrotondato al primo numero dell'ordine di grandezza utile. Ex. (20, 200, 2000)
+	const flatMaxValue = calculateFlatValue(serieMaxValue);
+
+	// Calcolo lo 0 per il grafico a con valori negativi
+	const zeroY = (chartYEnd + 2 * padding) / 2;
+
+	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
+		const absValue = Math.abs(serieEl.value ?? 0);
+		const isNegative = (serieEl.value ?? 0) < 0;
+		const value = getValuePosition(flatMaxValue, absValue, chartYEnd - 2.5 * padding);
+
+		const serieY = isDefined(serieEl.value)
+			? isNegative
+				? zeroY + value
+				: zeroY - value
+			: null;
+
+		if (type === "bar") {
+			const barWidth = ctxBarWidth ?? padding;
+			const serieElX =
+				xAxisInterval * serieElIndex + (chartXStart + padding / 2);
+
+			const point =
+				value < 16
+					? [-1, -1]
+					: [serieElX + barWidth / 2, chartYEnd - value / 2 + padding / 4];
+
+			const allDataPoints = dataPoints.get(serie.name);
+
+			dataPoints.set(serie.name, [...allDataPoints, point]);
+
+			const topLabelPoint = [
+				serieElX + barWidth / 2,
+				chartYEnd - value - padding / 2,
+			];
+
+			const allTopLabelsPoints = topLabelsPoints.get(serie.name);
+
+			topLabelsPoints.set(serie.name, [...allTopLabelsPoints, topLabelPoint]);
+
+			return generateVerticalBarPath(
+				serieElX,
+				serieY ?? 0,
+				barWidth,
+				zeroY,
+				radius,
+				topLeftRadius,
+				topRightRadius,
+				bottomRightRadius,
+				bottomLeftRadius,
+			);
+		}
+		const xSpacing = globalConfig?.barWidth
+			? Number(globalConfig?.barWidth) / 2
+			: padding;
+
+		const serieElX =
+			xAxisInterval * serieElIndex + xSpacing + (chartXStart + padding / 2);
+
+		const formattedX =
+			isDefined(serieElX) && !Number.isNaN(serieElX) ? serieElX : null;
+		const formattedY =
+			isDefined(serieY) && !Number.isNaN(serieY) ? serieY : null;
+
+		const point =
+			isDefined(formattedX) && isDefined(formattedY)
+				? [serieElX, formattedY]
+				: [0, -10];
+
+		const allDataPoints = dataPoints.get(serie.name);
+
+		dataPoints.set(serie.name, [...allDataPoints, point]);
+
+		if (!isDefined(formattedY)) {
+			return "";
+		}
+		return serieElIndex === getFirstValorizedElementIndex(timeSerieData)
+			? `M ${serieElX} ${formattedY}`
+			: generateLine(serieElX, formattedY);
+	});
+
+	const normalizedPaths = trimZerosAndNullLinePath(paths);
+
+	return { paths: normalizedPaths, dataPoints, topLabelsPoints };
+};
+
+// funzione che genera i dataPaths in base al tipo di serie da graficare
+export const generateDataPaths = (
+	serie: Serie,
+	ctx: ChartState & {
+		padding: number;
+		barWidth?: number;
+		radius?: number;
+		trimZeros?: boolean;
+		topLeftRadius?: number;
+		topRightRadius?: number;
+		bottomRightRadius?: number;
+		bottomLeftRadius?: number;
+	},
+	type: "line" | "bar",
+) => {
+	if (!ctx.elements) return null;
+
+	// Preparo la struttura per i dataPoints da mostrare dentro le barre
+	const dataPoints = new Map();
+	dataPoints.set(serie.name, []);
+
+	// Preparo la struttura per i topLabelPoints da mostrare sopra le barre
+	const topLabelsPoints = new Map();
+	topLabelsPoints.set(serie.name, []);
+
+	// Converto gli zeri in null per ottenere delle spezzate in caso di ctx.trimZeros === true
+	const timeSerieData = ctx.trimZeros
+		? (serie.data as TimeSerieEl[]).map((el) => ({
+				...el,
+				value: el.value === 0 ? null : el.value,
+			}))
+		: (serie.data as TimeSerieEl[]);
+
+	// raggruppo le serie per asse Y
+	const axisSeries = getSeriesByAxisName(
+		ctx.elements,
+		serie.axisName ?? serie.name,
+	);
+
+	// Ottengo un unico array di punti da graficare
+	const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
+
+	// Prendo le soglie associate ad una serie
+	const seriesThresholds = getSerieAssociatedThresholds(
+		ctx.elements,
+		serie.name,
+	);
+
+	// Calcolo il valore massimo tra serie e soglie associate ad essa
+	const serieMaxValue = getTimeSerieMaxValue([
+		...(flatAxisSeriesData ?? []),
+		...(seriesThresholds ?? []),
+	]);
+
+	const serieIndex = ctx.elements.findIndex((el) => el.name === serie.name);
+
+	if (serieIndex < 0) return null;
+
+	const {
+		chartXStart: _chartXStart,
+		chartXEnd: _chartXEnd,
+		chartYEnd: _chartYEnd,
+		padding,
+		barWidth: ctxBarWidth,
+		radius,
+		topLeftRadius,
+		topRightRadius,
+		bottomRightRadius,
+		bottomLeftRadius,
+		globalConfig,
+	} = ctx;
+
+	const chartXStart = _chartXStart as number;
+	const chartXEnd = _chartXEnd as number;
+	const chartYEnd = _chartYEnd as number;
+
+	// Calcolo l'intervallo tra un punto/barra e l'altro sull'asse X
+	const xAxisInterval = (chartXEnd - chartXStart) / timeSerieData?.length || 1;
+
+	// Calcolo il valore massimo della serie arrotondato al primo numero dell'ordine di grandezza utile. Ex. (20, 200, 2000)
 	const flatMaxValue = calculateFlatValue(serieMaxValue);
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {

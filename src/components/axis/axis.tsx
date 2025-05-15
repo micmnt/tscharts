@@ -78,7 +78,7 @@ const Axis = (props: AxisProps) => {
 
 	// Creazione dell'asse X
 	if (type === "xAxis") {
-		const xAxis = generateXAxis(ctx);
+		const xAxis = generateXAxis({...ctx, padding});
 
 		const serie = elements?.[0] || { data: [] };
 
@@ -97,7 +97,7 @@ const Axis = (props: AxisProps) => {
 			return {
 				value: label,
 				x: xAxisInterval * labelIndex + chartXStart + xSpacing,
-				y: chartYEnd + padding,
+				y: ctx.negative ? chartYEnd + 3 * padding : chartYEnd + padding,
 			};
 		});
 

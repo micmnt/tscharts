@@ -48,6 +48,11 @@ const Chart = (props: ChartProps) => {
 		),
 	);
 
+	// Controllo se nelle serie da graficare ci sono elementi con valore negativo
+	const negative = timeSeriesElements
+		.flatMap((timeSerieEl) => timeSerieEl.data as TimeSerieEl[])
+		.some((el) => el.value < 0);
+
 	const { leftAxisCount, rightAxisCount } = getAxisCount(yAxisCount);
 
 	useEffect(() => {
@@ -64,12 +69,13 @@ const Chart = (props: ChartProps) => {
 			hoveredElement: null,
 			width,
 			height,
+			negative,
 			chartXStart: 0,
 			chartXEnd: 0,
 			chartYEnd: 0,
 			timeSeriesMaxValue,
 		}),
-		[elements, height, timeSeriesMaxValue, width],
+		[elements, height, timeSeriesMaxValue, width, negative],
 	);
 
 	if (!chartID) return null;
