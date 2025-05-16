@@ -25,6 +25,7 @@ export type AxisProps = {
 	labelColor?: string;
 	titleSize?: number;
 	showGrid?: boolean;
+	gridColor?: string;
 	showLine?: boolean;
 	titleDx?: number;
 	titleDy?: number;
@@ -37,6 +38,7 @@ const Axis = (props: AxisProps) => {
 		name,
 		dataPoints = [],
 		showGrid = false,
+		gridColor = undefined,
 		labelSize = undefined,
 		labelColor = undefined,
 		titleSize = undefined,
@@ -129,7 +131,7 @@ const Axis = (props: AxisProps) => {
 								d={`M ${label.x} ${chartYEnd + (padding * 1) / 3} V 0`}
 								strokeWidth={theme?.grid?.size}
 								strokeDasharray={theme?.grid?.dashed ? 5 : 0}
-								stroke={theme?.grid?.color}
+								stroke={gridColor ?? theme?.grid?.color}
 							/>
 						) : null}
 						{tooltipElement ? (
