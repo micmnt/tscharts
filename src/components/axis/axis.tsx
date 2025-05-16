@@ -27,6 +27,7 @@ export type AxisProps = {
 	showGrid?: boolean;
 	gridColor?: string;
 	showLine?: boolean;
+	lineColor?: string;
 	titleDx?: number;
 	titleDy?: number;
 	showName?: boolean;
@@ -42,6 +43,7 @@ const Axis = (props: AxisProps) => {
 		labelSize = undefined,
 		labelColor = undefined,
 		titleSize = undefined,
+		lineColor = undefined,
 		showName = false,
 		titleDx = 0,
 		titleDy = 0,
@@ -80,7 +82,7 @@ const Axis = (props: AxisProps) => {
 
 	// Creazione dell'asse X
 	if (type === "xAxis") {
-		const xAxis = generateXAxis({...ctx, padding});
+		const xAxis = generateXAxis({ ...ctx, padding });
 
 		const serie = elements?.[0] || { data: [] };
 
@@ -214,7 +216,7 @@ const Axis = (props: AxisProps) => {
 					<path
 						d={xAxis?.path}
 						strokeWidth={theme?.axis?.size}
-						stroke={theme?.axis?.color}
+						stroke={lineColor ?? theme?.axis?.color}
 					/>
 				) : null}
 				{xPoints}
@@ -281,7 +283,7 @@ const Axis = (props: AxisProps) => {
 							d={`M ${chartXStart + padding / 4} ${label.y} H ${chartXEnd - padding / 4}`}
 							strokeWidth={theme?.grid?.size}
 							strokeDasharray={theme?.grid?.dashed ? 5 : 0}
-							stroke={theme?.grid?.color}
+							stroke={gridColor ?? theme?.grid?.color}
 						/>
 					) : null}
 				</Fragment>
@@ -290,7 +292,7 @@ const Axis = (props: AxisProps) => {
 				<path
 					d={yAxis.path}
 					strokeWidth={theme?.axis?.size}
-					stroke={theme?.axis?.color}
+					stroke={lineColor ?? theme?.axis?.color}
 				/>
 			) : null}
 		</Fragment>

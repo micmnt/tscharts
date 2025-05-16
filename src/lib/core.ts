@@ -287,11 +287,19 @@ export const getChartDimensions = (
 };
 
 // Funzione che genera l'asse x
-export const generateXAxis = (ctx: ChartState & {padding: number}) => {
-	const { chartXStart, chartXEnd, chartYEnd: _chartYEnd, negative, padding } = ctx;
-	const chartYEnd = _chartYEnd as number
+export const generateXAxis = (ctx: ChartState & { padding: number }) => {
+	const {
+		chartXStart,
+		chartXEnd,
+		chartYEnd: _chartYEnd,
+		negative,
+		padding,
+	} = ctx;
+	const chartYEnd = _chartYEnd as number;
 
-	const normalizedChartYEnd = negative ? (chartYEnd + 2 * padding) / 2 : chartYEnd
+	const normalizedChartYEnd = negative
+		? (chartYEnd + 2 * padding) / 2
+		: chartYEnd;
 
 	return {
 		path: `M ${chartXStart} ${normalizedChartYEnd} H ${chartXEnd}`,
@@ -858,7 +866,11 @@ export const generateNegativeDataPaths = (
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
 		const absValue = Math.abs(serieEl.value ?? 0);
 		const isNegative = (serieEl.value ?? 0) < 0;
-		const value = getValuePosition(flatMaxValue, absValue, chartYEnd - 2.5 * padding);
+		const value = getValuePosition(
+			flatMaxValue,
+			absValue,
+			chartYEnd - 2.5 * padding,
+		);
 
 		const serieY = isDefined(serieEl.value)
 			? isNegative
