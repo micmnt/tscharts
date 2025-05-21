@@ -6,9 +6,7 @@
 	"main": "dist/index.cjs.js",
 	"module": "dist/index.es.js",
 	"types": "dist/index.d.ts",
-	"files": [
-		"/dist"
-	],
+	"files": ["/dist"],
 	"scripts": {
 		"lint": "npx biome check --write",
 		"build": "tsc && vite build",
@@ -18,9 +16,7 @@
 		"prepublishOnly": "npm run build:publish"
 	},
 	"lint-staged": {
-		"*.{ts,tsx}": [
-			"npm run lint"
-		]
+		"*.{ts,tsx}": ["npm run lint"]
 	},
 	"keywords": [],
 	"author": "",
