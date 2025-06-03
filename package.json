@@ -1,12 +1,14 @@
 {
 	"name": "tscharts",
-	"version": "0.13.5",
+	"version": "0.13.6",
 	"description": "",
 	"type": "module",
 	"main": "dist/index.cjs.js",
 	"module": "dist/index.es.js",
 	"types": "dist/index.d.ts",
-	"files": ["/dist"],
+	"files": [
+		"/dist"
+	],
 	"scripts": {
 		"lint": "npx biome check --write",
 		"build": "tsc && vite build",
@@ -16,7 +18,9 @@
 		"prepublishOnly": "npm run build:publish"
 	},
 	"lint-staged": {
-		"*.{ts,tsx}": ["npm run lint"]
+		"*.{ts,tsx}": [
+			"npm run lint"
+		]
 	},
 	"keywords": [],
 	"author": "",
@@ -32,9 +36,9 @@
 		"@storybook/react": "^8.4.4",
 		"@storybook/react-vite": "^8.6.14",
 		"@storybook/test": "^8.6.14",
-		"@types/react": "^19.1.4",
+		"@types/react": "^19.1.6",
 		"husky": "^9.1.7",
-		"lint-staged": "^16.0.0",
+		"lint-staged": "^16.1.0",
 		"storybook": "^8.6.14",
 		"typescript": "^5.8.2",
 		"vite": "^6.0.3",

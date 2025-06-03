@@ -31,6 +31,7 @@ export type AxisProps = {
 	titleDx?: number;
 	titleDy?: number;
 	showName?: boolean;
+	tiltLabels?: boolean
 };
 
 const Axis = (props: AxisProps) => {
@@ -48,6 +49,7 @@ const Axis = (props: AxisProps) => {
 		titleDx = 0,
 		titleDy = 0,
 		showLine = false,
+		tiltLabels = true
 	} = props;
 
 	const ctx = useCharts();
@@ -168,7 +170,7 @@ const Axis = (props: AxisProps) => {
 							/>
 						) : null}
 					</>
-					{dataPoints.length > 20 ? (
+					{dataPoints.length > 20 && tiltLabels ? (
 						<>
 							<defs>
 								<path
