@@ -32,6 +32,7 @@ export const generateVerticalBarPath = (
 	topRightRadius?: number,
 	bottomRightRadius?: number,
 	bottomLeftRadius?: number,
+	isNegative?: boolean
 ) => {
 	if (
 		(radius ||
@@ -59,27 +60,30 @@ export const generateVerticalBarPath = (
 			startY - y,
 		);
 
+		const topY = isNegative ? startY : y;
+  	const bottomY = isNegative ? y : startY;
+
 		const topLeftCorner =
 			normalizedRadius || normalizedTopLeftRadius
-				? `Q${x},${y} ${x + (normalizedRadius || normalizedTopLeftRadius || 0)},${y}`
+				? `Q${x},${topY} ${x + (normalizedRadius || normalizedTopLeftRadius || 0)},${topY}`
 				: "";
 		const topRightCorner =
 			normalizedRadius || normalizedTopRightRadius
-				? `Q${x + barWidth},${y} ${x + barWidth},${y + (normalizedRadius || normalizedTopRightRadius || 0)}`
+				? `Q${x + barWidth},${topY} ${x + barWidth},${topY + (normalizedRadius || normalizedTopRightRadius || 0)}`
 				: "";
 		const bottomRightCorner =
 			normalizedRadius || normalizedBottomRightRadius
-				? `Q${x + barWidth},${startY} ${x + barWidth - (normalizedRadius || normalizedBottomRightRadius || 0)},${startY}`
+				? `Q${x + barWidth},${bottomY} ${x + barWidth - (normalizedRadius || normalizedBottomRightRadius || 0)},${bottomY}`
 				: "";
 		const bottomLeftCorner =
 			normalizedRadius || normalizedBottomLeftRadius
-				? `Q${x},${startY} ${x},${startY - (normalizedRadius || normalizedBottomLeftRadius || 0)}`
+				? `Q${x},${bottomY} ${x},${bottomY - (normalizedRadius || normalizedBottomLeftRadius || 0)}`
 				: "";
-
-		const startPosition = `M ${x} ${startY + (normalizedRadius || normalizedTopLeftRadius || 0)}`;
-		const topLeftPoint = `V ${y + (normalizedRadius || normalizedTopLeftRadius || 0)}`;
+		
+		const startPosition = `M ${x} ${bottomY + (normalizedRadius || normalizedTopLeftRadius || 0)}`;
+		const topLeftPoint = `V ${topY + (normalizedRadius || normalizedTopLeftRadius || 0)}`;
 		const topRightPoint = `H ${x + barWidth - (normalizedRadius || normalizedTopRightRadius || 0)}`;
-		const bottomRightPoint = `V ${startY - (normalizedRadius || normalizedBottomRightRadius || 0)}`;
+		const bottomRightPoint = `V ${bottomY - (normalizedRadius || normalizedBottomRightRadius || 0)}`;
 		const bottomLeftPoint = `H ${x + (normalizedRadius || normalizedBottomLeftRadius || 0)}`;
 
 		return `${startPosition} ${topLeftPoint} ${topLeftCorner} ${topRightPoint} ${topRightCorner} ${bottomRightPoint} ${bottomRightCorner} ${bottomLeftPoint} ${bottomLeftCorner}`;
@@ -280,7 +284,7 @@ export const getChartDimensions = (
 	const xPaddingMultiplier = 3;
 	const yPaddingMultiplier = 4;
 	const chartXStart = xPaddingMultiplier * padding * leftAxisCount;
-	const chartXEnd = svgWidth - xPaddingMultiplier * padding * rightAxisCount;
+	const chartXEnd = svgWidth - padding * xPaddingMultiplier * (rightAxisCount || 1/xPaddingMultiplier);
 	const chartYEnd = svgHeight - yPaddingMultiplier * padding - legendHeight;
 
 	return { chartXStart, chartXEnd, chartYEnd };
@@ -293,12 +297,11 @@ export const generateXAxis = (ctx: ChartState & { padding: number }) => {
 		chartXEnd,
 		chartYEnd: _chartYEnd,
 		negative,
-		padding,
 	} = ctx;
 	const chartYEnd = _chartYEnd as number;
 
 	const normalizedChartYEnd = negative
-		? (chartYEnd + 2 * padding) / 2
+		? ctx.chartYMiddle
 		: chartYEnd;
 
 	return {
@@ -370,7 +373,14 @@ export const generateYAxis = (
 	const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
 
 	let serieMaxValue = 0;
-	if (isStacked) {
+	let negativeSerieMaxValue = 0;
+	if (ctx.negative) {
+		const negativeSeries = ctx.elements.filter(el => (el.data as TimeSerieEl[]).some(dataEl => dataEl.value < 0))
+		const positiveSeries = ctx.elements.filter(el => !(el.data as TimeSerieEl[]).some(dataEl => dataEl.value < 0))
+		serieMaxValue = getTimeSerieMaxValue([...positiveSeries.flatMap(el => el.data as TimeSerieEl[])])
+		negativeSerieMaxValue = getTimeSerieMaxValue([...negativeSeries.flatMap(el => el.data as TimeSerieEl[])])
+
+	} else if (isStacked) {
 		serieMaxValue = calculateStackedSeriesMax(
 			ctx.elements.filter((el) => el.type === "bar-stacked"),
 		);
@@ -435,6 +445,7 @@ export const generateYAxis = (
 
 	/* Creazione degli assi */
 	const axisX = isOppositeAxis ? chartXEnd : chartXStart + padding / 2;
+	
 	const axisPath = generateVerticalLine(axisX, chartYEnd, 0);
 
 	// creazione delle label degli assi e del nome verticale degli assi
@@ -451,6 +462,60 @@ export const generateYAxis = (
 		0,
 		height - 3 * padding,
 	);
+
+	if(ctx.negative) {
+		const negativeAndPositiveSerieMaxValue = Math.max(serieMaxValue, negativeSerieMaxValue)
+		
+		const firstValue = serie.format
+		? serie.format(calculateFlatValue(negativeAndPositiveSerieMaxValue) * -1)
+		: calculateFlatValue(negativeAndPositiveSerieMaxValue) * -1;
+
+		const lastValue = serie.format
+		? serie.format(calculateFlatValue(negativeAndPositiveSerieMaxValue))
+		: calculateFlatValue(negativeAndPositiveSerieMaxValue);
+
+		const yAxisLabels = [{
+			value: firstValue,
+			x: axisLabelsX,
+			y: chartYEnd + yAxisInterval,
+		}]
+
+		
+		for(let i = Math.floor(yInterval/2) * -1; i < Math.ceil(yInterval/2); i++) {
+			const flatInterval = calculateFlatValue(negativeAndPositiveSerieMaxValue) / Math.ceil(yInterval/2);
+
+			const axisIntervalIndex = Math.floor(yInterval/2) - i
+
+			const axisValue = flatInterval * i === 0 ? 0 : flatInterval * i * -1;
+
+			const axisY = axisValue === 0 ? ctx.chartYMiddle ?? 0 : chartYEnd - yAxisInterval * axisIntervalIndex
+
+			const serieValue = serie.format ? serie.format(axisValue) : axisValue;
+
+			const element =  {
+				value: serieValue,
+				x: axisLabelsX,
+				y: axisY,
+			};
+
+			yAxisLabels.push(element)
+		}
+
+		yAxisLabels.push({
+			value: lastValue,
+			x: axisLabelsX,
+			y: chartYEnd - yAxisInterval * yInterval,
+		})
+		
+		return {
+		valueLabels: yAxisLabels,
+		isOpposite: isOppositeAxis,
+		uom: serie.uom,
+		name: serie.name,
+		path: axisPath,
+		nameLabelPath: nameLabelAxisPath,
+	};
+	}
 
 	const lastValue = serie.format
 		? serie.format(calculateFlatValue(serieMaxValue))
@@ -861,15 +926,15 @@ export const generateNegativeDataPaths = (
 	const flatMaxValue = calculateFlatValue(serieMaxValue);
 
 	// Calcolo lo 0 per il grafico a con valori negativi
-	const zeroY = (chartYEnd + 2 * padding) / 2;
+	const zeroY = ctx.chartYMiddle ?? 0
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
 		const absValue = Math.abs(serieEl.value ?? 0);
-		const isNegative = (serieEl.value ?? 0) < 0;
+		const isNegative = (serieEl.value ?? 0) < 0 || serieEl.value === 0 && timeSerieData.some(serieEl => (serieEl.value ?? 0) < 0);
 		const value = getValuePosition(
 			flatMaxValue,
 			absValue,
-			chartYEnd - 2.5 * padding,
+			chartYEnd - 5 * padding - (ctx?.globalConfig?.legendHeight as number ?? 0),
 		);
 
 		const serieY = isDefined(serieEl.value)
@@ -894,7 +959,8 @@ export const generateNegativeDataPaths = (
 
 			const topLabelPoint = [
 				serieElX + barWidth / 2,
-				chartYEnd - value - padding / 2,
+				// chartYEnd - value - padding / 2,
+				isNegative ? (serieY ?? 0) + padding / 2 : (serieY ?? 0) - padding / 2,
 			];
 
 			const allTopLabelsPoints = topLabelsPoints.get(serie.name);
@@ -911,6 +977,7 @@ export const generateNegativeDataPaths = (
 				topRightRadius,
 				bottomRightRadius,
 				bottomLeftRadius,
+				isNegative
 			);
 		}
 		const xSpacing = globalConfig?.barWidth

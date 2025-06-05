@@ -19,6 +19,7 @@ export type TooltipProps = {
 	title?: string;
 	reverseOrder?: boolean;
 	showGrid?: boolean;
+	hideSeries?: string[];
 	cumulatedSeriesValue?: {
 		series: string[];
 		label: string;
@@ -59,13 +60,19 @@ const generateTimeSerieContent = (
 	theme: ThemeState | null,
 	hoveredElement: { elementIndex: number; label: string } | null,
 	reverseOrder: boolean,
+	hideSeries?: string[]
 ) => {
 	// Ordino l'array di valori in base all'ordinamento scelto
 	const orderedTimeSeriesElements = reverseOrder
 		? [...timeSeriesElements].reverse()
 		: timeSeriesElements;
 
-	return orderedTimeSeriesElements.map((element, serieIndex) => {
+	// Filtro le serie che non voglio graficare nel tooltip
+	const seriesToShow = (hideSeries ?? []).length > 0
+		? orderedTimeSeriesElements.filter(serie => !hideSeries?.includes(serie.name))
+		: orderedTimeSeriesElements
+
+	return seriesToShow.map((element, serieIndex) => {
 		const elementValue = getElementValueByType(
 			element.data,
 			element.type as string,
@@ -94,8 +101,14 @@ const generateTimeSerieContent = (
 const generatePieSerieContent = (
 	pieSeriesElements: PieSerieEl[],
 	theme: ThemeState | null,
+	hideSeries?: string[]
 ) => {
-	return pieSeriesElements.map((element, serieIndex) => {
+	// Filtro le serie che non voglio graficare nel tooltip
+	const seriesToShow = (hideSeries ?? []).length > 0
+		? pieSeriesElements.filter(serie => !hideSeries?.includes(serie.name))
+		: pieSeriesElements
+
+	return seriesToShow.map((element, serieIndex) => {
 		return (
 			<div className="tooltipSerieContainer" key={`tooltip-${element.name}`}>
 				<div
@@ -144,6 +157,7 @@ const Tooltip = (props: TooltipProps) => {
 	const {
 		title = "",
 		cumulatedSeriesValue,
+		hideSeries = [],
 		reverseOrder = false,
 		showGrid = false,
 		width = 150,
@@ -221,8 +235,9 @@ const Tooltip = (props: TooltipProps) => {
 								theme,
 								hoveredElement,
 								reverseOrder,
+								hideSeries
 							)
-						: generatePieSerieContent(pieSeriesElements as PieSerieEl[], theme)}
+						: generatePieSerieContent(pieSeriesElements as PieSerieEl[], theme, hideSeries)}
 					<div className="tooltipFooter">{showTotal ? tooltipTotal : null}</div>
 				</div>
 			</foreignObject>

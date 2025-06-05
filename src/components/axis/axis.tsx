@@ -103,19 +103,19 @@ const Axis = (props: AxisProps) => {
 			return {
 				value: label,
 				x: xAxisInterval * labelIndex + chartXStart + xSpacing,
-				y: ctx.negative ? chartYEnd + 3 * padding : chartYEnd + padding,
+				y: ctx.negative ? chartYEnd + 3.5 * padding : chartYEnd + padding,
 			};
 		});
 
 		const xPoints = labels.map((label, labelIndex) => {
 			const hoverRectX = label.x - (xAxisInterval - padding) / 2;
-			const hoverRectWidth = xAxisInterval - padding;
+			const hoverRectWidth = ctx.negative ? (ctx?.globalConfig?.barWidth as number) ?? (xAxisInterval - padding) : xAxisInterval - padding;
 
 			const selectionFill =
 				label.value === selectionValue ? `${selectionColor}26` : undefined;
 
 			const height =
-				label.value === selectionValue ? (chartYEnd ?? 0) + 35 : chartYEnd;
+				label.value === selectionValue ? (chartYEnd ?? 0) + 35 : ctx.negative ? chartYEnd + padding * 2 : chartYEnd;
 
 			const labelFontWeight = label.value === selectionValue ? 700 : 400;
 
@@ -274,13 +274,13 @@ const Axis = (props: AxisProps) => {
 					<text
 						textAnchor={yAxis.isOpposite ? "start" : "end"}
 						fontSize={labelFontSize}
-						x={label.x}
+						x={label.x - 8}
 						y={label.y + (labelFontSize ?? 0) / 2}
 						fill={labelTextColor}
 					>
 						{label.value}
 					</text>
-					{showGrid && labelIndex > 0 ? (
+					{showGrid && labelIndex > -1 ? (
 						<path
 							d={`M ${chartXStart + padding / 4} ${label.y} H ${chartXEnd - padding / 4}`}
 							strokeWidth={theme?.grid?.size}

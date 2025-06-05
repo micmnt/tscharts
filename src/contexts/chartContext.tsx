@@ -54,6 +54,7 @@ function chartReducer(
 				chartXStart,
 				chartXEnd,
 				chartYEnd,
+				chartYMiddle,
 				chartID,
 				globalConfig,
 			} = action.payload;
@@ -63,6 +64,7 @@ function chartReducer(
 				width,
 				chartXStart,
 				chartXEnd,
+				chartYMiddle,
 				chartYEnd,
 				chartID,
 				globalConfig,

@@ -30,6 +30,7 @@ type SVGProps = {
 	children: ReactNode;
 	containerRef: RefObject<HTMLDivElement | null>;
 	chartID: string | null;
+	style?: any;
 	leftAxisCount?: number;
 	rightAxisCount?: number;
 };
@@ -75,7 +76,7 @@ const getLegendHeight = (children: JSX.Element[]) => {
 };
 
 const Svg = (props: SVGProps) => {
-	const { children, containerRef, leftAxisCount, rightAxisCount, chartID } =
+	const { children, containerRef, leftAxisCount, rightAxisCount, chartID, style } =
 		props;
 
 	const rootRef = useRef<SVGSVGElement>(null);
@@ -118,6 +119,7 @@ const Svg = (props: SVGProps) => {
 					chartXStart,
 					chartXEnd,
 					chartYEnd,
+					chartYMiddle: (chartYEnd + 3 * padding) / 2,
 					chartID,
 					globalConfig: globalConfig.current,
 				},
@@ -192,6 +194,7 @@ const Svg = (props: SVGProps) => {
 
 	return (
 		<svg
+			style={style}
 			ref={rootRef}
 			viewBox={viewBox}
 			width={width}

@@ -23,11 +23,12 @@ type ChartProps = {
 	elements: Serie[];
 	width: number;
 	height: number;
+	style?: any;
 	children: React.ReactNode;
 };
 
 const Chart = (props: ChartProps) => {
-	const { elements, width, height, children } = props;
+	const { elements, width, height, children, style } = props;
 
 	const chartContainerRef = useRef<HTMLDivElement>(null);
 
@@ -73,6 +74,7 @@ const Chart = (props: ChartProps) => {
 			chartXStart: 0,
 			chartXEnd: 0,
 			chartYEnd: 0,
+			chartYMiddle: 0,
 			timeSeriesMaxValue,
 		}),
 		[elements, height, timeSeriesMaxValue, width, negative],
@@ -84,6 +86,7 @@ const Chart = (props: ChartProps) => {
 		<ChartProvider initialState={initialState}>
 			<div ref={chartContainerRef} className="rootContainer">
 				<Svg
+					style={style}
 					containerRef={chartContainerRef}
 					leftAxisCount={leftAxisCount}
 					rightAxisCount={rightAxisCount}

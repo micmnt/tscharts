@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 export type LegendProps = {
 	showDots?: boolean;
 	height?: number;
+	hideSeries?: string[];
 	customLabel?: (el: PieSerieEl | Serie) => ReactNode;
 	legendType: "horizontal" | "vertical";
 };
@@ -23,8 +24,15 @@ const generateXYChartLenged = (
 	theme: ThemeState | null,
 	showDots: boolean,
 	customLabel: ((el: PieSerieEl | Serie) => ReactNode) | null,
+	hideSeries?: string[]
 ) => {
-	return timeSeriesElements?.map((element, elementIndex) => (
+
+	// Filtro le serie che non voglio graficare nel tooltip
+	const seriesToShow = (hideSeries ?? []).length > 0
+		? timeSeriesElements.filter(serie => !hideSeries?.includes(serie.name))
+		: timeSeriesElements
+
+	return seriesToShow?.map((element, elementIndex) => (
 		<div className="legendItemContainer" key={`${element.name}-legend`}>
 			{showDots && (
 				<div
@@ -50,8 +58,15 @@ const generatePieChartLegend = (
 	theme: ThemeState | null,
 	showDots: boolean,
 	customLabel: ((el: PieSerieEl | Serie) => ReactNode) | null,
+	hideSeries?: string[]
 ) => {
-	return pieSerieElements?.map((element, elementIndex) => (
+
+	// Filtro le serie che non voglio graficare nel tooltip
+	const seriesToShow = (hideSeries ?? []).length > 0
+		? pieSerieElements.filter(serie => !hideSeries?.includes(serie.name))
+		: pieSerieElements
+
+	return seriesToShow?.map((element, elementIndex) => (
 		<div className="legendItemContainer" key={`${element.name}-legend`}>
 			{showDots && (
 				<div
@@ -77,6 +92,7 @@ const Legend = (props: LegendProps) => {
 		customLabel = null,
 		legendType,
 		height = DEFAULT_LEGEND_HEIGHT,
+		hideSeries = []
 	} = props;
 
 	const ctx = useCharts();
@@ -103,7 +119,7 @@ const Legend = (props: LegendProps) => {
 	const chartXEnd = _chartXEnd as number;
 	const chartYEnd = _chartYEnd as number;
 
-	const legendY = 2 * padding + chartYEnd;
+	const legendY = ctx?.negative ? 4 * padding + chartYEnd : 2 * padding + chartYEnd;
 	const legendWidth = chartXEnd - chartXStart;
 
 	if (!elements) return null;
@@ -130,12 +146,14 @@ const Legend = (props: LegendProps) => {
 							theme,
 							showDots,
 							customLabel,
+							hideSeries
 						)
 					: generatePieChartLegend(
 							pieSerieElements as PieSerieEl[],
 							theme,
 							showDots,
 							customLabel,
+							hideSeries
 						)}
 			</div>
 		</foreignObject>
