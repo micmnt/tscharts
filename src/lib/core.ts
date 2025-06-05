@@ -482,7 +482,7 @@ export const generateYAxis = (
 
 		
 		for(let i = Math.floor(yInterval/2) * -1; i < Math.ceil(yInterval/2); i++) {
-			const flatInterval = calculateFlatValue(negativeAndPositiveSerieMaxValue) / Math.ceil(yInterval/2);
+			const flatInterval = calculateFlatValue(calculateFlatValue(negativeAndPositiveSerieMaxValue) / Math.ceil(yInterval/2));
 
 			const axisIntervalIndex = Math.floor(yInterval/2) - i
 
@@ -934,7 +934,8 @@ export const generateNegativeDataPaths = (
 		const value = getValuePosition(
 			flatMaxValue,
 			absValue,
-			chartYEnd - 5 * padding - (ctx?.globalConfig?.legendHeight as number ?? 0),
+			// chartYEnd - 4.5 * padding - (ctx?.globalConfig?.legendHeight as number ?? 0),
+			chartYEnd - 4.7 * padding,
 		);
 
 		const serieY = isDefined(serieEl.value)
