@@ -8,6 +8,7 @@ import { nanoid } from "nanoid";
 /* Core Imports */
 import {
 	generateDataPaths,
+	generateHorizontalDataPaths,
 	generateNegativeDataPaths,
 	generateStackedDataPaths,
 } from "../../lib/core";
@@ -17,6 +18,7 @@ export type BarProps = {
 	stacked?: boolean;
 	showLabels?: boolean;
 	topLabelSerie?: string;
+	horizontal?: boolean;
 	config?: {
 		selectedColor?: string;
 		selectedValue?: string;
@@ -31,6 +33,7 @@ export type BarProps = {
 		topLabelSize?: number;
 		labelColor?: string;
 		topLabelColor?: string;
+		barOffset?: number;
 	};
 };
 
@@ -41,6 +44,7 @@ const Bar = (props: BarProps) => {
 		stacked = false,
 		showLabels = false,
 		topLabelSerie = "",
+		horizontal = false,
 	} = props;
 
 	const ctx = useCharts();
@@ -64,6 +68,7 @@ const Bar = (props: BarProps) => {
 		topLabelSize = 12,
 		labelColor = "white",
 		topLabelColor = "black",
+		barOffset = undefined,
 	} = config || {};
 
 	const serieElement = elements?.find((el) => el.name === name);
@@ -84,6 +89,7 @@ const Bar = (props: BarProps) => {
 		topRightRadius,
 		bottomRightRadius,
 		bottomLeftRadius,
+		barOffset,
 	};
 
 	let result: {
@@ -96,6 +102,8 @@ const Bar = (props: BarProps) => {
 		result = generateStackedDataPaths(serieElement, pathsConfig);
 	} else if (ctx.negative) {
 		result = generateNegativeDataPaths(serieElement, pathsConfig, "bar");
+	} else if (horizontal) {
+		result = generateHorizontalDataPaths(serieElement, pathsConfig, "bar");
 	} else {
 		result = generateDataPaths(serieElement, pathsConfig, "bar");
 	}

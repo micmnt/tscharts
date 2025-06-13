@@ -16,13 +16,14 @@ type Position = {
 };
 
 export type TooltipProps = {
-	title?: string;
+	title?: (val: string) => string;
 	reverseOrder?: boolean;
 	showGrid?: boolean;
 	hideSeries?: string[];
 	cumulatedSeriesValue?: {
 		series: string[];
 		label: string;
+		format?: (value: number) => string;
 	};
 	width?: number;
 	height?: number;
@@ -131,6 +132,7 @@ const computeStackedSeriesElementsTotal = (
 	hoveredElement: { elementIndex: number; label: string } | null,
 	enabledSeries?: string[],
 	totalLabel?: string,
+	format?: (value: number) => string,
 ) => {
 	const filteredTimeSeriesElements =
 		enabledSeries !== undefined &&
@@ -150,12 +152,14 @@ const computeStackedSeriesElementsTotal = (
 		return acc;
 	}, 0);
 
-	return <span className="tooltipTitle">{`${totalLabel}: ${totalValue}`}</span>;
+	const formattedTotal = format ? format(totalValue) : totalValue;
+
+	return <span className="tooltipTitle">{`${totalLabel}: ${formattedTotal}`}</span>;
 };
 
 const Tooltip = (props: TooltipProps) => {
 	const {
-		title = "",
+		title = undefined,
 		cumulatedSeriesValue,
 		hideSeries = [],
 		reverseOrder = false,
@@ -203,13 +207,14 @@ const Tooltip = (props: TooltipProps) => {
 	const chartXEnd = _chartXEnd as number;
 	const chartXStart = _chartXStart as number;
 
-	const tooltipTitle = title || hoveredElement?.label;
+	const tooltipTitle = title ? title(hoveredElement?.label) : hoveredElement?.label;
 
 	const tooltipTotal = computeStackedSeriesElementsTotal(
 		timeSeriesElements,
 		hoveredElement,
 		cumulatedSeriesValue?.series ?? [],
 		cumulatedSeriesValue?.label ?? "",
+		cumulatedSeriesValue?.format ?? undefined,
 	);
 
 	const showTotal =

@@ -31,7 +31,10 @@ export type AxisProps = {
 	titleDx?: number;
 	titleDy?: number;
 	showName?: boolean;
-	tiltLabels?: boolean
+	tiltLabels?: boolean;
+	horizontal?: boolean;
+	labelXOffset?: number;
+	labelYOffset?: number;
 };
 
 const Axis = (props: AxisProps) => {
@@ -49,7 +52,10 @@ const Axis = (props: AxisProps) => {
 		titleDx = 0,
 		titleDy = 0,
 		showLine = false,
-		tiltLabels = true
+		tiltLabels = true,
+		horizontal = false,
+		labelXOffset = 0,
+		labelYOffset = 0,
 	} = props;
 
 	const ctx = useCharts();
@@ -84,6 +90,128 @@ const Axis = (props: AxisProps) => {
 
 	// Creazione dell'asse X
 	if (type === "xAxis") {
+		// Nuova gestione per grafici orizzontali
+		if (horizontal) {
+			const serie = elements?.[0] || { data: [] };
+			const serieData = serie.data as TimeSerieEl[];
+
+			const yAxisInterval = (chartYEnd - padding) / (serieData?.length || 1);
+
+			const selectionColor = globalConfig?.selectedColor as string;
+			const selectionValue = globalConfig?.selectedValue as string;
+
+			const labels = dataPoints.map((label, labelIndex) => {
+				const ySpacing = padding / 2;
+				const barOffset = typeof globalConfig?.barOffset === 'number' ? globalConfig.barOffset : 0;
+				return {
+					value: label,
+					x: chartXStart + barOffset - 6 + labelXOffset,
+					y: yAxisInterval * labelIndex + ySpacing + (ctx?.globalConfig?.barWidth ? Number(ctx.globalConfig.barWidth) / 2 : 0) + labelYOffset,
+				};
+			});
+
+			const xPoints = labels.map((label, labelIndex) => {
+				const hoverRectY = label.y - (yAxisInterval - padding) / 2;
+				const hoverRectHeight = yAxisInterval - padding;
+
+				const selectionFill =
+					label.value === selectionValue ? `${selectionColor}26` : undefined;
+
+				const width = chartXEnd; // hover rect copre tutta la barra
+
+				const labelFontWeight = label.value === selectionValue ? 700 : 400;
+
+				const fill: string =
+					hoveredElement?.elementIndex === labelIndex &&
+					globalConfig?.barClickAction
+						? "rgb(148,163,184,0.1)"
+						: selectionFill
+						? selectionFill
+						: "transparent";
+
+				return (
+					<Fragment key={`${label.value}-${nanoid()}`}>
+						<>
+							{showGrid ? (
+								<path
+									d={`M ${chartXStart} ${label.y} H ${chartXEnd}`}
+									strokeWidth={theme?.grid?.size}
+									strokeDasharray={theme?.grid?.dashed ? 5 : 0}
+									stroke={gridColor ?? theme?.grid?.color}
+								/>
+							) : null}
+							{tooltipElement ? (
+								<rect
+									onClick={() => {
+										if (
+											globalConfig?.barClickAction &&
+											isFunction(globalConfig.barClickAction)
+										) {
+											const serieEl = serieData[labelIndex];
+											globalConfig.barClickAction(serieEl);
+										}
+									}}
+									onMouseEnter={() => {
+										if (dispatch && labelIndex !== hoveredElement?.elementIndex) {
+											dispatch({
+												type: "SET_HOVER_ELEMENT",
+												payload: {
+													hoveredElement: {
+														elementIndex: labelIndex,
+														label: label.value,
+													},
+												},
+											});
+										}
+									}}
+									x={0}
+									y={hoverRectY > 0 ? hoverRectY : 0}
+									width={width}
+									height={hoverRectHeight > 0 ? hoverRectHeight : 1}
+									fill={fill}
+								/>
+							) : null}
+						</>
+						<text
+							textAnchor="end"
+							x={label.x}
+							y={label.y}
+							fontSize={labelFontSize}
+							fontWeight={labelFontWeight}
+							fill={labelTextColor}
+						>
+							{label.value}
+						</text>
+					</Fragment>
+				);
+			});
+
+			return (
+				<>
+					{showLine ? (
+						<path
+							d={`M ${chartXStart} ${chartYEnd} H ${chartXStart}`}
+							strokeWidth={theme?.axis?.size}
+							stroke={lineColor ?? theme?.axis?.color}
+						/>
+					) : null}
+					{xPoints}
+					{showName ? (
+						<text
+							x={chartXStart - 40}
+							y={chartYEnd / 2}
+							textAnchor="middle"
+							fontSize={titleSize ?? theme?.axis?.titleSize}
+							fill={theme?.axis?.titleColor}
+							fontWeight={600}
+							transform={`rotate(-90,${chartXStart - 40},${chartYEnd / 2})`}
+						>
+							{name}
+						</text>
+					) : null}
+				</>
+			);
+		}
 		const xAxis = generateXAxis({ ...ctx, padding });
 
 		const serie = elements?.[0] || { data: [] };

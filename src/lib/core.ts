@@ -1453,3 +1453,193 @@ export const generateStackedGroupDataPaths = (
 
 	return { paths, dataPoints, topLabelsPoints };
 };
+
+// Funzione che genera il path SVG per una barra orizzontale
+export const generateHorizontalBarPath = (
+	y: number,
+	x: number,
+	barHeight: number,
+	startX: number,
+	radius?: number,
+	topLeftRadius?: number,
+	topRightRadius?: number,
+	bottomRightRadius?: number,
+	bottomLeftRadius?: number,
+) => {
+	if (
+		(radius ||
+			topLeftRadius ||
+			bottomLeftRadius ||
+			topRightRadius ||
+			bottomRightRadius) &&
+		x !== startX
+	) {
+		const normalizedRadius = normalizeBarRadius(radius, x - startX);
+		const normalizedTopLeftRadius = normalizeBarRadius(topLeftRadius, x - startX);
+		const normalizedBottomLeftRadius = normalizeBarRadius(bottomLeftRadius, x - startX);
+		const normalizedTopRightRadius = normalizeBarRadius(topRightRadius, x - startX);
+		const normalizedBottomRightRadius = normalizeBarRadius(bottomRightRadius, x - startX);
+
+		const leftX = startX;
+		const rightX = x;
+
+		const topY = y;
+		const bottomY = y + barHeight;
+
+		const topLeftCorner =
+			normalizedRadius || normalizedTopLeftRadius
+				? `Q${leftX},${topY} ${leftX},${topY + (normalizedRadius || normalizedTopLeftRadius || 0)}`
+				: "";
+		const topRightCorner =
+			normalizedRadius || normalizedTopRightRadius
+				? `Q${rightX},${topY} ${rightX - (normalizedRadius || normalizedTopRightRadius || 0)},${topY}`
+				: "";
+		const bottomRightCorner =
+			normalizedRadius || normalizedBottomRightRadius
+				? `Q${rightX},${bottomY} ${rightX},${bottomY - (normalizedRadius || normalizedBottomRightRadius || 0)}`
+				: "";
+		const bottomLeftCorner =
+			normalizedRadius || normalizedBottomLeftRadius
+				? `Q${leftX},${bottomY} ${leftX + (normalizedRadius || normalizedBottomLeftRadius || 0)},${bottomY}`
+				: "";
+
+		const startPosition = `M ${leftX + (normalizedRadius || normalizedTopLeftRadius || 0)} ${topY}`;
+		const topLeftPoint = `H ${rightX - (normalizedRadius || normalizedTopRightRadius || 0)}`;
+		const topRightPoint = `V ${bottomY - (normalizedRadius || normalizedTopRightRadius || 0)}`;
+		const bottomRightPoint = `H ${leftX + (normalizedRadius || normalizedBottomLeftRadius || 0)}`;
+		const bottomLeftPoint = `V ${topY + (normalizedRadius || normalizedTopLeftRadius || 0)}`;
+
+		return `${startPosition} ${topLeftPoint} ${topRightCorner} ${topRightPoint} ${bottomRightCorner} ${bottomRightPoint} ${bottomLeftCorner} ${bottomLeftPoint} ${topLeftCorner}`;
+	}
+	return `M ${startX} ${y} H ${x} V ${y + barHeight} H ${startX} Z`;
+};
+
+// Funzione che genera i dataPaths per barre orizzontali
+export const generateHorizontalDataPaths = (
+	serie: Serie,
+	ctx: ChartState & {
+		padding: number;
+		barWidth?: number;
+		radius?: number;
+		trimZeros?: boolean;
+		topLeftRadius?: number;
+		topRightRadius?: number;
+		bottomRightRadius?: number;
+		bottomLeftRadius?: number;
+		barOffset?: number;
+	},
+	type: "line" | "bar",
+) => {
+	if (!ctx.elements) return null;
+
+	const dataPoints = new Map();
+	dataPoints.set(serie.name, []);
+
+	const topLabelsPoints = new Map();
+	topLabelsPoints.set(serie.name, []);
+
+	const timeSerieData = ctx.trimZeros
+		? (serie.data as TimeSerieEl[]).map((el) => ({
+				...el,
+				value: el.value === 0 ? null : el.value,
+			}))
+		: (serie.data as TimeSerieEl[]);
+
+	const axisSeries = getSeriesByAxisName(
+		ctx.elements,
+		serie.axisName ?? serie.name,
+	);
+
+	const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
+	const seriesThresholds = getSerieAssociatedThresholds(ctx.elements, serie.name);
+
+	const serieMaxValue = getTimeSerieMaxValue([
+		...(flatAxisSeriesData ?? []),
+		...(seriesThresholds ?? []),
+	]);
+
+	const serieIndex = ctx.elements.findIndex((el) => el.name === serie.name);
+	if (serieIndex < 0) return null;
+
+	const {
+		chartXStart: _chartXStart,
+		chartXEnd: _chartXEnd,
+		chartYEnd: _chartYEnd,
+		padding,
+		barWidth: ctxBarWidth,
+		radius,
+		topLeftRadius,
+		topRightRadius,
+		bottomRightRadius,
+		bottomLeftRadius,
+		barOffset
+	} = ctx;
+
+	// barOffset ora è parametrico
+	const effectiveBarOffset = typeof barOffset === 'number' ? barOffset : 40;
+	const chartXStart = (_chartXStart as number) + effectiveBarOffset;
+	const chartXEnd = (_chartXEnd as number) - 8;
+	const chartYEnd = _chartYEnd as number;
+
+	const yAxisInterval = (chartYEnd - padding) / timeSerieData?.length || 1;
+	const flatMaxValue = calculateFlatValue(serieMaxValue);
+
+	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
+		const value = getValuePosition(flatMaxValue, serieEl.value ?? 0, chartXEnd - chartXStart - padding);
+		const serieX = isDefined(serieEl.value) ? chartXStart + value : null;
+		const barHeight = ctxBarWidth ?? padding;
+		const serieElY = yAxisInterval * serieElIndex + (padding / 2);
+
+		if (type === "bar") {
+			const point =
+				value < 16
+					? [-1, -1]
+					: [chartXStart + value / 2, serieElY + barHeight / 2];
+
+			const allDataPoints = dataPoints.get(serie.name);
+			dataPoints.set(serie.name, [...allDataPoints, point]);
+
+			const topLabelPoint = [
+				chartXStart + value + padding / 2,
+				serieElY + barHeight / 2,
+			];
+			const allTopLabelsPoints = topLabelsPoints.get(serie.name);
+			topLabelsPoints.set(serie.name, [...allTopLabelsPoints, topLabelPoint]);
+
+			return generateHorizontalBarPath(
+				serieElY,
+				chartXStart + value,
+				barHeight,
+				chartXStart,
+				radius,
+				topLeftRadius,
+				topRightRadius,
+				bottomRightRadius,
+				bottomLeftRadius,
+			);
+		}
+
+		// Caso LINEA ORIZZONTALE
+		const formattedX = isDefined(serieX) && !Number.isNaN(serieX) ? serieX : null;
+		const formattedY = isDefined(serieElY) && !Number.isNaN(serieElY) ? serieElY : null;
+
+		const point =
+			isDefined(formattedX) && isDefined(formattedY)
+				? [formattedX, serieElY]
+				: [0, -10];
+
+		const allDataPoints = dataPoints.get(serie.name);
+		dataPoints.set(serie.name, [...allDataPoints, point]);
+
+		if (!isDefined(formattedX)) {
+			return "";
+		}
+		return serieElIndex === getFirstValorizedElementIndex(timeSerieData)
+			? `M ${formattedX} ${serieElY}`
+			: generateLine(formattedX, serieElY);
+	});
+
+	const normalizedPaths = trimZerosAndNullLinePath(paths);
+
+	return { paths: normalizedPaths, dataPoints, topLabelsPoints };
+};

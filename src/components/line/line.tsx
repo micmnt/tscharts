@@ -2,7 +2,7 @@
 import type { TimeSerieEl } from "../../types";
 
 /* Core Imports */
-import { generateDataPaths } from "../../lib/core";
+import { generateDataPaths, generateHorizontalDataPaths } from "../../lib/core";
 
 import { nanoid } from "nanoid";
 /*  */
@@ -18,6 +18,9 @@ export type LineProps = {
 	trimZeros?: boolean;
 	showLabels?: boolean;
 	higlightLabels?: boolean;
+	horizontal?: boolean;
+	labelXOffset?: number;
+	lineOffset?: number;
 };
 
 const Line = (props: LineProps) => {
@@ -31,6 +34,9 @@ const Line = (props: LineProps) => {
 		labelYOffset = 0,
 		hideLine = false,
 		labelSize = 12,
+		horizontal = false,
+		labelXOffset = 0,
+		lineOffset = undefined,
 	} = props;
 
 	const ctx = useCharts();
@@ -49,8 +55,9 @@ const Line = (props: LineProps) => {
 
 	if (!serieElement) return null;
 
-	const { paths, dataPoints } =
-		generateDataPaths(serieElement, { ...ctx, padding, trimZeros }, "line") ??
+	const { paths, dataPoints } = horizontal
+		? generateHorizontalDataPaths(serieElement, { ...ctx, padding, trimZeros, barOffset: lineOffset }, "line") ?? {}
+		: generateDataPaths(serieElement, { ...ctx, padding, trimZeros }, "line") ??
 		{};
 
 	const linePath = paths?.filter((p) => p !== "").join() ?? "";
@@ -67,6 +74,7 @@ const Line = (props: LineProps) => {
 	const dotRadius = showDots ? 3 : 0;
 
 	const labelYSpacing = padding / 2 + labelYOffset;
+	const labelXSpacing = padding / 2 + labelXOffset;
 
 	return (
 		<>
@@ -97,7 +105,7 @@ const Line = (props: LineProps) => {
 							fontWeight="bold"
 							fill={serieColor}
 							key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
-							x={point[0]}
+							x={point[0] - labelXSpacing}
 							y={point[1] - labelYSpacing}
 						>
 							{serieElement.format
