@@ -102,11 +102,20 @@ const Axis = (props: AxisProps) => {
 
 			const labels = dataPoints.map((label, labelIndex) => {
 				const ySpacing = padding / 2;
-				const barOffset = typeof globalConfig?.barOffset === 'number' ? globalConfig.barOffset : 0;
+				const barOffset =
+					typeof globalConfig?.barOffset === "number"
+						? globalConfig.barOffset
+						: 0;
 				return {
 					value: label,
 					x: chartXStart + barOffset - 6 + labelXOffset,
-					y: yAxisInterval * labelIndex + ySpacing + (ctx?.globalConfig?.barWidth ? Number(ctx.globalConfig.barWidth) / 2 : 0) + labelYOffset,
+					y:
+						yAxisInterval * labelIndex +
+						ySpacing +
+						(ctx?.globalConfig?.barWidth
+							? Number(ctx.globalConfig.barWidth) / 2
+							: 0) +
+						labelYOffset,
 				};
 			});
 
@@ -126,8 +135,8 @@ const Axis = (props: AxisProps) => {
 					globalConfig?.barClickAction
 						? "rgb(148,163,184,0.1)"
 						: selectionFill
-						? selectionFill
-						: "transparent";
+							? selectionFill
+							: "transparent";
 
 				return (
 					<Fragment key={`${label.value}-${nanoid()}`}>
@@ -152,7 +161,10 @@ const Axis = (props: AxisProps) => {
 										}
 									}}
 									onMouseEnter={() => {
-										if (dispatch && labelIndex !== hoveredElement?.elementIndex) {
+										if (
+											dispatch &&
+											labelIndex !== hoveredElement?.elementIndex
+										) {
 											dispatch({
 												type: "SET_HOVER_ELEMENT",
 												payload: {
@@ -236,14 +248,19 @@ const Axis = (props: AxisProps) => {
 		});
 
 		const xPoints = labels.map((label, labelIndex) => {
-			const hoverRectX = label.x - (xAxisInterval - padding) / 2;
-			const hoverRectWidth = ctx.negative ? (ctx?.globalConfig?.barWidth as number) ?? (xAxisInterval - padding) : xAxisInterval - padding;
+			const hoverRectWidth =((ctx?.globalConfig?.barWidth as number) ?? xAxisInterval - padding)
+
+			const hoverRectX = label.x - hoverRectWidth / 2;
 
 			const selectionFill =
 				label.value === selectionValue ? `${selectionColor}26` : undefined;
 
 			const height =
-				label.value === selectionValue ? (chartYEnd ?? 0) + 35 : ctx.negative ? chartYEnd + padding * 2 : chartYEnd;
+				label.value === selectionValue
+					? (chartYEnd ?? 0) + 35
+					: ctx.negative
+						? chartYEnd + padding * 2
+						: chartYEnd;
 
 			const labelFontWeight = label.value === selectionValue ? 700 : 400;
 

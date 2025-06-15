@@ -76,8 +76,14 @@ const getLegendHeight = (children: JSX.Element[]) => {
 };
 
 const Svg = (props: SVGProps) => {
-	const { children, containerRef, leftAxisCount, rightAxisCount, chartID, style } =
-		props;
+	const {
+		children,
+		containerRef,
+		leftAxisCount,
+		rightAxisCount,
+		chartID,
+		style,
+	} = props;
 
 	const rootRef = useRef<SVGSVGElement>(null);
 

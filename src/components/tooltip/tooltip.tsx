@@ -61,7 +61,7 @@ const generateTimeSerieContent = (
 	theme: ThemeState | null,
 	hoveredElement: { elementIndex: number; label: string } | null,
 	reverseOrder: boolean,
-	hideSeries?: string[]
+	hideSeries?: string[],
 ) => {
 	// Ordino l'array di valori in base all'ordinamento scelto
 	const orderedTimeSeriesElements = reverseOrder
@@ -69,9 +69,12 @@ const generateTimeSerieContent = (
 		: timeSeriesElements;
 
 	// Filtro le serie che non voglio graficare nel tooltip
-	const seriesToShow = (hideSeries ?? []).length > 0
-		? orderedTimeSeriesElements.filter(serie => !hideSeries?.includes(serie.name))
-		: orderedTimeSeriesElements
+	const seriesToShow =
+		(hideSeries ?? []).length > 0
+			? orderedTimeSeriesElements.filter(
+					(serie) => !hideSeries?.includes(serie.name),
+				)
+			: orderedTimeSeriesElements;
 
 	return seriesToShow.map((element, serieIndex) => {
 		const elementValue = getElementValueByType(
@@ -102,12 +105,13 @@ const generateTimeSerieContent = (
 const generatePieSerieContent = (
 	pieSeriesElements: PieSerieEl[],
 	theme: ThemeState | null,
-	hideSeries?: string[]
+	hideSeries?: string[],
 ) => {
 	// Filtro le serie che non voglio graficare nel tooltip
-	const seriesToShow = (hideSeries ?? []).length > 0
-		? pieSeriesElements.filter(serie => !hideSeries?.includes(serie.name))
-		: pieSeriesElements
+	const seriesToShow =
+		(hideSeries ?? []).length > 0
+			? pieSeriesElements.filter((serie) => !hideSeries?.includes(serie.name))
+			: pieSeriesElements;
 
 	return seriesToShow.map((element, serieIndex) => {
 		return (
@@ -154,7 +158,9 @@ const computeStackedSeriesElementsTotal = (
 
 	const formattedTotal = format ? format(totalValue) : totalValue;
 
-	return <span className="tooltipTitle">{`${totalLabel}: ${formattedTotal}`}</span>;
+	return (
+		<span className="tooltipTitle">{`${totalLabel}: ${formattedTotal}`}</span>
+	);
 };
 
 const Tooltip = (props: TooltipProps) => {
@@ -207,7 +213,9 @@ const Tooltip = (props: TooltipProps) => {
 	const chartXEnd = _chartXEnd as number;
 	const chartXStart = _chartXStart as number;
 
-	const tooltipTitle = title ? title(hoveredElement?.label) : hoveredElement?.label;
+	const tooltipTitle = title
+		? title(hoveredElement?.label)
+		: hoveredElement?.label;
 
 	const tooltipTotal = computeStackedSeriesElementsTotal(
 		timeSeriesElements,
@@ -240,9 +248,13 @@ const Tooltip = (props: TooltipProps) => {
 								theme,
 								hoveredElement,
 								reverseOrder,
-								hideSeries
+								hideSeries,
 							)
-						: generatePieSerieContent(pieSeriesElements as PieSerieEl[], theme, hideSeries)}
+						: generatePieSerieContent(
+								pieSeriesElements as PieSerieEl[],
+								theme,
+								hideSeries,
+							)}
 					<div className="tooltipFooter">{showTotal ? tooltipTotal : null}</div>
 				</div>
 			</foreignObject>

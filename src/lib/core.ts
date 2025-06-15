@@ -32,7 +32,7 @@ export const generateVerticalBarPath = (
 	topRightRadius?: number,
 	bottomRightRadius?: number,
 	bottomLeftRadius?: number,
-	isNegative?: boolean
+	isNegative?: boolean,
 ) => {
 	if (
 		(radius ||
@@ -61,7 +61,7 @@ export const generateVerticalBarPath = (
 		);
 
 		const topY = isNegative ? startY : y;
-  	const bottomY = isNegative ? y : startY;
+		const bottomY = isNegative ? y : startY;
 
 		const topLeftCorner =
 			normalizedRadius || normalizedTopLeftRadius
@@ -79,7 +79,7 @@ export const generateVerticalBarPath = (
 			normalizedRadius || normalizedBottomLeftRadius
 				? `Q${x},${bottomY} ${x},${bottomY - (normalizedRadius || normalizedBottomLeftRadius || 0)}`
 				: "";
-		
+
 		const startPosition = `M ${x} ${bottomY + (normalizedRadius || normalizedTopLeftRadius || 0)}`;
 		const topLeftPoint = `V ${topY + (normalizedRadius || normalizedTopLeftRadius || 0)}`;
 		const topRightPoint = `H ${x + barWidth - (normalizedRadius || normalizedTopRightRadius || 0)}`;
@@ -284,7 +284,9 @@ export const getChartDimensions = (
 	const xPaddingMultiplier = 3;
 	const yPaddingMultiplier = 4;
 	const chartXStart = xPaddingMultiplier * padding * leftAxisCount;
-	const chartXEnd = svgWidth - padding * xPaddingMultiplier * (rightAxisCount || 1/xPaddingMultiplier);
+	const chartXEnd =
+		svgWidth -
+		padding * xPaddingMultiplier * (rightAxisCount || 1 / xPaddingMultiplier);
 	const chartYEnd = svgHeight - yPaddingMultiplier * padding - legendHeight;
 
 	return { chartXStart, chartXEnd, chartYEnd };
@@ -292,17 +294,10 @@ export const getChartDimensions = (
 
 // Funzione che genera l'asse x
 export const generateXAxis = (ctx: ChartState & { padding: number }) => {
-	const {
-		chartXStart,
-		chartXEnd,
-		chartYEnd: _chartYEnd,
-		negative,
-	} = ctx;
+	const { chartXStart, chartXEnd, chartYEnd: _chartYEnd, negative } = ctx;
 	const chartYEnd = _chartYEnd as number;
 
-	const normalizedChartYEnd = negative
-		? ctx.chartYMiddle
-		: chartYEnd;
+	const normalizedChartYEnd = negative ? ctx.chartYMiddle : chartYEnd;
 
 	return {
 		path: `M ${chartXStart} ${normalizedChartYEnd} H ${chartXEnd}`,
@@ -375,11 +370,18 @@ export const generateYAxis = (
 	let serieMaxValue = 0;
 	let negativeSerieMaxValue = 0;
 	if (ctx.negative) {
-		const negativeSeries = ctx.elements.filter(el => (el.data as TimeSerieEl[]).some(dataEl => dataEl.value < 0))
-		const positiveSeries = ctx.elements.filter(el => !(el.data as TimeSerieEl[]).some(dataEl => dataEl.value < 0))
-		serieMaxValue = getTimeSerieMaxValue([...positiveSeries.flatMap(el => el.data as TimeSerieEl[])])
-		negativeSerieMaxValue = getTimeSerieMaxValue([...negativeSeries.flatMap(el => el.data as TimeSerieEl[])])
-
+		const negativeSeries = ctx.elements.filter((el) =>
+			(el.data as TimeSerieEl[]).some((dataEl) => dataEl.value < 0),
+		);
+		const positiveSeries = ctx.elements.filter(
+			(el) => !(el.data as TimeSerieEl[]).some((dataEl) => dataEl.value < 0),
+		);
+		serieMaxValue = getTimeSerieMaxValue([
+			...positiveSeries.flatMap((el) => el.data as TimeSerieEl[]),
+		]);
+		negativeSerieMaxValue = getTimeSerieMaxValue([
+			...negativeSeries.flatMap((el) => el.data as TimeSerieEl[]),
+		]);
 	} else if (isStacked) {
 		serieMaxValue = calculateStackedSeriesMax(
 			ctx.elements.filter((el) => el.type === "bar-stacked"),
@@ -445,7 +447,7 @@ export const generateYAxis = (
 
 	/* Creazione degli assi */
 	const axisX = isOppositeAxis ? chartXEnd : chartXStart + padding / 2;
-	
+
 	const axisPath = generateVerticalLine(axisX, chartYEnd, 0);
 
 	// creazione delle label degli assi e del nome verticale degli assi
@@ -463,58 +465,72 @@ export const generateYAxis = (
 		height - 3 * padding,
 	);
 
-	if(ctx.negative) {
-		const negativeAndPositiveSerieMaxValue = Math.max(serieMaxValue, negativeSerieMaxValue)
-		
+	if (ctx.negative) {
+		const negativeAndPositiveSerieMaxValue = Math.max(
+			serieMaxValue,
+			negativeSerieMaxValue,
+		);
+
 		const firstValue = serie.format
-		? serie.format(calculateFlatValue(negativeAndPositiveSerieMaxValue) * -1)
-		: calculateFlatValue(negativeAndPositiveSerieMaxValue) * -1;
+			? serie.format(calculateFlatValue(negativeAndPositiveSerieMaxValue) * -1)
+			: calculateFlatValue(negativeAndPositiveSerieMaxValue) * -1;
 
 		const lastValue = serie.format
-		? serie.format(calculateFlatValue(negativeAndPositiveSerieMaxValue))
-		: calculateFlatValue(negativeAndPositiveSerieMaxValue);
+			? serie.format(calculateFlatValue(negativeAndPositiveSerieMaxValue))
+			: calculateFlatValue(negativeAndPositiveSerieMaxValue);
 
-		const yAxisLabels = [{
-			value: firstValue,
-			x: axisLabelsX,
-			y: chartYEnd + yAxisInterval,
-		}]
+		const yAxisLabels = [
+			{
+				value: firstValue,
+				x: axisLabelsX,
+				y: chartYEnd + yAxisInterval,
+			},
+		];
 
-		
-		for(let i = Math.floor(yInterval/2) * -1; i < Math.ceil(yInterval/2); i++) {
-			const flatInterval = calculateFlatValue(calculateFlatValue(negativeAndPositiveSerieMaxValue) / Math.ceil(yInterval/2));
+		for (
+			let i = Math.floor(yInterval / 2) * -1;
+			i < Math.ceil(yInterval / 2);
+			i++
+		) {
+			const flatInterval = calculateFlatValue(
+				calculateFlatValue(negativeAndPositiveSerieMaxValue) /
+					Math.ceil(yInterval / 2),
+			);
 
-			const axisIntervalIndex = Math.floor(yInterval/2) - i
+			const axisIntervalIndex = Math.floor(yInterval / 2) - i;
 
 			const axisValue = flatInterval * i === 0 ? 0 : flatInterval * i * -1;
 
-			const axisY = axisValue === 0 ? ctx.chartYMiddle ?? 0 : chartYEnd - yAxisInterval * axisIntervalIndex
+			const axisY =
+				axisValue === 0
+					? (ctx.chartYMiddle ?? 0)
+					: chartYEnd - yAxisInterval * axisIntervalIndex;
 
 			const serieValue = serie.format ? serie.format(axisValue) : axisValue;
 
-			const element =  {
+			const element = {
 				value: serieValue,
 				x: axisLabelsX,
 				y: axisY,
 			};
 
-			yAxisLabels.push(element)
+			yAxisLabels.push(element);
 		}
 
 		yAxisLabels.push({
 			value: lastValue,
 			x: axisLabelsX,
 			y: chartYEnd - yAxisInterval * yInterval,
-		})
-		
+		});
+
 		return {
-		valueLabels: yAxisLabels,
-		isOpposite: isOppositeAxis,
-		uom: serie.uom,
-		name: serie.name,
-		path: axisPath,
-		nameLabelPath: nameLabelAxisPath,
-	};
+			valueLabels: yAxisLabels,
+			isOpposite: isOppositeAxis,
+			uom: serie.uom,
+			name: serie.name,
+			path: axisPath,
+			nameLabelPath: nameLabelAxisPath,
+		};
 	}
 
 	const lastValue = serie.format
@@ -926,11 +942,14 @@ export const generateNegativeDataPaths = (
 	const flatMaxValue = calculateFlatValue(serieMaxValue);
 
 	// Calcolo lo 0 per il grafico a con valori negativi
-	const zeroY = ctx.chartYMiddle ?? 0
+	const zeroY = ctx.chartYMiddle ?? 0;
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
 		const absValue = Math.abs(serieEl.value ?? 0);
-		const isNegative = (serieEl.value ?? 0) < 0 || serieEl.value === 0 && timeSerieData.some(serieEl => (serieEl.value ?? 0) < 0);
+		const isNegative =
+			(serieEl.value ?? 0) < 0 ||
+			(serieEl.value === 0 &&
+				timeSerieData.some((serieEl) => (serieEl.value ?? 0) < 0));
 		const value = getValuePosition(
 			flatMaxValue,
 			absValue,
@@ -978,7 +997,7 @@ export const generateNegativeDataPaths = (
 				topRightRadius,
 				bottomRightRadius,
 				bottomLeftRadius,
-				isNegative
+				isNegative,
 			);
 		}
 		const xSpacing = globalConfig?.barWidth
@@ -1475,10 +1494,22 @@ export const generateHorizontalBarPath = (
 		x !== startX
 	) {
 		const normalizedRadius = normalizeBarRadius(radius, x - startX);
-		const normalizedTopLeftRadius = normalizeBarRadius(topLeftRadius, x - startX);
-		const normalizedBottomLeftRadius = normalizeBarRadius(bottomLeftRadius, x - startX);
-		const normalizedTopRightRadius = normalizeBarRadius(topRightRadius, x - startX);
-		const normalizedBottomRightRadius = normalizeBarRadius(bottomRightRadius, x - startX);
+		const normalizedTopLeftRadius = normalizeBarRadius(
+			topLeftRadius,
+			x - startX,
+		);
+		const normalizedBottomLeftRadius = normalizeBarRadius(
+			bottomLeftRadius,
+			x - startX,
+		);
+		const normalizedTopRightRadius = normalizeBarRadius(
+			topRightRadius,
+			x - startX,
+		);
+		const normalizedBottomRightRadius = normalizeBarRadius(
+			bottomRightRadius,
+			x - startX,
+		);
 
 		const leftX = startX;
 		const rightX = x;
@@ -1551,7 +1582,10 @@ export const generateHorizontalDataPaths = (
 	);
 
 	const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
-	const seriesThresholds = getSerieAssociatedThresholds(ctx.elements, serie.name);
+	const seriesThresholds = getSerieAssociatedThresholds(
+		ctx.elements,
+		serie.name,
+	);
 
 	const serieMaxValue = getTimeSerieMaxValue([
 		...(flatAxisSeriesData ?? []),
@@ -1572,11 +1606,11 @@ export const generateHorizontalDataPaths = (
 		topRightRadius,
 		bottomRightRadius,
 		bottomLeftRadius,
-		barOffset
+		barOffset,
 	} = ctx;
 
 	// barOffset ora è parametrico
-	const effectiveBarOffset = typeof barOffset === 'number' ? barOffset : 40;
+	const effectiveBarOffset = typeof barOffset === "number" ? barOffset : 40;
 	const chartXStart = (_chartXStart as number) + effectiveBarOffset;
 	const chartXEnd = (_chartXEnd as number) - 8;
 	const chartYEnd = _chartYEnd as number;
@@ -1585,10 +1619,14 @@ export const generateHorizontalDataPaths = (
 	const flatMaxValue = calculateFlatValue(serieMaxValue);
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
-		const value = getValuePosition(flatMaxValue, serieEl.value ?? 0, chartXEnd - chartXStart - padding);
+		const value = getValuePosition(
+			flatMaxValue,
+			serieEl.value ?? 0,
+			chartXEnd - chartXStart - padding,
+		);
 		const serieX = isDefined(serieEl.value) ? chartXStart + value : null;
 		const barHeight = ctxBarWidth ?? padding;
-		const serieElY = yAxisInterval * serieElIndex + (padding / 2);
+		const serieElY = yAxisInterval * serieElIndex + padding / 2;
 
 		if (type === "bar") {
 			const point =
@@ -1620,8 +1658,10 @@ export const generateHorizontalDataPaths = (
 		}
 
 		// Caso LINEA ORIZZONTALE
-		const formattedX = isDefined(serieX) && !Number.isNaN(serieX) ? serieX : null;
-		const formattedY = isDefined(serieElY) && !Number.isNaN(serieElY) ? serieElY : null;
+		const formattedX =
+			isDefined(serieX) && !Number.isNaN(serieX) ? serieX : null;
+		const formattedY =
+			isDefined(serieElY) && !Number.isNaN(serieElY) ? serieElY : null;
 
 		const point =
 			isDefined(formattedX) && isDefined(formattedY)

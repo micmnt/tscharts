@@ -5,7 +5,7 @@ import type { TimeSerieEl } from "../../types";
 import { generateDataPaths, generateHorizontalDataPaths } from "../../lib/core";
 
 import { nanoid } from "nanoid";
-/*  */
+
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
 export type LineProps = {
@@ -21,6 +21,8 @@ export type LineProps = {
 	horizontal?: boolean;
 	labelXOffset?: number;
 	lineOffset?: number;
+	tiltLabels?: boolean;
+	tiltLabelsAngle?: number;
 };
 
 const Line = (props: LineProps) => {
@@ -37,6 +39,8 @@ const Line = (props: LineProps) => {
 		horizontal = false,
 		labelXOffset = 0,
 		lineOffset = undefined,
+		tiltLabels = false,
+		tiltLabelsAngle = 45,
 	} = props;
 
 	const ctx = useCharts();
@@ -56,9 +60,16 @@ const Line = (props: LineProps) => {
 	if (!serieElement) return null;
 
 	const { paths, dataPoints } = horizontal
-		? generateHorizontalDataPaths(serieElement, { ...ctx, padding, trimZeros, barOffset: lineOffset }, "line") ?? {}
-		: generateDataPaths(serieElement, { ...ctx, padding, trimZeros }, "line") ??
-		{};
+		? (generateHorizontalDataPaths(
+				serieElement,
+				{ ...ctx, padding, trimZeros, barOffset: lineOffset },
+				"line",
+			) ?? {})
+		: (generateDataPaths(
+				serieElement,
+				{ ...ctx, padding, trimZeros },
+				"line",
+			) ?? {});
 
 	const linePath = paths?.filter((p) => p !== "").join() ?? "";
 
@@ -91,32 +102,38 @@ const Line = (props: LineProps) => {
 			)}
 			{(showLabels || higlightLabels) &&
 				linePoints.map(
-					(point: [x: number, y: number], dataPointIndex: number) => (
-						<text
-							display={
-								(higlightLabels &&
-									hoveredElement?.elementIndex === dataPointIndex) ||
-								showLabels
-									? "block"
-									: "none"
-							}
-							textAnchor="middle"
-							fontSize={labelSize}
-							fontWeight="bold"
-							fill={serieColor}
-							key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
-							x={point[0] - labelXSpacing}
-							y={point[1] - labelYSpacing}
-						>
-							{serieElement.format
-								? serieElement.format(
-										(serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-											?.value,
-									)
-								: (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-										?.value}
-						</text>
-					),
+					(point: [x: number, y: number], dataPointIndex: number) => {
+						const labelX = point[0] - labelXSpacing;
+						const labelY = point[1] - labelYSpacing;
+
+							return (
+								<text
+									key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
+									display={
+										(higlightLabels &&
+											hoveredElement?.elementIndex === dataPointIndex) ||
+										showLabels
+											? "block"
+											: "none"
+									}
+									fontSize={labelSize}
+									fontWeight="bold"
+									fill={serieColor}
+									x={labelX}
+									y={labelY}
+									textAnchor={tiltLabels ? "start" : "middle"}
+									transform={tiltLabels ? `rotate(${tiltLabelsAngle}, ${labelX}, ${labelY})` : undefined}
+								>
+									{serieElement.format
+										? serieElement.format(
+												(serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
+													?.value,
+											)
+										: (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
+												?.value}
+								</text>
+							)
+					}
 				)}
 			{!hideLine &&
 				linePoints
