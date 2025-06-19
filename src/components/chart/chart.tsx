@@ -25,11 +25,11 @@ type ChartProps = {
 	height: number;
 	style?: any;
 	children: React.ReactNode;
-	key?: string;
+	name?: string;
 };
 
 const Chart = (props: ChartProps) => {
-	const { elements, width, height, children, style, key = 'chart' } = props;
+	const { elements, width, height, children, style, name = 'chart' } = props;
 
 	const chartContainerRef = useRef<HTMLDivElement>(null);
 
@@ -58,8 +58,8 @@ const Chart = (props: ChartProps) => {
 	const { leftAxisCount, rightAxisCount } = getAxisCount(yAxisCount);
 
 	useEffect(() => {
-		setChartID(`${nanoid()}-${key}`);
-	}, [key]);
+		setChartID(`${nanoid()}-${name}`);
+	}, [name]);
 
 	const initialState = useMemo(
 		() => ({
