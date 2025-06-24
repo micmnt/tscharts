@@ -6,8 +6,7 @@
 		"useIgnoreFile": false
 	},
 	"files": {
-		"ignoreUnknown": false,
-		"ignore": ["dist/**"]
+		"includes": ["**", "!dist/**"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -35,6 +34,14 @@
 		"formatter": {
 			"semicolons": "always",
 			"quoteStyle": "double"
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
 		}
 	}
 }

@@ -307,16 +307,22 @@ export const generateXAxis = (ctx: ChartState & { padding: number }) => {
 // Funzione che calcola il massimo sommando i massimi delle serie da mostrare come colonne stacked
 const calculateStackedSeriesMax = (series: Serie[]) => {
 	// Prendo le labels per costruire una serie unificata
-	const serieLabels = (series?.[0].data as TimeSerieEl[]).map(el => el.date) ?? []
+	const serieLabels =
+		(series?.[0].data as TimeSerieEl[]).map((el) => el.date) ?? [];
 	// Creo una serie dove per ogni label c'è la somma dei valori di tutte le serie per quella label
-	const unifiedSerie = serieLabels.map(label => {
-		const seriesElements = series.flatMap(serie => (serie.data as TimeSerieEl[]).find(el => el.date === label))
-		const value = (seriesElements as TimeSerieEl[]).reduce((acc, el) => acc += el.value ?? 0, 0)
+	const unifiedSerie = serieLabels.map((label) => {
+		const seriesElements = series.flatMap((serie) =>
+			(serie.data as TimeSerieEl[]).find((el) => el.date === label),
+		);
+		const value = (seriesElements as TimeSerieEl[]).reduce(
+			(acc, el) => (acc += el.value ?? 0),
+			0,
+		);
 
-		return {date: label, value}
-	})
+		return { date: label, value };
+	});
 
-	return getTimeSerieMaxValue(unifiedSerie as TimeSerieEl[] ?? [])
+	return getTimeSerieMaxValue((unifiedSerie as TimeSerieEl[]) ?? []);
 
 	// return series.reduce((acc, stackedSerie) => {
 	// 	const serieMaxValue = getTimeSerieMaxValue(
@@ -326,7 +332,7 @@ const calculateStackedSeriesMax = (series: Serie[]) => {
 
 	// 	return acc;
 	// }, 0);
-}
+};
 
 // Funzione che prende in ingresso le serie del grafico e ritorna le serie a linea e a barre presenti associate ad un determinato asse
 export const getSeriesByAxisName = (elements: Serie[], axisName: string) => {
@@ -484,15 +490,15 @@ export const generateYAxis = (
 			negativeSerieMaxValue,
 		);
 
-		const flatMaxValue = ctx.flatMax ? calculateFlatValue(negativeAndPositiveSerieMaxValue) : negativeAndPositiveSerieMaxValue
+		const flatMaxValue = ctx.flatMax
+			? calculateFlatValue(negativeAndPositiveSerieMaxValue)
+			: negativeAndPositiveSerieMaxValue;
 
 		const firstValue = serie.format
-			? serie.format( flatMaxValue * -1)
+			? serie.format(flatMaxValue * -1)
 			: flatMaxValue * -1;
 
-		const lastValue = serie.format
-			? serie.format(flatMaxValue)
-			: flatMaxValue;
+		const lastValue = serie.format ? serie.format(flatMaxValue) : flatMaxValue;
 
 		const yAxisLabels = [
 			{
@@ -507,7 +513,9 @@ export const generateYAxis = (
 			i < Math.ceil(yInterval / 2);
 			i++
 		) {
-			const flatInterval = ctx.flatMax ? calculateFlatValue(flatMaxValue / Math.ceil(yInterval / 2)) : (flatMaxValue / Math.ceil(yInterval / 2))
+			const flatInterval = ctx.flatMax
+				? calculateFlatValue(flatMaxValue / Math.ceil(yInterval / 2))
+				: flatMaxValue / Math.ceil(yInterval / 2);
 
 			const axisIntervalIndex = Math.floor(yInterval / 2) - i;
 
@@ -545,11 +553,11 @@ export const generateYAxis = (
 		};
 	}
 
-	const flatMaxValue = ctx.flatMax ? calculateFlatValue(serieMaxValue) : serieMaxValue
-	
-	const lastValue = serie.format
-		? serie.format(flatMaxValue)
-		: flatMaxValue;
+	const flatMaxValue = ctx.flatMax
+		? calculateFlatValue(serieMaxValue)
+		: serieMaxValue;
+
+	const lastValue = serie.format ? serie.format(flatMaxValue) : flatMaxValue;
 
 	const yAxisLabels = [...Array(yInterval)]
 		.map((_, index) => {
@@ -788,7 +796,7 @@ export const generateStackedDataPaths = (
 
 	const stackedMaxValue = calculateStackedSeriesMax(barSeries);
 
-	console.log('stackedMaxValue: ', stackedMaxValue)
+	console.log("stackedMaxValue: ", stackedMaxValue);
 
 	const serieIndex = barSeries.findIndex((el) => el.name === serie.name);
 
@@ -814,7 +822,9 @@ export const generateStackedDataPaths = (
 	const xAxisInterval =
 		(chartXEnd - chartXStart) / (timeSerieData?.length || 1);
 
-	const flatMaxValue = ctx.flatMax ? calculateFlatValue(stackedMaxValue) : stackedMaxValue;
+	const flatMaxValue = ctx.flatMax
+		? calculateFlatValue(stackedMaxValue)
+		: stackedMaxValue;
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
 		const value = getValuePosition(
@@ -955,7 +965,9 @@ export const generateNegativeDataPaths = (
 	const xAxisInterval = (chartXEnd - chartXStart) / timeSerieData?.length || 1;
 
 	// Calcolo il valore massimo della serie arrotondato al primo numero dell'ordine di grandezza utile. Ex. (20, 200, 2000)
-	const flatMaxValue = ctx.flatMax ? calculateFlatValue(serieMaxValue) : serieMaxValue;
+	const flatMaxValue = ctx.flatMax
+		? calculateFlatValue(serieMaxValue)
+		: serieMaxValue;
 
 	// Calcolo lo 0 per il grafico a con valori negativi
 	const zeroY = ctx.chartYMiddle ?? 0;
@@ -1130,7 +1142,9 @@ export const generateDataPaths = (
 	const xAxisInterval = (chartXEnd - chartXStart) / timeSerieData?.length || 1;
 
 	// Calcolo il valore massimo della serie arrotondato al primo numero dell'ordine di grandezza utile. Ex. (20, 200, 2000)
-	const flatMaxValue = ctx.flatMax ? calculateFlatValue(serieMaxValue) : serieMaxValue;
+	const flatMaxValue = ctx.flatMax
+		? calculateFlatValue(serieMaxValue)
+		: serieMaxValue;
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
 		const value = getValuePosition(
@@ -1264,7 +1278,9 @@ export const generateGroupDataPaths = (
 
 	const xAxisInterval = xAxisGroupInterval / barSeries?.length;
 
-	const flatMaxValue = ctx.flatMax ? calculateFlatValue(serieMaxValue) : serieMaxValue;
+	const flatMaxValue = ctx.flatMax
+		? calculateFlatValue(serieMaxValue)
+		: serieMaxValue;
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
 		const value = getValuePosition(
@@ -1423,7 +1439,9 @@ export const generateStackedGroupDataPaths = (
 	const xAxisInterval =
 		groupBarNumber > 0 ? xAxisGroupInterval / groupBarNumber : 0;
 
-	const flatMaxValue = ctx.flatMax ? calculateFlatValue(stackedMaxValue) : stackedMaxValue;
+	const flatMaxValue = ctx.flatMax
+		? calculateFlatValue(stackedMaxValue)
+		: stackedMaxValue;
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
 		const value = getValuePosition(
@@ -1632,8 +1650,10 @@ export const generateHorizontalDataPaths = (
 	const chartYEnd = _chartYEnd as number;
 
 	const yAxisInterval = (chartYEnd - padding) / timeSerieData?.length || 1;
-	
-	const flatMaxValue = ctx.flatMax ? calculateFlatValue(serieMaxValue) : serieMaxValue;
+
+	const flatMaxValue = ctx.flatMax
+		? calculateFlatValue(serieMaxValue)
+		: serieMaxValue;
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
 		const value = getValuePosition(

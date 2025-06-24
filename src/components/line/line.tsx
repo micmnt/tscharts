@@ -1,12 +1,10 @@
 /* Types Imports */
-import type { TimeSerieEl } from "../../types";
-
-/* Core Imports */
-import { generateDataPaths, generateHorizontalDataPaths } from "../../lib/core";
 
 import { nanoid } from "nanoid";
-
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+/* Core Imports */
+import { generateDataPaths, generateHorizontalDataPaths } from "../../lib/core";
+import type { TimeSerieEl } from "../../types";
 
 export type LineProps = {
 	name: string;
@@ -106,34 +104,38 @@ const Line = (props: LineProps) => {
 						const labelX = point[0] - labelXSpacing;
 						const labelY = point[1] - labelYSpacing;
 
-							return (
-								<text
-									key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
-									display={
-										(higlightLabels &&
-											hoveredElement?.elementIndex === dataPointIndex) ||
-										showLabels
-											? "block"
-											: "none"
-									}
-									fontSize={labelSize}
-									fontWeight="bold"
-									fill={serieColor}
-									x={labelX}
-									y={labelY}
-									textAnchor={tiltLabels ? "start" : "middle"}
-									transform={tiltLabels ? `rotate(${tiltLabelsAngle}, ${labelX}, ${labelY})` : undefined}
-								>
-									{serieElement.format
-										? serieElement.format(
-												(serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-													?.value,
-											)
-										: (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-												?.value}
-								</text>
-							)
-					}
+						return (
+							<text
+								key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
+								display={
+									(higlightLabels &&
+										hoveredElement?.elementIndex === dataPointIndex) ||
+									showLabels
+										? "block"
+										: "none"
+								}
+								fontSize={labelSize}
+								fontWeight="bold"
+								fill={serieColor}
+								x={labelX}
+								y={labelY}
+								textAnchor={tiltLabels ? "start" : "middle"}
+								transform={
+									tiltLabels
+										? `rotate(${tiltLabelsAngle}, ${labelX}, ${labelY})`
+										: undefined
+								}
+							>
+								{serieElement.format
+									? serieElement.format(
+											(serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
+												?.value,
+										)
+									: (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
+											?.value}
+							</text>
+						);
+					},
 				)}
 			{!hideLine &&
 				linePoints

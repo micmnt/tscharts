@@ -1,5 +1,7 @@
 /* Types Imports */
-import type { ChartState, ThemeState, TimeSerieEl } from "../../types";
+
+/* Context Imports */
+import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
 /* Core Imports */
 import {
@@ -7,10 +9,8 @@ import {
 	getTimeSerieMaxValue,
 	getValuePosition,
 } from "../../lib/core";
-
-/* Context Imports */
-import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 import { calculateFlatValue, isDefined } from "../../lib/utils";
+import type { ChartState, ThemeState, TimeSerieEl } from "../../types";
 
 type ThresholdProps = {
 	name: string;
@@ -71,8 +71,8 @@ const Threshold = (props: ThresholdProps) => {
 	const chartXStart = _chartXStart as number;
 	const chartXEnd = _chartXEnd as number;
 
-	const flatMax = ctx.flatMax ? calculateFlatValue(serieMax) : serieMax
-	
+	const flatMax = ctx.flatMax ? calculateFlatValue(serieMax) : serieMax;
+
 	const position = getValuePosition(
 		flatMax,
 		thresholdValue,

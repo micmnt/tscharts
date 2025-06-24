@@ -1,21 +1,17 @@
-import { Fragment } from "react";
-
-/* Type Imports */
-import type { TimeSerieEl } from "../../types";
-
-/* Core Imports */
-import { generateXAxis, generateYAxis } from "../../lib/core";
-
-/* Utils Imports */
-import { isFunction } from "../../lib/utils";
-
 import { nanoid } from "nanoid";
+import { Fragment } from "react";
 /* Context Imports */
 import {
 	useCharts,
 	useChartsDispatch,
 	useChartsTheme,
 } from "../../contexts/chartContext";
+/* Core Imports */
+import { generateXAxis, generateYAxis } from "../../lib/core";
+/* Utils Imports */
+import { isFunction } from "../../lib/utils";
+/* Type Imports */
+import type { TimeSerieEl } from "../../types";
 
 export type AxisProps = {
 	type: "xAxis" | "yAxis";
@@ -248,7 +244,8 @@ const Axis = (props: AxisProps) => {
 		});
 
 		const xPoints = labels.map((label, labelIndex) => {
-			const hoverRectWidth =((ctx?.globalConfig?.barWidth as number) ?? xAxisInterval - padding)
+			const hoverRectWidth =
+				(ctx?.globalConfig?.barWidth as number) ?? xAxisInterval - padding;
 
 			const hoverRectX = label.x - hoverRectWidth / 2;
 

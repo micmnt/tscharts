@@ -9,20 +9,18 @@ import {
 	useEffect,
 	useRef,
 } from "react";
-
-/* Core Imports */
-import {
-	calculateTooltipPosition,
-	convertToSVGPoint,
-	getChartDimensions,
-} from "../../lib/core";
-
 /* Context Imports */
 import {
 	useCharts,
 	useChartsDispatch,
 	useChartsTheme,
 } from "../../contexts/chartContext";
+/* Core Imports */
+import {
+	calculateTooltipPosition,
+	convertToSVGPoint,
+	getChartDimensions,
+} from "../../lib/core";
 import { isDefined } from "../../lib/utils";
 import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
 

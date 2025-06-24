@@ -1,23 +1,21 @@
 /* Types Imports */
-import type { Serie, TimeSerieEl } from "../../types";
 
 /* React Imports */
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
+/* Context Imports */
+import { ChartProvider } from "../../contexts/chartContext";
 
 /* Core Imports */
 import { getAxisCount, getTimeSerieMaxValue } from "../../lib/core";
-
-/* Context Imports */
-import { ChartProvider } from "../../contexts/chartContext";
+import type { Serie, TimeSerieEl } from "../../types";
 
 /* Styles Imports */
 import "../../styles.css";
 
-/* Components Imports */
-import Svg from "../../components/svg/svg";
-
 /* Utils Imports */
 import { nanoid } from "nanoid";
+/* Components Imports */
+import Svg from "../../components/svg/svg";
 
 type ChartProps = {
 	elements: Serie[];
@@ -26,11 +24,19 @@ type ChartProps = {
 	style?: any;
 	children: React.ReactNode;
 	name?: string;
-	flatMax?: boolean
+	flatMax?: boolean;
 };
 
 const Chart = (props: ChartProps) => {
-	const { elements, width, height, children, style, name = 'chart', flatMax = true } = props;
+	const {
+		elements,
+		width,
+		height,
+		children,
+		style,
+		name = "chart",
+		flatMax = true,
+	} = props;
 
 	const chartContainerRef = useRef<HTMLDivElement>(null);
 

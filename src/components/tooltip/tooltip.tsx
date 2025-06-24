@@ -1,8 +1,8 @@
 /* Types Imports */
-import type { PieSerieEl, Serie, ThemeState, TimeSerieEl } from "../../types";
 
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+import type { PieSerieEl, Serie, ThemeState, TimeSerieEl } from "../../types";
 
 /* Styles Imports */
 import "../../styles.css";

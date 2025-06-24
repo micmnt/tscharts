@@ -1,17 +1,16 @@
 /* Types Imports */
-import type { ChartState, ThemeState } from "../types";
 
 /* React Imports */
 import {
+	createContext,
 	type Dispatch,
 	type ReactNode,
-	createContext,
 	useContext,
 	useReducer,
 } from "react";
-
 /* Theme Imports */
 import defaultTheme from "../lib/defaultTheme";
+import type { ChartState, ThemeState } from "../types";
 
 type ChartProviderProps = {
 	children: ReactNode;
