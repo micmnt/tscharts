@@ -26,10 +26,11 @@ type ChartProps = {
 	style?: any;
 	children: React.ReactNode;
 	name?: string;
+	flatMax?: boolean
 };
 
 const Chart = (props: ChartProps) => {
-	const { elements, width, height, children, style, name = 'chart' } = props;
+	const { elements, width, height, children, style, name = 'chart', flatMax = true } = props;
 
 	const chartContainerRef = useRef<HTMLDivElement>(null);
 
@@ -76,9 +77,10 @@ const Chart = (props: ChartProps) => {
 			chartXEnd: 0,
 			chartYEnd: 0,
 			chartYMiddle: 0,
+			flatMax,
 			timeSeriesMaxValue,
 		}),
-		[elements, height, timeSeriesMaxValue, width, negative],
+		[elements, height, timeSeriesMaxValue, width, negative, flatMax],
 	);
 
 	if (!chartID) return null;

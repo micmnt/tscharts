@@ -17,6 +17,7 @@ type ThresholdProps = {
 	axisName?: string;
 	dashed?: boolean;
 	type?: "vertical" | "horizontal";
+	size?: number;
 	showLabel?: boolean;
 	dx?: number;
 	dy?: number;
@@ -30,6 +31,7 @@ const Threshold = (props: ThresholdProps) => {
 		type = "horizontal",
 		name,
 		showLabel = false,
+		size = theme.threshold?.size,
 		axisName = "",
 		dx = 0,
 		dy = 0,
@@ -69,7 +71,8 @@ const Threshold = (props: ThresholdProps) => {
 	const chartXStart = _chartXStart as number;
 	const chartXEnd = _chartXEnd as number;
 
-	const flatMax = calculateFlatValue(serieMax);
+	const flatMax = ctx.flatMax ? calculateFlatValue(serieMax) : serieMax
+	
 	const position = getValuePosition(
 		flatMax,
 		thresholdValue,
@@ -94,7 +97,7 @@ const Threshold = (props: ThresholdProps) => {
 				d={path}
 				strokeDasharray={dashed ? theme.threshold?.dash : 0}
 				strokeLinecap="round"
-				strokeWidth={theme.threshold?.size}
+				strokeWidth={size}
 				stroke={thresholdElement.color ?? theme.seriesColors?.[1]}
 			/>
 			{showLabel && (

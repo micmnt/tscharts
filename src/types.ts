@@ -35,6 +35,7 @@ export type ChartState = {
 	chartYEnd?: number;
 	chartYMiddle?: number;
 	negative?: boolean;
+	flatMax?: boolean;
 	timeSeriesMaxValue?: number;
 	chartID?: string | null;
 	globalConfig?: {
