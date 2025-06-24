@@ -314,10 +314,10 @@ const calculateStackedSeriesMax = (series: Serie[]) => {
 		const seriesElements = series.flatMap((serie) =>
 			(serie.data as TimeSerieEl[]).find((el) => el.date === label),
 		);
-		const value = (seriesElements as TimeSerieEl[]).reduce(
-			(acc, el) => (acc += el.value ?? 0),
-			0,
-		);
+		const value = (seriesElements as TimeSerieEl[]).reduce((acc, el) => {
+			acc += el.value ?? 0;
+			return acc;
+		}, 0);
 
 		return { date: label, value };
 	});
