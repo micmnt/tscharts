@@ -690,7 +690,7 @@ export const generatePiePaths = (
 	const dataPoints = new Map();
 
 	const pieTotalValue = serieData.reduce(
-		// biome-ignore lint/suspicious/noAssignInExpressions
+		// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
 		(acc, dataEl) => (acc += dataEl.value),
 		0,
 	);
@@ -713,7 +713,7 @@ export const generatePiePaths = (
 			serieElIndex > 0
 				? startAngles
 						.slice(0, serieElIndex)
-						// biome-ignore lint/suspicious/noAssignInExpressions
+						// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
 						.reduce((acc, el) => (acc += el), 0)
 				: 0;
 
