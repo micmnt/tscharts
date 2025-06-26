@@ -796,8 +796,6 @@ export const generateStackedDataPaths = (
 
 	const stackedMaxValue = calculateStackedSeriesMax(barSeries);
 
-	console.log("stackedMaxValue: ", stackedMaxValue);
-
 	const serieIndex = barSeries.findIndex((el) => el.name === serie.name);
 
 	if (serieIndex < 0) return null;

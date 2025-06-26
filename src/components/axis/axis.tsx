@@ -31,6 +31,7 @@ export type AxisProps = {
 	horizontal?: boolean;
 	labelXOffset?: number;
 	labelYOffset?: number;
+	tiltLabelsAngle?:number;
 };
 
 const Axis = (props: AxisProps) => {
@@ -52,6 +53,7 @@ const Axis = (props: AxisProps) => {
 		horizontal = false,
 		labelXOffset = 0,
 		labelYOffset = 0,
+		tiltLabelsAngle = 45
 	} = props;
 
 	const ctx = useCharts();
@@ -269,6 +271,9 @@ const Axis = (props: AxisProps) => {
 						? selectionFill
 						: "transparent";
 
+			const labelX = label.x - labelXOffset;
+			const labelY = label.y - labelYOffset;
+
 			return (
 				<Fragment key={`${label.value}-${nanoid()}`}>
 					<>
@@ -314,12 +319,12 @@ const Axis = (props: AxisProps) => {
 					</>
 					{dataPoints.length > 20 && tiltLabels ? (
 						<>
-							<defs>
+							{/* <defs>
 								<path
 									id={`xAxisLabel-${labelIndex}`}
 									d={`M ${label.x - 40} ${label.y + 20} L ${label.x} ${label.y}`}
 								/>
-							</defs>
+							</defs> */}
 							{/* <use href={`#xAxisLabel-${labelIndex}`} fill="none" /> */}
 							<text
 								dx={titleDx}
@@ -327,22 +332,31 @@ const Axis = (props: AxisProps) => {
 								fontSize={theme?.axis?.labelSize}
 								fontWeight={labelFontWeight}
 								fill={labelTextColor}
+								textAnchor="start"
+								x={labelX}
+								y={labelY}
+								transform={
+									tiltLabels
+										? `rotate(${tiltLabelsAngle}, ${label.x}, ${label.y})`
+										: undefined
+								}
 							>
-								<textPath
+								{label.value}
+								{/* <textPath
 									textAnchor="start"
 									x={label.x}
 									y={label.y}
 									href={`#xAxisLabel-${labelIndex}`}
 								>
 									{label.value}
-								</textPath>
+								</textPath> */}
 							</text>
 						</>
 					) : (
 						<text
 							textAnchor="middle"
-							x={label.x}
-							y={label.y}
+							x={labelX}
+							y={labelY}
 							fontSize={labelFontSize}
 							fontWeight={labelFontWeight}
 							fill={labelTextColor}
