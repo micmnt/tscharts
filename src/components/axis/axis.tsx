@@ -23,6 +23,7 @@ export type AxisProps = {
 	showGrid?: boolean;
 	gridColor?: string;
 	showLine?: boolean;
+	showLabels?: boolean;
 	lineColor?: string;
 	titleDx?: number;
 	titleDy?: number;
@@ -32,6 +33,9 @@ export type AxisProps = {
 	labelXOffset?: number;
 	labelYOffset?: number;
 	tiltLabelsAngle?: number;
+	selectedArea?: string[];
+	selectedAreaColor?: string;
+	selectedAreaOpacity?: number;
 };
 
 const Axis = (props: AxisProps) => {
@@ -54,6 +58,10 @@ const Axis = (props: AxisProps) => {
 		labelXOffset = 0,
 		labelYOffset = 0,
 		tiltLabelsAngle = 45,
+		selectedArea,
+		selectedAreaColor,
+		selectedAreaOpacity,
+		showLabels = true
 	} = props;
 
 	const ctx = useCharts();
@@ -222,6 +230,7 @@ const Axis = (props: AxisProps) => {
 				</>
 			);
 		}
+
 		const xAxis = generateXAxis({ ...ctx, padding });
 
 		const serie = elements?.[0] || { data: [] };
@@ -230,13 +239,14 @@ const Axis = (props: AxisProps) => {
 
 		const xAxisInterval = (chartXEnd - chartXStart) / (serieData?.length || 1);
 
+		const xSpacing = globalConfig?.barWidth
+				? (Number(globalConfig?.barWidth) + padding) / 2
+				: padding;
+
 		const selectionColor = globalConfig?.selectedColor as string;
 		const selectionValue = globalConfig?.selectedValue as string;
 
 		const labels = dataPoints.map((label, labelIndex) => {
-			const xSpacing = globalConfig?.barWidth
-				? (Number(globalConfig?.barWidth) + padding) / 2
-				: padding;
 
 			return {
 				value: label,
@@ -244,6 +254,26 @@ const Axis = (props: AxisProps) => {
 				y: ctx.negative ? chartYEnd + 3.5 * padding : chartYEnd + padding,
 			};
 		});
+
+		let selectedAreaRect = null
+
+		if(selectedArea) {
+			const areaStartX = labels.find(label => label.value === selectedArea?.[0])?.x
+			const areaEndX = labels.find(label => label.value === selectedArea?.[1])?.x
+			const areaX = areaStartX ? areaStartX - xSpacing / 2 - padding / 6 : 0
+			const areaY = 0
+			const areaWidth = areaEndX && areaStartX ? areaEndX - areaStartX + xSpacing + padding / 3 : 0
+			const areaHeight = chartYEnd
+
+			selectedAreaRect = <rect
+			x={areaX}
+			y={areaY}
+			width={areaWidth}
+			height={areaHeight}
+			fill={selectedAreaColor ?? 'red'}
+			opacity={selectedAreaOpacity ?? 0.2}
+			/>
+		}
 
 		const xPoints = labels.map((label, labelIndex) => {
 			const hoverRectWidth =
@@ -370,6 +400,7 @@ const Axis = (props: AxisProps) => {
 
 		return (
 			<>
+				{selectedAreaRect}
 				{showLine ? (
 					<path
 						d={xAxis?.path}
@@ -377,7 +408,7 @@ const Axis = (props: AxisProps) => {
 						stroke={lineColor ?? theme?.axis?.color}
 					/>
 				) : null}
-				{xPoints}
+				{showLabels ? xPoints : null}
 				{showName ? (
 					<text
 						x={chartXEnd / 2}
