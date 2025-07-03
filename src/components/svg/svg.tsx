@@ -95,7 +95,7 @@ const Svg = (props: SVGProps) => {
 
 	const legendHeight = getLegendHeight(normalizedChildren);
 
-	const globalConfig = useRef(computeConfigs(normalizedChildren));
+	const globalConfig = useRef(computeConfigs(normalizedChildren.flat()));
 
 	// Funzione che inizializza le dimensioni del grafico svg
 	const intializeChart = useCallback(() => {
