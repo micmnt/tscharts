@@ -29,7 +29,9 @@ export type TooltipProps = {
 	};
 	width?: number;
 	height?: number;
-	customElement?: (props: (TimeSerieEl | PieSerieEl) & {name: string, elementIndex?: number}) => ReactNode
+	customElement?: (
+		props: (TimeSerieEl | PieSerieEl) & { name: string; elementIndex?: number },
+	) => ReactNode;
 };
 
 const getFormattedValue = (
@@ -65,7 +67,9 @@ const generateTimeSerieContent = (
 	hoveredElement: { elementIndex: number; label: string } | null,
 	reverseOrder: boolean,
 	hideSeries?: string[],
-	customElement?: (props: (TimeSerieEl | PieSerieEl) & {name: string, elementIndex?: number}) => ReactNode
+	customElement?: (
+		props: (TimeSerieEl | PieSerieEl) & { name: string; elementIndex?: number },
+	) => ReactNode,
 ) => {
 	// Ordino l'array di valori in base all'ordinamento scelto
 	const orderedTimeSeriesElements = reverseOrder
@@ -81,16 +85,20 @@ const generateTimeSerieContent = (
 			: orderedTimeSeriesElements;
 
 	return seriesToShow.map((element, serieIndex) => {
-		const hoveredElementIndex = hoveredElement?.elementIndex ?? -1
-		
+		const hoveredElementIndex = hoveredElement?.elementIndex ?? -1;
+
 		const elementValue = getElementValueByType(
 			element.data,
 			element.type as string,
-			hoveredElementIndex
+			hoveredElementIndex,
 		);
 
-		if(customElement && hoveredElementIndex > -1) {
-			return customElement({elementIndex: hoveredElementIndex, name: element.name, ...((element.data as TimeSerieEl[])?.[hoveredElementIndex] ?? {})})
+		if (customElement && hoveredElementIndex > -1) {
+			return customElement({
+				elementIndex: hoveredElementIndex,
+				name: element.name,
+				...((element.data as TimeSerieEl[])?.[hoveredElementIndex] ?? {}),
+			});
 		}
 
 		return (
@@ -117,7 +125,9 @@ const generatePieSerieContent = (
 	pieSeriesElements: PieSerieEl[],
 	theme: ThemeState | null,
 	hideSeries?: string[],
-	customElement?: (props: (TimeSerieEl | PieSerieEl) & {name: string}) => ReactNode
+	customElement?: (
+		props: (TimeSerieEl | PieSerieEl) & { name: string },
+	) => ReactNode,
 ) => {
 	// Filtro le serie che non voglio graficare nel tooltip
 	const seriesToShow =
@@ -126,12 +136,11 @@ const generatePieSerieContent = (
 			: pieSeriesElements;
 
 	return seriesToShow.map((element, serieIndex) => {
-		
-		if(customElement) {
-			return customElement({name: element.name, value: element.value})
+		if (customElement) {
+			return customElement({ name: element.name, value: element.value });
 		}
-		
-			return (
+
+		return (
 			<div className="tooltipSerieContainer" key={`tooltip-${element.name}`}>
 				<div
 					className="tooltipCircle"
@@ -148,13 +157,19 @@ const generatePieSerieContent = (
 };
 
 // Funzione che genera il footer del tooltip
-const generateFooter = (elements: Serie[], hoveredElement: { elementIndex: number; label: string } | null, showTotal: boolean, tooltipTotal: ReactNode, footerFn?: (series: Serie[], hoveredElementIndex: number) => ReactNode) => {
-	if(footerFn) {
-		return footerFn(elements, hoveredElement?.elementIndex ?? -1)
+const generateFooter = (
+	elements: Serie[],
+	hoveredElement: { elementIndex: number; label: string } | null,
+	showTotal: boolean,
+	tooltipTotal: ReactNode,
+	footerFn?: (series: Serie[], hoveredElementIndex: number) => ReactNode,
+) => {
+	if (footerFn) {
+		return footerFn(elements, hoveredElement?.elementIndex ?? -1);
 	}
 
-	return <div className="tooltipFooter">{showTotal ? tooltipTotal : null}</div>
-}
+	return <div className="tooltipFooter">{showTotal ? tooltipTotal : null}</div>;
+};
 
 // Funzione che genera i valori dei totali dei singoli elementi di una Serie stacked
 const computeStackedSeriesElementsTotal = (
@@ -199,7 +214,7 @@ const Tooltip = (props: TooltipProps) => {
 		showGrid = false,
 		width = 150,
 		height = 0,
-		customElement = undefined
+		customElement = undefined,
 	} = props;
 
 	const ctx = useCharts();
@@ -258,7 +273,6 @@ const Tooltip = (props: TooltipProps) => {
 		cumulatedSeriesValue !== null &&
 		Object.keys(cumulatedSeriesValue)?.length > 0;
 
-
 	return (
 		<>
 			<foreignObject
@@ -278,15 +292,21 @@ const Tooltip = (props: TooltipProps) => {
 								hoveredElement,
 								reverseOrder,
 								hideSeries,
-								customElement
+								customElement,
 							)
 						: generatePieSerieContent(
 								pieSeriesElements as PieSerieEl[],
 								theme,
 								hideSeries,
-								customElement
+								customElement,
 							)}
-						{generateFooter(elements,hoveredElement, showTotal, tooltipTotal, footer)}
+					{generateFooter(
+						elements,
+						hoveredElement,
+						showTotal,
+						tooltipTotal,
+						footer,
+					)}
 				</div>
 			</foreignObject>
 			{showGrid &&

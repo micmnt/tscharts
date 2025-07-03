@@ -31,7 +31,7 @@ export type AxisProps = {
 	horizontal?: boolean;
 	labelXOffset?: number;
 	labelYOffset?: number;
-	tiltLabelsAngle?:number;
+	tiltLabelsAngle?: number;
 };
 
 const Axis = (props: AxisProps) => {
@@ -53,7 +53,7 @@ const Axis = (props: AxisProps) => {
 		horizontal = false,
 		labelXOffset = 0,
 		labelYOffset = 0,
-		tiltLabelsAngle = 45
+		tiltLabelsAngle = 45,
 	} = props;
 
 	const ctx = useCharts();
