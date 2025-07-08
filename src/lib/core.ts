@@ -1,4 +1,4 @@
-import type { ChartState, PieSerieEl, Serie, TimeSerieEl } from "../types";
+import type { AngleDonutSerieEl, ChartState, PieSerieEl, Serie, TimeSerieEl } from "../types";
 import {
 	calculateFlatValue,
 	getFirstValorizedElementIndex,
@@ -587,6 +587,91 @@ export const generateYAxis = (
 		nameLabelPath: nameLabelAxisPath,
 	};
 };
+
+// Funzione che genera i path per una serie di un grafico a ciambella aperto con un angolo
+export const generateAngleDonutPaths = (
+	serie: Serie,
+	ctx: ChartState & {
+		padding: number;
+		innerRadius?: number;
+		angle?: number;
+		showTrack?: boolean;
+		centerElement?: {
+			value?: string;
+			valueColor?: string;
+			valueSize?: number;
+			uom?: string;
+			uomColor?: string;
+			uomSize?: number;
+			uomDx?: number;
+			label?: string;
+			labelColor?: string;
+			labelSize?: number;
+			labelDy?: number;
+		}
+	}
+) => {
+	const serieData = serie.data as AngleDonutSerieEl[]
+
+	const {width, height, padding, centerElement, angle, showTrack = false} = ctx
+
+	const {value: centerValue} = centerElement ?? {}
+
+	const centerX = (width as number) / 2;
+	const centerY = (height as number) / 2 - padding;
+	const radius = ((height as number) - 2 * padding) / 2;
+
+	const paths = serieData.map((serieEl, serieElIndex) => {
+		const maxValue = isDefined(serieEl.maxValue) ? serieEl.maxValue : serieEl.value
+		const startAngle = 0
+
+		const normalizedAngle = isDefined(angle) ? Number(angle) : 360
+		const valueAngle = (Number(serieEl.value) * normalizedAngle) / maxValue;
+		
+		const normalizedValueAngle = valueAngle >= 360 ? 359.9 : valueAngle;
+
+		const newRadius = radius - ((ctx.innerRadius ?? radius / 2) + padding / 8) * serieElIndex
+		const newInnerRadius = newRadius - (ctx.innerRadius ?? radius / 2)
+
+		let shadowPath = ''
+
+		if(showTrack && isDefined(serieEl.maxValue)) {
+			shadowPath = generateDonutSlice(
+				centerX,
+				centerY,
+				newRadius,
+				newInnerRadius,
+				startAngle,
+				normalizedAngle
+			)
+		}
+
+		const path = generateDonutSlice(
+			centerX,
+			centerY,
+			newRadius,
+			newInnerRadius,
+			startAngle,
+			normalizedValueAngle,
+		);
+		
+		return {shadowPath, path}
+	})
+
+	const labelElement = {
+		x: centerX - radius - padding / 4,
+		y: 0,
+		width: radius,
+		height: ((ctx.innerRadius ?? radius / 2) + padding / 8) * serieData.length
+	}
+
+	if(isDefined(centerValue)) {
+		const centerPoint = {x: centerX, y: centerY}
+
+		return {paths, labelElement, centerPoint}
+	}
+	return { paths, labelElement };
+}
 
 // Funzioen che genera i path per una serie di un grafico a ciambella
 export const generateDonutPaths = (

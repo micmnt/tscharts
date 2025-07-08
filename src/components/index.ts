@@ -1,3 +1,4 @@
+export * from './angleDonut'
 export * from "./axis";
 export * from "./bar";
 export * from "./chart";

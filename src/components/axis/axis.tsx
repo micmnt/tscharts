@@ -61,7 +61,7 @@ const Axis = (props: AxisProps) => {
 		selectedArea,
 		selectedAreaColor,
 		selectedAreaOpacity,
-		showLabels = true
+		showLabels = true,
 	} = props;
 
 	const ctx = useCharts();
@@ -240,14 +240,13 @@ const Axis = (props: AxisProps) => {
 		const xAxisInterval = (chartXEnd - chartXStart) / (serieData?.length || 1);
 
 		const xSpacing = globalConfig?.barWidth
-				? (Number(globalConfig?.barWidth) + padding) / 2
-				: padding;
+			? (Number(globalConfig?.barWidth) + padding) / 2
+			: padding;
 
 		const selectionColor = globalConfig?.selectedColor as string;
 		const selectionValue = globalConfig?.selectedValue as string;
 
 		const labels = dataPoints.map((label, labelIndex) => {
-
 			return {
 				value: label,
 				x: xAxisInterval * labelIndex + chartXStart + xSpacing,
@@ -255,24 +254,33 @@ const Axis = (props: AxisProps) => {
 			};
 		});
 
-		let selectedAreaRect = null
+		let selectedAreaRect = null;
 
-		if(selectedArea) {
-			const areaStartX = labels.find(label => label.value === selectedArea?.[0])?.x
-			const areaEndX = labels.find(label => label.value === selectedArea?.[1])?.x
-			const areaX = areaStartX ? areaStartX - xSpacing / 2 - padding / 6 : 0
-			const areaY = 0
-			const areaWidth = areaEndX && areaStartX ? areaEndX - areaStartX + xSpacing + padding / 3 : 0
-			const areaHeight = chartYEnd
+		if (selectedArea) {
+			const areaStartX = labels.find(
+				(label) => label.value === selectedArea?.[0],
+			)?.x;
+			const areaEndX = labels.find(
+				(label) => label.value === selectedArea?.[1],
+			)?.x;
+			const areaX = areaStartX ? areaStartX - xSpacing / 2 - padding / 6 : 0;
+			const areaY = 0;
+			const areaWidth =
+				areaEndX && areaStartX
+					? areaEndX - areaStartX + xSpacing + padding / 3
+					: 0;
+			const areaHeight = chartYEnd;
 
-			selectedAreaRect = <rect
-			x={areaX}
-			y={areaY}
-			width={areaWidth}
-			height={areaHeight}
-			fill={selectedAreaColor ?? 'red'}
-			opacity={selectedAreaOpacity ?? 0.2}
-			/>
+			selectedAreaRect = (
+				<rect
+					x={areaX}
+					y={areaY}
+					width={areaWidth}
+					height={areaHeight}
+					fill={selectedAreaColor ?? "red"}
+					opacity={selectedAreaOpacity ?? 0.2}
+				/>
+			);
 		}
 
 		const xPoints = labels.map((label, labelIndex) => {

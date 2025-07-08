@@ -206,7 +206,6 @@ const Svg = (props: SVGProps) => {
 			onMouseMove={handleMouseMove}
 			onMouseLeave={handleMouseLeave}
 		>
-			<title>{chartID}</title>
 			{children}
 		</svg>
 	);

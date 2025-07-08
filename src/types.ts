@@ -10,10 +10,15 @@ export type PieSerieEl = {
 	format?: (value: number) => string;
 };
 
+export type AngleDonutSerieEl = PieSerieEl & {
+	maxValue?: number;
+	trackColor?: string;
+};
+
 export type Serie = {
 	name: string;
 	uom?: string;
-	data: TimeSerieEl[] | PieSerieEl[] | number;
+	data: TimeSerieEl[] | PieSerieEl[] | AngleDonutSerieEl[] | number;
 	labels?: { name: string; value?: string }[];
 	type?: string;
 	axisName?: string;

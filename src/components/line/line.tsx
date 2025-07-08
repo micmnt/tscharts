@@ -21,6 +21,8 @@ export type LineProps = {
 	lineOffset?: number;
 	tiltLabels?: boolean;
 	tiltLabelsAngle?: number;
+	fill?: string;
+	fillOpacity?: number
 };
 
 const Line = (props: LineProps) => {
@@ -39,6 +41,8 @@ const Line = (props: LineProps) => {
 		lineOffset = undefined,
 		tiltLabels = false,
 		tiltLabelsAngle = 45,
+		fill = undefined,
+		fillOpacity = 0
 	} = props;
 
 	const ctx = useCharts();
@@ -94,8 +98,9 @@ const Line = (props: LineProps) => {
 					strokeLinejoin="round"
 					d={linePath}
 					strokeWidth={theme?.line?.size}
-					fill="none"
 					stroke={serieColor}
+					fill={fill}
+					fillOpacity={fillOpacity}
 				/>
 			)}
 			{(showLabels || higlightLabels) &&
