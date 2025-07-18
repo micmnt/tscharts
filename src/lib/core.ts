@@ -390,10 +390,10 @@ export const generateYAxis = (
 	let negativeSerieMaxValue = 0;
 	if (ctx.negative) {
 		const negativeSeries = ctx.elements.filter((el) =>
-			(el.data as TimeSerieEl[]).some((dataEl) => dataEl.value < 0),
+			(el.data as TimeSerieEl[])?.some((dataEl) => dataEl.value < 0),
 		);
 		const positiveSeries = ctx.elements.filter(
-			(el) => !(el.data as TimeSerieEl[]).some((dataEl) => dataEl.value < 0),
+			(el) => !(el.data as TimeSerieEl[])?.some((dataEl) => dataEl.value < 0),
 		);
 		serieMaxValue = getTimeSerieMaxValue([
 			...positiveSeries.flatMap((el) => el.data as TimeSerieEl[]),
@@ -1060,7 +1060,7 @@ export const generateNegativeDataPaths = (
 		const isNegative =
 			(serieEl.value ?? 0) < 0 ||
 			(serieEl.value === 0 &&
-				timeSerieData.some((serieEl) => (serieEl.value ?? 0) < 0));
+				timeSerieData?.some((serieEl) => (serieEl.value ?? 0) < 0));
 		const value = getValuePosition(
 			flatMaxValue,
 			absValue,

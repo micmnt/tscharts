@@ -60,7 +60,7 @@ const Chart = (props: ChartProps) => {
 	// Controllo se nelle serie da graficare ci sono elementi con valore negativo
 	const negative = timeSeriesElements
 		.flatMap((timeSerieEl) => timeSerieEl.data as TimeSerieEl[])
-		.some((el) => el.value < 0);
+		?.some((el) => el.value < 0);
 
 	const { leftAxisCount, rightAxisCount } = getAxisCount(yAxisCount);
 
