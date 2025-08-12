@@ -3,7 +3,7 @@
 import { nanoid } from "nanoid";
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 /* Core Imports */
-import { generateDataPaths, generateHorizontalDataPaths } from "../../lib/core";
+import { generateDataPaths, generateHorizontalDataPaths, generateNegativeDataPaths } from "../../lib/core";
 import type { TimeSerieEl } from "../../types";
 
 export type LineProps = {
@@ -22,7 +22,7 @@ export type LineProps = {
 	tiltLabels?: boolean;
 	tiltLabelsAngle?: number;
 	fill?: string;
-	fillOpacity?: number
+	fillOpacity?: number;
 };
 
 const Line = (props: LineProps) => {
@@ -42,7 +42,7 @@ const Line = (props: LineProps) => {
 		tiltLabels = false,
 		tiltLabelsAngle = 45,
 		fill = undefined,
-		fillOpacity = 0
+		fillOpacity = 0,
 	} = props;
 
 	const ctx = useCharts();
@@ -61,17 +61,20 @@ const Line = (props: LineProps) => {
 
 	if (!serieElement) return null;
 
-	const { paths, dataPoints } = horizontal
-		? (generateHorizontalDataPaths(
-				serieElement,
-				{ ...ctx, padding, trimZeros, barOffset: lineOffset },
-				"line",
-			) ?? {})
-		: (generateDataPaths(
-				serieElement,
-				{ ...ctx, padding, trimZeros },
-				"line",
-			) ?? {});
+	let result: {
+		paths: string[];
+		dataPoints: Map<any, any>;
+	} | null = null;
+	
+	if (ctx.negative) {
+		result = generateNegativeDataPaths(serieElement, { ...ctx, padding, trimZeros: Number(trimZeros)}, "line");
+	} else if (horizontal) {
+		result = generateHorizontalDataPaths(serieElement, { ...ctx, padding, trimZeros, barOffset: lineOffset }, "line");
+	} else {
+		result = generateDataPaths(serieElement, { ...ctx, padding, trimZeros }, "line");
+	}
+
+	const { paths, dataPoints } = result ?? {}
 
 	const linePath = paths?.filter((p) => p !== "").join() ?? "";
 

@@ -1,17 +1,17 @@
 import { nanoid } from "nanoid";
+import { Fragment, type ReactNode } from "react";
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 import { generateAngleDonutPaths } from "../../lib/core";
 import { isDefined } from "../../lib/utils";
-import { AngleDonutSerieEl } from "../../types";
-import { Fragment, ReactNode } from "react";
+import type { AngleDonutSerieEl } from "../../types";
 
 export type AngleDonutProps = {
 	name: string;
 	config?: {
 		innerRadius?: number;
-    angle?: number;
-    showTrack?: boolean;
-		customLabel?: ((el: AngleDonutSerieEl) => ReactNode) | string
+		angle?: number;
+		showTrack?: boolean;
+		customLabel?: ((el: AngleDonutSerieEl) => ReactNode) | string;
 		centerElement?: {
 			value?: string;
 			valueColor?: string;
@@ -29,11 +29,17 @@ export type AngleDonutProps = {
 };
 
 const AngleDonut = (props: AngleDonutProps) => {
-  const { name, config } = props;
+	const { name, config } = props;
 
-  const { innerRadius, centerElement, angle, showTrack, customLabel = undefined } = config ?? {};
+	const {
+		innerRadius,
+		centerElement,
+		angle,
+		showTrack,
+		customLabel = undefined,
+	} = config ?? {};
 
-  const ctx = useCharts();
+	const ctx = useCharts();
 
 	const theme = useChartsTheme();
 
@@ -46,17 +52,20 @@ const AngleDonut = (props: AngleDonutProps) => {
 	if (!elements) return null;
 
 	const serieElement = elements.find((el) => el.name === name);
-	
+
 	if (!serieElement) return null;
-	
-	const { paths, centerPoint, labelElement } = generateAngleDonutPaths(serieElement, {
-		...ctx,
-		padding,
-		innerRadius,
-		centerElement,
-		angle,
-		showTrack
-	});
+
+	const { paths, centerPoint, labelElement } = generateAngleDonutPaths(
+		serieElement,
+		{
+			...ctx,
+			padding,
+			innerRadius,
+			centerElement,
+			angle,
+			showTrack,
+		},
+	);
 	const serieData = serieElement.data as AngleDonutSerieEl[];
 
 	const slicesColors = serieData.map(
@@ -67,9 +76,11 @@ const AngleDonut = (props: AngleDonutProps) => {
 		(el, elIndex) => el.trackColor ?? theme.seriesColors?.[elIndex],
 	);
 
-	const shadowPaths = paths.map(el => el.shadowPath)?.filter(el => el !== '')
-	const normalPaths = paths.map(el => el.path)
-	
+	const shadowPaths = paths
+		.map((el) => el.shadowPath)
+		?.filter((el) => el !== "");
+	const normalPaths = paths.map((el) => el.path);
+
 	const slices = normalPaths.map((path, pathIndex) => (
 		<path
 			d={path}
@@ -87,32 +98,40 @@ const AngleDonut = (props: AngleDonutProps) => {
 			key={`${path}-${nanoid()}`}
 			shapeRendering="geometricPrecision"
 		/>
-	))
+	));
 
-	const returnValues = [...shadowSlices, ...slices]
+	const returnValues = [...shadowSlices, ...slices];
 
-	if(customLabel && isDefined(customLabel as string)) {
-	const labels = serieData.map(serieEl => {
-		if(typeof customLabel === 'string') {
-			return <Fragment key={`customDonutLabel-${nanoid()}`}>{customLabel}</Fragment>
-		}
+	if (customLabel && isDefined(customLabel as string)) {
+		const labels = serieData.map((serieEl) => {
+			if (typeof customLabel === "string") {
+				return (
+					<Fragment key={`customDonutLabel-${nanoid()}`}>
+						{customLabel}
+					</Fragment>
+				);
+			}
 
-		return <Fragment key={`customDonutLabel-${nanoid()}`}>{customLabel?.(serieEl)}</Fragment>
-	})
-	
-	const labelContainer = (
-		<foreignObject
-			key={`labelValue-${nanoid()}`}
-			x={labelElement.x}
-			y={labelElement.y}
-			width={labelElement.width}
-			height={labelElement.height}
+			return (
+				<Fragment key={`customDonutLabel-${nanoid()}`}>
+					{customLabel?.(serieEl)}
+				</Fragment>
+			);
+		});
+
+		const labelContainer = (
+			<foreignObject
+				key={`labelValue-${nanoid()}`}
+				x={labelElement.x}
+				y={labelElement.y}
+				width={labelElement.width}
+				height={labelElement.height}
 			>
 				{labels}
 			</foreignObject>
-			)
+		);
 
-		returnValues.push(labelContainer)
+		returnValues.push(labelContainer);
 	}
 
 	if (centerPoint && isDefined(centerElement?.value)) {
@@ -151,12 +170,11 @@ const AngleDonut = (props: AngleDonutProps) => {
 			</text>
 		);
 
-		returnValues.push(centerTextValue)
-		returnValues.push(centerTextLabel)
+		returnValues.push(centerTextValue);
+		returnValues.push(centerTextLabel);
 	}
-	
 
-  return returnValues;
-}
+	return returnValues;
+};
 
-export default AngleDonut
+export default AngleDonut;
