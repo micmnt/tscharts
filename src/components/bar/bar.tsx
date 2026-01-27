@@ -1,10 +1,9 @@
 /* Types Imports */
-import type { ThemeState, TimeSerieEl } from "../../types";
+
+import { nanoid } from "nanoid";
 
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
-
-import { nanoid } from "nanoid";
 /* Core Imports */
 import {
 	generateDataPaths,
@@ -12,6 +11,8 @@ import {
 	generateNegativeDataPaths,
 	generateStackedDataPaths,
 } from "../../lib/core";
+import { isFunction } from "../../lib/utils";
+import type { ThemeState, TimeSerieEl } from "../../types";
 
 export type BarProps = {
 	name: string;
@@ -23,6 +24,7 @@ export type BarProps = {
 		selectedColor?: string;
 		selectedValue?: string;
 		barClickAction?: (value: unknown) => void;
+		barDragAction?: (value: unknown) => void;
 		radius?: number;
 		topLeftRadius?: number;
 		topRightRadius?: number;
@@ -127,7 +129,55 @@ const Bar = (props: BarProps) => {
 			{paths
 				.filter((p) => p !== null && p !== undefined && !p.includes("NaN"))
 				.map((p) => (
-					<path key={`${p}-${nanoid()}`} d={p} fill={serieColor} />
+					<path
+						key={`${p}-${nanoid()}`}
+						d={p}
+						fill={serieColor}
+						onMouseDown={(event) => {
+							event.preventDefault();
+							const startY = event.clientY;
+							const handleMouseMove = (moveEvent: MouseEvent) => {
+								if (config?.barDragAction && isFunction(config.barDragAction)) {
+									const deltaY = moveEvent.clientY - startY;
+									const currentIndex = paths.findIndex((path) => path === p);
+									const currentValue = (serieElement.data as TimeSerieEl[])[
+										currentIndex
+									]?.value;
+
+									// Calcoliamo il fattore di scala basato sul range del grafico
+									const yRange = (ctx.chartYEnd ?? 0) - padding * 3; // Sottraiamo il padding per le labels dell'asse X
+									// Usiamo il valore massimo assoluto tra tutte le serie
+									const maxValue = Math.max(
+										...(elements ?? [])
+											.filter((el) => el.type !== "pie")
+											.map((serie) =>
+												Math.max(
+													...(serie.data as TimeSerieEl[]).map((d) =>
+														Math.abs(d.value),
+													),
+												),
+											),
+									);
+
+									// Convertiamo il deltaY in un delta di valore usando la stessa logica di getValuePosition
+									const valueDelta = (deltaY * maxValue) / yRange;
+
+									// Calcoliamo il nuovo valore assicurandoci che non vada sotto zero
+									const newValue = Math.max(0, currentValue - valueDelta);
+
+									config.barDragAction(newValue);
+								}
+							};
+
+							const handleMouseUp = () => {
+								document.removeEventListener("mousemove", handleMouseMove);
+								document.removeEventListener("mouseup", handleMouseUp);
+							};
+
+							document.addEventListener("mousemove", handleMouseMove);
+							document.addEventListener("mouseup", handleMouseUp);
+						}}
+					/>
 				))}
 			{topLabelSerie &&
 				labelsPoints.map(
