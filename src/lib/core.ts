@@ -367,6 +367,24 @@ export const getSerieAssociatedThresholds = (
 	return seriesThresholds;
 };
 
+// Funzione che normalizza ctx.elements[i].data in TimeSerieEl[]
+export const normalizeSerieElementsData = (elements: Serie[]) => {
+  if (!elements) return []
+
+  // Prendo le serie che sono delle soglie
+  const thresholdsSeries = elements.filter(el => el.type === 'threshold')
+    .map(el => ({ ...el, data: [{ date: 'null', value: el.data as number }] }))
+
+  const lineOrBarSeries = elements.filter(el => el.type === 'line'
+    || el.type === 'bar'
+    || el.type === 'bar-stacked'
+    || el.type === 'group-bar'
+  )
+
+  return [...lineOrBarSeries, ...thresholdsSeries]
+
+}
+
 // funzione che genera gli assi di un grafico
 export const generateYAxis = (
 	serie: Serie,
@@ -395,10 +413,11 @@ export const generateYAxis = (
 	let serieMaxValue = 0;
 	let negativeSerieMaxValue = 0;
 	if (ctx.negative) {
-		const negativeSeries = ctx.elements.filter((el) =>
+		const normalizedElements = normalizeSerieElementsData(ctx.elements)
+		const negativeSeries = normalizedElements.filter((el) =>
 			(el.data as TimeSerieEl[])?.some((dataEl) => dataEl.value < 0),
 		);
-		const positiveSeries = ctx.elements.filter(
+		const positiveSeries = normalizedElements.filter(
 			(el) => !(el.data as TimeSerieEl[])?.some((dataEl) => dataEl.value < 0),
 		);
 		serieMaxValue = getTimeSerieMaxValue([
