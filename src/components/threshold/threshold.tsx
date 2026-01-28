@@ -73,30 +73,22 @@ const Threshold = (props: ThresholdProps) => {
 
 	const flatMax = ctx.flatMax ? calculateFlatValue(serieMax) : serieMax;
 
-	const zeroY = ctx.negative ? ctx.chartYMiddle ?? 0 : chartYEnd
-	
+	const zeroY = ctx.negative ? (ctx.chartYMiddle ?? 0) : chartYEnd;
+
 	const chartDimension = ctx.negative
 		? zeroY - 3.1 * padding
-		: chartYEnd - padding
+		: chartYEnd - padding;
 
+	const isNegative = thresholdValue < 0;
 
-	const isNegative = thresholdValue < 0
-
-	const position = getValuePosition(
-		flatMax,
-		thresholdValue,
-		chartDimension,
-	);
+	const position = getValuePosition(flatMax, thresholdValue, chartDimension);
 
 	let svgValue = chartYEnd - position;
 
-	
 	if (ctx.negative) {
-		svgValue = isNegative
-		? zeroY + position
-		: zeroY - position
+		svgValue = isNegative ? zeroY + position : zeroY - position;
 	}
-	
+
 	const textY =
 		svgValue < chartYEnd / 2 - padding
 			? svgValue - padding / 2

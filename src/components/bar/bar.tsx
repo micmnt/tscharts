@@ -1,10 +1,9 @@
 /* Types Imports */
-import type { ThemeState, TimeSerieEl } from "../../types";
+
+import { nanoid } from "nanoid";
 
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
-
-import { nanoid } from "nanoid";
 /* Core Imports */
 import {
 	generateDataPaths,
@@ -12,6 +11,7 @@ import {
 	generateNegativeDataPaths,
 	generateStackedDataPaths,
 } from "../../lib/core";
+import type { ThemeState, TimeSerieEl } from "../../types";
 
 export type BarProps = {
 	name: string;
