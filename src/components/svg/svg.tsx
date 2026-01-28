@@ -123,7 +123,7 @@ const Svg = (props: SVGProps) => {
 					chartXStart,
 					chartXEnd,
 					chartYEnd,
-					chartYMiddle: (chartYEnd + 3 * padding) / 2,
+					chartYMiddle: (chartYEnd + 2 * padding) / 2,
 					chartID,
 					globalConfig: globalConfig.current,
 				},

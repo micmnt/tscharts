@@ -369,19 +369,19 @@ export const getSerieAssociatedThresholds = (
 
 // Funzione che normalizza ctx.elements[i].data in TimeSerieEl[]
 export const normalizeSerieElementsData = (elements: Serie[]) => {
-  if (!elements) return []
+	if (!elements) return []
 
-  // Prendo le serie che sono delle soglie
-  const thresholdsSeries = elements.filter(el => el.type === 'threshold')
-    .map(el => ({ ...el, data: [{ date: 'null', value: el.data as number }] }))
+	// Prendo le serie che sono delle soglie
+	const thresholdsSeries = elements.filter(el => el.type === 'threshold')
+		.map(el => ({ ...el, data: [{ date: 'null', value: el.data as number }] }))
 
-  const lineOrBarSeries = elements.filter(el => el.type === 'line'
-    || el.type === 'bar'
-    || el.type === 'bar-stacked'
-    || el.type === 'group-bar'
-  )
+	const lineOrBarSeries = elements.filter(el => el.type === 'line'
+		|| el.type === 'bar'
+		|| el.type === 'bar-stacked'
+		|| el.type === 'group-bar'
+	)
 
-  return [...lineOrBarSeries, ...thresholdsSeries]
+	return [...lineOrBarSeries, ...thresholdsSeries]
 
 }
 
@@ -832,9 +832,9 @@ export const generatePiePaths = (
 		const startAngle =
 			serieElIndex > 0
 				? startAngles
-						.slice(0, serieElIndex)
-						// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-						.reduce((acc, el) => (acc += el), 0)
+					.slice(0, serieElIndex)
+					// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+					.reduce((acc, el) => (acc += el), 0)
 				: 0;
 
 		const valueAngle =
@@ -1031,9 +1031,9 @@ export const generateNegativeDataPaths = (
 	// Converto gli zeri in null per ottenere delle spezzate in caso di ctx.trimZeros === true
 	const timeSerieData = ctx.trimZeros
 		? (serie.data as TimeSerieEl[]).map((el) => ({
-				...el,
-				value: el.value === 0 ? null : el.value,
-			}))
+			...el,
+			value: el.value === 0 ? null : el.value,
+		}))
 		: (serie.data as TimeSerieEl[]);
 
 	// raggruppo le serie per asse Y
@@ -1087,7 +1087,7 @@ export const generateNegativeDataPaths = (
 		? calculateFlatValue(serieMaxValue)
 		: serieMaxValue;
 
-	// Calcolo lo 0 per il grafico a con valori negativi
+	// Calcolo lo 0 per il grafico con valori negativi
 	const zeroY = ctx.chartYMiddle ?? 0;
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
@@ -1099,8 +1099,7 @@ export const generateNegativeDataPaths = (
 		const value = getValuePosition(
 			flatMaxValue,
 			absValue,
-			// chartYEnd - 4.5 * padding - (ctx?.globalConfig?.legendHeight as number ?? 0),
-			chartYEnd - 4.7 * padding,
+			chartYEnd - 3.5 * padding - (ctx?.globalConfig?.legendHeight as number ?? 0),
 		);
 
 		const serieY = isDefined(serieEl.value)
@@ -1208,9 +1207,9 @@ export const generateDataPaths = (
 	// Converto gli zeri in null per ottenere delle spezzate in caso di ctx.trimZeros === true
 	const timeSerieData = ctx.trimZeros
 		? (serie.data as TimeSerieEl[]).map((el) => ({
-				...el,
-				value: el.value === 0 ? null : el.value,
-			}))
+			...el,
+			value: el.value === 0 ? null : el.value,
+		}))
 		: (serie.data as TimeSerieEl[]);
 
 	// raggruppo le serie per asse Y
@@ -1585,7 +1584,7 @@ export const generateStackedGroupDataPaths = (
 		const serieElX =
 			serieElIndex * xAxisGroupInterval +
 			(xAxisInterval - barWidth + padding / 2 / groupBarNumber) *
-				serieGroupIndex +
+			serieGroupIndex +
 			(chartXStart + padding / 2);
 
 		const point =
@@ -1723,9 +1722,9 @@ export const generateHorizontalDataPaths = (
 
 	const timeSerieData = ctx.trimZeros
 		? (serie.data as TimeSerieEl[]).map((el) => ({
-				...el,
-				value: el.value === 0 ? null : el.value,
-			}))
+			...el,
+			value: el.value === 0 ? null : el.value,
+		}))
 		: (serie.data as TimeSerieEl[]);
 
 	const axisSeries = getSeriesByAxisName(
