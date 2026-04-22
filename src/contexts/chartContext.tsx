@@ -6,6 +6,7 @@ import {
 	type Dispatch,
 	type ReactNode,
 	useContext,
+	useEffect,
 	useReducer,
 } from "react";
 /* Theme Imports */
@@ -29,6 +30,27 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 	const { children, initialState, theme = defaultTheme } = props;
 
 	const [chart, dispatch] = useReducer(chartReducer, initialState);
+
+	useEffect(() => {
+		dispatch({
+			type: "SYNC_PROPS",
+			payload: {
+				elements: initialState.elements,
+				width: initialState.width,
+				height: initialState.height,
+				negative: initialState.negative,
+				flatMax: initialState.flatMax,
+				timeSeriesMaxValue: initialState.timeSeriesMaxValue,
+			},
+		});
+	}, [
+		initialState.elements,
+		initialState.width,
+		initialState.height,
+		initialState.negative,
+		initialState.flatMax,
+		initialState.timeSeriesMaxValue,
+	]);
 
 	if (!(chart && dispatch)) return null;
 
@@ -82,6 +104,20 @@ function chartReducer(
 				...chart,
 				tooltipPosition,
 				mousePosition,
+			};
+		}
+		case "SYNC_PROPS": {
+			const { elements, width, height, negative, flatMax, timeSeriesMaxValue } =
+				action.payload;
+
+			return {
+				...chart,
+				elements,
+				width,
+				height,
+				negative,
+				flatMax,
+				timeSeriesMaxValue,
 			};
 		}
 		default: {

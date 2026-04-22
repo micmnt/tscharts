@@ -1,7 +1,5 @@
 /* Types Imports */
 
-import { nanoid } from "nanoid";
-
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 /* Core Imports */
@@ -10,9 +8,21 @@ import {
 	generateHorizontalDataPaths,
 	generateNegativeDataPaths,
 	generateStackedDataPaths,
+	getSerieAssociatedThresholds,
+	getSeriesByAxisName,
+	getTimeSerieMaxValue,
 } from "../../lib/core";
-import { isFunction } from "../../lib/utils";
+import { calculateFlatValue, isFunction } from "../../lib/utils";
 import type { ThemeState, TimeSerieEl } from "../../types";
+
+export type BarDragPayload = {
+	value: number;
+	previousValue: number;
+	deltaValue: number;
+	index: number;
+	date?: string;
+	serieName: string;
+};
 
 export type BarProps = {
 	name: string;
@@ -24,7 +34,8 @@ export type BarProps = {
 		selectedColor?: string;
 		selectedValue?: string;
 		barClickAction?: (value: unknown) => void;
-		barDragAction?: (value: unknown) => void;
+		barDragAction?: (value: BarDragPayload) => void;
+		dragValueDecimals?: number;
 		radius?: number;
 		topLeftRadius?: number;
 		topRightRadius?: number;
@@ -60,6 +71,7 @@ const Bar = (props: BarProps) => {
 	const { padding } = theme;
 
 	const {
+		dragValueDecimals = 2,
 		radius = 0,
 		topLeftRadius = 0,
 		topRightRadius = 0,
@@ -121,6 +133,24 @@ const Bar = (props: BarProps) => {
 
 	const barPoints = dataPoints?.get(serieElement.name) ?? [];
 	const labelsPoints = topLabelsPoints?.get(serieElement.name) ?? [];
+	const axisSeries = getSeriesByAxisName(
+		elements ?? [],
+		serieElement.axisName ?? serieElement.name,
+	);
+	const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
+	const associatedThresholds = elements
+		? getSerieAssociatedThresholds(elements, serieElement.name)
+		: [];
+	const serieMaxValue = getTimeSerieMaxValue([
+		...flatAxisSeriesData,
+		...associatedThresholds,
+	]);
+	const dragMaxValue = ctx.flatMax
+		? calculateFlatValue(serieMaxValue)
+		: serieMaxValue;
+	const chartHeight = Math.max(1, (ctx.chartYEnd ?? 0) - padding);
+	const normalizedDragDecimals = Math.max(0, Math.floor(dragValueDecimals));
+	const decimalFactor = 10 ** normalizedDragDecimals;
 
 	if (!paths) return null;
 
@@ -128,54 +158,94 @@ const Bar = (props: BarProps) => {
 		<>
 			{paths
 				.filter((p) => p !== null && p !== undefined && !p.includes("NaN"))
-				.map((p) => (
+				.map((p, pathIndex) => (
 					<path
-						key={`${p}-${nanoid()}`}
+						key={`${serieElement.name}-bar-${pathIndex}`}
 						d={p}
 						fill={serieColor}
-						onMouseDown={(event) => {
+						style={{
+							cursor: config?.barDragAction ? "ns-resize" : "default",
+							touchAction: "none",
+							transition: "d 90ms linear",
+						}}
+						onPointerDown={(event) => {
+							if (!config?.barDragAction || !isFunction(config.barDragAction)) {
+								return;
+							}
+
 							event.preventDefault();
-							const startY = event.clientY;
-							const handleMouseMove = (moveEvent: MouseEvent) => {
-								if (config?.barDragAction && isFunction(config.barDragAction)) {
-									const deltaY = moveEvent.clientY - startY;
-									const currentIndex = paths.findIndex((path) => path === p);
-									const currentValue = (serieElement.data as TimeSerieEl[])[
-										currentIndex
-									]?.value;
 
-									// Calcoliamo il fattore di scala basato sul range del grafico
-									const yRange = (ctx.chartYEnd ?? 0) - padding * 3; // Sottraiamo il padding per le labels dell'asse X
-									// Usiamo il valore massimo assoluto tra tutte le serie
-									const maxValue = Math.max(
-										...(elements ?? [])
-											.filter((el) => el.type !== "pie")
-											.map((serie) =>
-												Math.max(
-													...(serie.data as TimeSerieEl[]).map((d) =>
-														Math.abs(d.value),
-													),
-												),
-											),
-									);
+							const currentDataPoint = (serieElement.data as TimeSerieEl[])[
+								pathIndex
+							];
+							const currentValue = currentDataPoint?.value ?? 0;
 
-									// Convertiamo il deltaY in un delta di valore usando la stessa logica di getValuePosition
-									const valueDelta = (deltaY * maxValue) / yRange;
+							if (dragMaxValue <= 0) {
+								config.barDragAction({
+									value: currentValue,
+									previousValue: currentValue,
+									deltaValue: 0,
+									index: pathIndex,
+									date: currentDataPoint?.date,
+									serieName: serieElement.name,
+								});
+								return;
+							}
 
-									// Calcoliamo il nuovo valore assicurandoci che non vada sotto zero
-									const newValue = Math.max(0, currentValue - valueDelta);
+							const startClientY = event.clientY;
+							let lastClientY = startClientY;
+							let rafId: number | null = null;
 
-									config.barDragAction(newValue);
+							const emitDragValue = (clientY: number) => {
+								const deltaPixels = startClientY - clientY;
+								const rawDeltaValue =
+									(deltaPixels / chartHeight) * dragMaxValue;
+								const rawValue = Math.max(0, currentValue + rawDeltaValue);
+								const value =
+									Math.round(rawValue * decimalFactor) / decimalFactor;
+								const deltaValue = value - currentValue;
+
+								config.barDragAction?.({
+									value,
+									previousValue: currentValue,
+									deltaValue,
+									index: pathIndex,
+									date: currentDataPoint?.date,
+									serieName: serieElement.name,
+								});
+							};
+
+							const scheduleEmit = () => {
+								if (rafId !== null) return;
+								rafId = window.requestAnimationFrame(() => {
+									rafId = null;
+									emitDragValue(lastClientY);
+								});
+							};
+
+							const onPointerMove = (moveEvent: PointerEvent) => {
+								lastClientY = moveEvent.clientY;
+								scheduleEmit();
+							};
+
+							const cleanup = () => {
+								if (rafId !== null) {
+									window.cancelAnimationFrame(rafId);
+									rafId = null;
 								}
+								window.removeEventListener("pointermove", onPointerMove);
+								window.removeEventListener("pointerup", onPointerUp);
+								window.removeEventListener("pointercancel", onPointerUp);
 							};
 
-							const handleMouseUp = () => {
-								document.removeEventListener("mousemove", handleMouseMove);
-								document.removeEventListener("mouseup", handleMouseUp);
+							const onPointerUp = () => {
+								emitDragValue(lastClientY);
+								cleanup();
 							};
 
-							document.addEventListener("mousemove", handleMouseMove);
-							document.addEventListener("mouseup", handleMouseUp);
+							window.addEventListener("pointermove", onPointerMove);
+							window.addEventListener("pointerup", onPointerUp);
+							window.addEventListener("pointercancel", onPointerUp);
 						}}
 					/>
 				))}
@@ -188,7 +258,7 @@ const Bar = (props: BarProps) => {
 								fontSize={topLabelSize}
 								fontWeight="bold"
 								fill={topLabelColor}
-								key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
+								key={`${serieElement.name}-top-label-${dataPointIndex}`}
 								x={point[0]}
 								y={Number.isNaN(point[1]) ? 0 : point[1]}
 							>
@@ -213,7 +283,7 @@ const Bar = (props: BarProps) => {
 								fontSize={labelSize}
 								fontWeight="bold"
 								fill={labelColor}
-								key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
+								key={`${serieElement.name}-label-${dataPointIndex}`}
 								x={point[0]}
 								y={Number.isNaN(point[1]) ? 0 : point[1]}
 							>

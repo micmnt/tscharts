@@ -89,6 +89,8 @@ const Axis = (props: AxisProps) => {
 	const chartYEnd = _chartYEnd as number;
 
 	const tooltipElement = document?.getElementById(`cts-tooltip-${chartID}`);
+	const isBarDragEnabled =
+		!!globalConfig?.barDragAction && isFunction(globalConfig.barDragAction);
 
 	const labelFontSize = labelSize ?? theme?.axis?.labelSize;
 
@@ -155,7 +157,7 @@ const Axis = (props: AxisProps) => {
 									stroke={gridColor ?? theme?.grid?.color}
 								/>
 							) : null}
-							{tooltipElement ? (
+							{tooltipElement && !isBarDragEnabled ? (
 								<rect
 									onClick={() => {
 										if (
@@ -323,7 +325,7 @@ const Axis = (props: AxisProps) => {
 								stroke={gridColor ?? theme?.grid?.color}
 							/>
 						) : null}
-						{tooltipElement ? (
+						{tooltipElement && !isBarDragEnabled ? (
 							<rect
 								onClick={() => {
 									if (
