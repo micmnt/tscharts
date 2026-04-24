@@ -45,7 +45,7 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 		initialState.elements,
 		initialState.negative,
 		initialState.flatMax,
-		initialState.timeSeriesMaxValue
+		initialState.timeSeriesMaxValue,
 	]);
 
 	if (!(chart && dispatch)) return null;

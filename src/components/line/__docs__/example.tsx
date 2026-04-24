@@ -5,7 +5,7 @@ import Line, { type LineProps } from "../line";
 
 const elements = {
 	name: "tempi migliori",
-	type: 'line',
+	type: "line",
 	uom: "s",
 	data: [
 		{

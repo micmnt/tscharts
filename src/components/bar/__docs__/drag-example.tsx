@@ -69,7 +69,7 @@ const DragExample: FC<DragExampleProps> = ({
 		<div
 			style={{
 				display: "flex",
-				width: '100%',
+				width: "100%",
 				flexDirection: "column",
 				justifyContent: "center",
 				alignItems: "center",

@@ -16,8 +16,10 @@ export default defineConfig({
 		sourcemap: true, // Generates source maps for debugging.
 		emptyOutDir: true, // Clears the output directory before building.
 	},
-	plugins: [dts({
-		insertTypesEntry: true,
-		exclude: ["**/*.css", "src/**/__docs__", "src/**/__test__"],
-	})], // Uses the 'vite-plugin-dts' plugin for generating TypeScript declaration files (d.ts).
+	plugins: [
+		dts({
+			insertTypesEntry: true,
+			exclude: ["**/*.css", "src/**/__docs__", "src/**/__test__"],
+		}),
+	], // Uses the 'vite-plugin-dts' plugin for generating TypeScript declaration files (d.ts).
 });

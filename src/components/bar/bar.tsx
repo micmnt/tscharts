@@ -157,7 +157,13 @@ const Bar = (props: BarProps) => {
 	return (
 		<>
 			{paths
-				.filter((p) => p !== null && p !== undefined && !p.includes("NaN") && !p.includes("Infinity"))
+				.filter(
+					(p) =>
+						p !== null &&
+						p !== undefined &&
+						!p.includes("NaN") &&
+						!p.includes("Infinity"),
+				)
 				.map((p, pathIndex) => (
 					<path
 						key={`${serieElement.name}-bar-${pathIndex}`}
@@ -264,13 +270,13 @@ const Bar = (props: BarProps) => {
 							>
 								{topLabelSerieElement?.format
 									? topLabelSerieElement.format(
-										(topLabelSerieElement?.data as TimeSerieEl[])?.[
-											dataPointIndex
-										]?.value,
-									)
+											(topLabelSerieElement?.data as TimeSerieEl[])?.[
+												dataPointIndex
+											]?.value,
+										)
 									: (topLabelSerieElement?.data as TimeSerieEl[])?.[
-										dataPointIndex
-									]?.value}
+											dataPointIndex
+										]?.value}
 							</text>
 						) : null,
 				)}
@@ -289,11 +295,11 @@ const Bar = (props: BarProps) => {
 							>
 								{serieElement.format
 									? serieElement.format(
-										(serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-											?.value,
-									)
+											(serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
+												?.value,
+										)
 									: (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-										?.value}
+											?.value}
 							</text>
 						) : null,
 					)

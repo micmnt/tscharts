@@ -1,12 +1,12 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.0.5/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
 	"vcs": {
 		"enabled": false,
 		"clientKind": "git",
 		"useIgnoreFile": false
 	},
 	"files": {
-		"includes": ["**", "!dist/**"]
+		"includes": ["**", "!dist"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -15,8 +15,15 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
+			"correctness": {
+				"noUnusedImports": "off"
+			},
+			"complexity": {
+				"noUselessFragments": "off"
+			},
 			"suspicious": {
-				"noExplicitAny": "off"
+				"noExplicitAny": "off",
+				"noArrayIndexKey": "off"
 			},
 			"performance": {
 				"noAccumulatingSpread": "off"

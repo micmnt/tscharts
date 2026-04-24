@@ -1,4 +1,4 @@
-import { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react";
 import DragExample from "./drag-example";
 
 const meta: Meta<typeof DragExample> = {
@@ -8,7 +8,7 @@ const meta: Meta<typeof DragExample> = {
 
 export default meta;
 
-type DragStory = StoryObj<typeof DragExample>
+type DragStory = StoryObj<typeof DragExample>;
 
 export const Draggable: DragStory = {
 	args: {
