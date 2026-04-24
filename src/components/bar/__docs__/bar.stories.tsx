@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import Example from "./example";
-import DragExample from "./drag-example";
 
 const meta: Meta<typeof Example> = {
 	title: "Bar Chart",
@@ -22,12 +21,4 @@ export const Simple: Story = {
 	},
 };
 
-export const Draggable: StoryObj<typeof DragExample> = {
-	render: (args) => <DragExample {...args} />,
-	args: {
-		name: "tempi migliori",
-		showLabels: true,
-		barWidth: 28,
-		dragValueDecimals: 3,
-	},
-};
+

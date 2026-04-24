@@ -1,4 +1,4 @@
-import { type FC, useState } from "react";
+import React, { type FC, useState } from "react";
 import Axis from "../../axis/axis";
 import Chart from "../../chart/chart";
 import Legend from "../../legend/legend";
@@ -69,44 +69,44 @@ const DragExample: FC<DragExampleProps> = ({
 		<div
 			style={{
 				display: "flex",
+				width: '100%',
+				flexDirection: "column",
 				justifyContent: "center",
 				alignItems: "center",
 				height: "100%",
 			}}
 		>
-			<div style={{ width: 460 }}>
-				<div
-					style={{
-						fontFamily: "monospace",
-						fontSize: 12,
-						marginBottom: 8,
-					}}
-				>
-					{dragInfo
-						? `dragging index ${dragInfo.index}: ${dragInfo.value.toFixed(dragValueDecimals)} ${serie.uom}`
-						: "Drag a bar to update its value in real time"}
-				</div>
-				<Chart width={460} height={360} elements={elements}>
-					<Axis type="yAxis" name="tempi migliori" showLine showName />
-					<Bar
-						name={name}
-						showLabels={showLabels}
-						config={{
-							barWidth,
-							dragValueDecimals,
-							barDragAction: handleDrag,
-						}}
-					/>
-					<Axis
-						type="xAxis"
-						dataPoints={dataPoints}
-						showLine
-						showName
-						name="Data di riferimento per i valori"
-					/>
-					<Legend legendType="horizontal" height={90} />
-				</Chart>
+			<div
+				style={{
+					fontFamily: "monospace",
+					fontSize: 12,
+					marginBottom: 8,
+				}}
+			>
+				{dragInfo
+					? `dragging index ${dragInfo.index}: ${dragInfo.value.toFixed(dragValueDecimals)} ${serie.uom}`
+					: "Drag a bar to update its value in real time"}
 			</div>
+			<Chart width={460} height={360} elements={elements}>
+				<Axis type="yAxis" name="tempi migliori" showLine showName />
+				<Bar
+					name={name}
+					showLabels={showLabels}
+					config={{
+						barWidth,
+						dragValueDecimals,
+						barDragAction: handleDrag,
+					}}
+				/>
+				<Axis
+					type="xAxis"
+					dataPoints={dataPoints}
+					showLine
+					showName
+					name="Data di riferimento per i valori"
+				/>
+				<Legend legendType="horizontal" height={90} />
+			</Chart>
 		</div>
 	);
 };

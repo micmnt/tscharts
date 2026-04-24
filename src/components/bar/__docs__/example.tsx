@@ -113,7 +113,7 @@ const Example: FC<BarProps> = ({
 					dataPoints={dataPoints}
 					showLine
 					showName
-					name="Data di riferimento per i valori"
+					// name="Data di riferimento per i valori"
 				/>
 				<Legend legendType="horizontal" height={90} />
 			</Chart>

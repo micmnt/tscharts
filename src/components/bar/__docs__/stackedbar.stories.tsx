@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import Example from "./stacked-example";
 
 const meta: Meta<typeof Example> = {
-	title: "Stacked Bar Chart",
+	title: "Bar Chart/Stacked",
 	component: Example,
 };
 
