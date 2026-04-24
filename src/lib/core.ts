@@ -345,11 +345,11 @@ export const getSeriesByAxisName = (elements: Serie[], axisName: string) => {
 	if (!elements || !axisName) return [];
 	// Prendo i valori delle serie presenti associate all'asse da graficare
 	const axisSeries = elements
-		.filter(
-			(el) =>
-				(el.type === "line" || el.type === "bar") && el.axisName === axisName,
-		)
-		.map((el) => el.data);
+	.filter(
+		(el) =>
+			(el.type === "line" || el.type === "bar") && (el.axisName === axisName || el.name === axisName),
+	)
+	.map((el) => el.data);
 	return axisSeries;
 };
 
@@ -837,9 +837,9 @@ export const generatePiePaths = (
 		const startAngle =
 			serieElIndex > 0
 				? startAngles
-						.slice(0, serieElIndex)
-						// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-						.reduce((acc, el) => (acc += el), 0)
+					.slice(0, serieElIndex)
+					// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+					.reduce((acc, el) => (acc += el), 0)
 				: 0;
 
 		const valueAngle =
@@ -1036,9 +1036,9 @@ export const generateNegativeDataPaths = (
 	// Converto gli zeri in null per ottenere delle spezzate in caso di ctx.trimZeros === true
 	const timeSerieData = ctx.trimZeros
 		? (serie.data as TimeSerieEl[]).map((el) => ({
-				...el,
-				value: el.value === 0 ? null : el.value,
-			}))
+			...el,
+			value: el.value === 0 ? null : el.value,
+		}))
 		: (serie.data as TimeSerieEl[]);
 
 	// raggruppo le serie per asse Y
@@ -1105,8 +1105,8 @@ export const generateNegativeDataPaths = (
 			flatMaxValue,
 			absValue,
 			chartYEnd -
-				3.5 * padding -
-				((ctx?.globalConfig?.legendHeight as number) ?? 0),
+			3.5 * padding -
+			((ctx?.globalConfig?.legendHeight as number) ?? 0),
 		);
 
 		const serieY = isDefined(serieEl.value)
@@ -1201,6 +1201,7 @@ export const generateDataPaths = (
 	},
 	type: "line" | "bar",
 ) => {
+
 	if (!ctx.elements) return null;
 
 	// Preparo la struttura per i dataPoints da mostrare dentro le barre
@@ -1214,9 +1215,9 @@ export const generateDataPaths = (
 	// Converto gli zeri in null per ottenere delle spezzate in caso di ctx.trimZeros === true
 	const timeSerieData = ctx.trimZeros
 		? (serie.data as TimeSerieEl[]).map((el) => ({
-				...el,
-				value: el.value === 0 ? null : el.value,
-			}))
+			...el,
+			value: el.value === 0 ? null : el.value,
+		}))
 		: (serie.data as TimeSerieEl[]);
 
 	// raggruppo le serie per asse Y
@@ -1591,7 +1592,7 @@ export const generateStackedGroupDataPaths = (
 		const serieElX =
 			serieElIndex * xAxisGroupInterval +
 			(xAxisInterval - barWidth + padding / 2 / groupBarNumber) *
-				serieGroupIndex +
+			serieGroupIndex +
 			(chartXStart + padding / 2);
 
 		const point =
@@ -1729,9 +1730,9 @@ export const generateHorizontalDataPaths = (
 
 	const timeSerieData = ctx.trimZeros
 		? (serie.data as TimeSerieEl[]).map((el) => ({
-				...el,
-				value: el.value === 0 ? null : el.value,
-			}))
+			...el,
+			value: el.value === 0 ? null : el.value,
+		}))
 		: (serie.data as TimeSerieEl[]);
 
 	const axisSeries = getSeriesByAxisName(

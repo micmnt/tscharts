@@ -152,12 +152,12 @@ const Bar = (props: BarProps) => {
 	const normalizedDragDecimals = Math.max(0, Math.floor(dragValueDecimals));
 	const decimalFactor = 10 ** normalizedDragDecimals;
 
-	if (!paths) return null;
+	if (!ctx.chartXEnd || !ctx.chartYEnd || !paths) return null;
 
 	return (
 		<>
 			{paths
-				.filter((p) => p !== null && p !== undefined && !p.includes("NaN"))
+				.filter((p) => p !== null && p !== undefined && !p.includes("NaN") && !p.includes("Infinity"))
 				.map((p, pathIndex) => (
 					<path
 						key={`${serieElement.name}-bar-${pathIndex}`}
@@ -264,13 +264,13 @@ const Bar = (props: BarProps) => {
 							>
 								{topLabelSerieElement?.format
 									? topLabelSerieElement.format(
-											(topLabelSerieElement?.data as TimeSerieEl[])?.[
-												dataPointIndex
-											]?.value,
-										)
-									: (topLabelSerieElement?.data as TimeSerieEl[])?.[
+										(topLabelSerieElement?.data as TimeSerieEl[])?.[
 											dataPointIndex
-										]?.value}
+										]?.value,
+									)
+									: (topLabelSerieElement?.data as TimeSerieEl[])?.[
+										dataPointIndex
+									]?.value}
 							</text>
 						) : null,
 				)}
@@ -289,11 +289,11 @@ const Bar = (props: BarProps) => {
 							>
 								{serieElement.format
 									? serieElement.format(
-											(serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-												?.value,
-										)
+										(serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
+											?.value,
+									)
 									: (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-											?.value}
+										?.value}
 							</text>
 						) : null,
 					)
