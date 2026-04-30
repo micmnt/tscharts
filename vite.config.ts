@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
-import { peerDependencies } from "./package.json";
 export default defineConfig({
 	build: {
 		lib: {
@@ -11,7 +10,12 @@ export default defineConfig({
 			cssFileName: "style",
 		},
 		rolldownOptions: {
-			external: [...Object.keys(peerDependencies)], // Defines external dependencies for Rollup bundling.
+			external: [
+				"react",
+        "react-dom",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime"
+			], // Defines external dependencies for Rollup bundling.
 		},
 		sourcemap: true, // Generates source maps for debugging.
 		emptyOutDir: true, // Clears the output directory before building.
