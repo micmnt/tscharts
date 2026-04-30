@@ -19,9 +19,15 @@ export default defineConfig({
 	plugins: [
 		dts({
 			insertTypesEntry: true,
-			rollupTypes: true,
+			outDir: './dist',
+			entryRoot: 'src',
+			include: ['src'],
 			tsconfigPath: './tsconfig.json',
 			exclude: ["**/*.css", "src/**/__docs__", "src/**/__test__"],
+			beforeWriteFile: (filePath, content) => ({
+				filePath: filePath.replace("/dist/src/", "/dist/"),
+				content,
+		}),
 		}),
 	], // Uses the 'vite-plugin-dts' plugin for generating TypeScript declaration files (d.ts).
 });
