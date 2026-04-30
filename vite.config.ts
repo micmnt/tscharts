@@ -7,7 +7,7 @@ export default defineConfig({
 			entry: "./src/index.ts", // Specifies the entry point for building the library.
 			name: "vite-react-ts-button", // Sets the name of the generated library.
 			fileName: (format) => `index.${format}.js`, // Generates the output file name based on the format.
-			formats: ["cjs", "es"], // Specifies the output formats (CommonJS and ES modules).
+			formats: ["es"],
 			cssFileName: "style",
 		},
 		rolldownOptions: {
@@ -19,15 +19,15 @@ export default defineConfig({
 	plugins: [
 		dts({
 			insertTypesEntry: true,
-			outDir: './dist',
-			entryRoot: 'src',
-			include: ['src'],
-			tsconfigPath: './tsconfig.json',
+			outDir: "./dist",
+			entryRoot: "src",
+			include: ["src"],
+			tsconfigPath: "./tsconfig.json",
 			exclude: ["**/*.css", "src/**/__docs__", "src/**/__test__"],
 			beforeWriteFile: (filePath, content) => ({
 				filePath: filePath.replace("/dist/src/", "/dist/"),
 				content,
-		}),
+			}),
 		}),
 	], // Uses the 'vite-plugin-dts' plugin for generating TypeScript declaration files (d.ts).
 });
