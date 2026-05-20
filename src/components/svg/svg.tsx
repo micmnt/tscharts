@@ -23,6 +23,7 @@ import {
 } from "../../lib/core";
 import { isDefined } from "../../lib/utils";
 import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
+import type { TimeSerieEl } from "../../types";
 
 type SVGProps = {
 	children: ReactNode;
@@ -148,6 +149,8 @@ const Svg = (props: SVGProps) => {
 	const { svgRef, chartXStart, chartXEnd, chartYEnd, width, height } =
 		ctx ?? {};
 
+	const { elements: ctxElements, globalConfig: ctxGlobalConfig } = ctx ?? {};
+
 	const handleMouseLeave = () => {
 		const tooltipElement = document.getElementById(`cts-tooltip-${chartID}`);
 		if (tooltipElement) {
@@ -187,9 +190,45 @@ const Svg = (props: SVGProps) => {
 					type: "SET_TOOLTIP_POSITION",
 					payload: { mousePosition: svgPoint, tooltipPosition },
 				});
+
+				// Compute hovered element index from svgPoint.x for non-pie charts
+				if (ctxElements?.[0] && ctxElements[0].type !== "pie") {
+					const serieData = ctxElements[0].data as TimeSerieEl[];
+					const xInterval = (chartXEnd - chartXStart) / (serieData.length || 1);
+					const xSpace = ctxGlobalConfig?.barWidth
+						? (Number(ctxGlobalConfig.barWidth) + (padding ?? 0)) / 2
+						: (padding ?? 0);
+					const hoveredIndex = Math.round(
+						(svgPoint.x - chartXStart - xSpace) / xInterval,
+					);
+					if (hoveredIndex >= 0 && hoveredIndex < serieData.length) {
+						const el = serieData[hoveredIndex];
+						if (el) {
+							dispatch({
+								type: "SET_HOVER_ELEMENT",
+								payload: {
+									hoveredElement: {
+										elementIndex: hoveredIndex,
+										label: el.date,
+									},
+								},
+							});
+						}
+					}
+				}
 			}
 		},
-		[svgRef, dispatch, chartXStart, chartXEnd, chartYEnd, chartID],
+		[
+			svgRef,
+			dispatch,
+			chartXStart,
+			chartXEnd,
+			chartYEnd,
+			chartID,
+			ctxElements,
+			ctxGlobalConfig,
+			padding,
+		],
 	);
 
 	if (!height) return null;

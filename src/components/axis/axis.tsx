@@ -89,8 +89,6 @@ const Axis = (props: AxisProps) => {
 	const chartYEnd = _chartYEnd as number;
 
 	const tooltipElement = document?.getElementById(`cts-tooltip-${chartID}`);
-	const isBarDragEnabled =
-		!!globalConfig?.barDragAction && isFunction(globalConfig.barDragAction);
 
 	const labelFontSize = labelSize ?? theme?.axis?.labelSize;
 
@@ -157,7 +155,7 @@ const Axis = (props: AxisProps) => {
 									stroke={gridColor ?? theme?.grid?.color}
 								/>
 							) : null}
-							{tooltipElement && !isBarDragEnabled ? (
+							{tooltipElement ? (
 								<rect
 									onClick={() => {
 										if (
@@ -325,35 +323,14 @@ const Axis = (props: AxisProps) => {
 								stroke={gridColor ?? theme?.grid?.color}
 							/>
 						) : null}
-						{tooltipElement && !isBarDragEnabled ? (
+						{tooltipElement ? (
 							<rect
-								onClick={() => {
-									if (
-										globalConfig?.barClickAction &&
-										isFunction(globalConfig.barClickAction)
-									) {
-										const serieEl = serieData[labelIndex];
-										globalConfig.barClickAction(serieEl);
-									}
-								}}
-								onMouseEnter={() => {
-									if (dispatch && labelIndex !== hoveredElement?.elementIndex) {
-										dispatch({
-											type: "SET_HOVER_ELEMENT",
-											payload: {
-												hoveredElement: {
-													elementIndex: labelIndex,
-													label: label.value,
-												},
-											},
-										});
-									}
-								}}
 								x={hoverRectX > 0 ? hoverRectX : 0}
 								y={0}
 								width={hoverRectWidth > 0 ? hoverRectWidth : 1}
 								height={height}
 								fill={fill}
+								style={{ pointerEvents: "none" }}
 							/>
 						) : null}
 					</>
