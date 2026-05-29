@@ -1,6 +1,6 @@
 {
 	"name": "tscharts",
-	"version": "0.17.7",
+	"version": "0.17.6",
 	"description": "",
 	"type": "module",
 	"main": "dist/index.es.js",
