@@ -12,9 +12,9 @@ export default defineConfig({
 		rolldownOptions: {
 			external: [
 				"react",
-        "react-dom",
-        "react/jsx-runtime",
-        "react/jsx-dev-runtime"
+				"react-dom",
+				"react/jsx-runtime",
+				"react/jsx-dev-runtime",
 			], // Defines external dependencies for Rollup bundling.
 		},
 		sourcemap: true, // Generates source maps for debugging.

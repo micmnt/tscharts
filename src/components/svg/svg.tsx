@@ -22,8 +22,8 @@ import {
 	getChartDimensions,
 } from "../../lib/core";
 import { isDefined } from "../../lib/utils";
-import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
 import type { TimeSerieEl } from "../../types";
+import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
 
 type SVGProps = {
 	children: ReactNode;
