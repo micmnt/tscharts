@@ -12,6 +12,14 @@ import {
 import { calculateFlatValue, isDefined } from "../../lib/utils";
 import type { ChartState, ThemeState, TimeSerieEl } from "../../types";
 
+// Moltiplicatore di `padding` per lo spazio riservato sotto lo zero nei
+// grafici con valori negativi, applicato al posizionamento delle soglie.
+// Stesso concetto di NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER (core.ts) ma
+// con un valore diverso (3.1 invece di 3.5): discrepanza preesistente nel
+// codice originale, non uniformata qui per non introdurre un cambio di
+// comportamento non richiesto.
+const NEGATIVE_THRESHOLD_Y_OFFSET_MULTIPLIER = 3.1;
+
 type ThresholdProps = {
 	name: string;
 	axisName?: string;
@@ -76,7 +84,7 @@ const Threshold = (props: ThresholdProps) => {
 	const zeroY = ctx.negative ? (ctx.chartYMiddle ?? 0) : chartYEnd;
 
 	const chartDimension = ctx.negative
-		? zeroY - 3.1 * padding
+		? zeroY - NEGATIVE_THRESHOLD_Y_OFFSET_MULTIPLIER * padding
 		: chartYEnd - padding;
 
 	const isNegative = thresholdValue < 0;

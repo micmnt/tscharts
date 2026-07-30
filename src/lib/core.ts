@@ -13,6 +13,34 @@ import {
 	trimZerosAndNullLinePath,
 } from "./utils";
 
+// Angolo minimo (in gradi) di uno spicchio pie/donut sotto il quale la sua
+// etichetta non viene mostrata, per evitare overlap su spicchi troppo stretti.
+const MIN_PIE_SLICE_LABEL_ANGLE = 31;
+
+// Altezza minima (in px) di una barra sotto la quale il punto-etichetta
+// interno viene omesso (dataPoint [-1, -1]) invece di essere disegnato.
+const MIN_BAR_HEIGHT_FOR_LABEL = 16;
+
+// Stessa soglia di MIN_BAR_HEIGHT_FOR_LABEL ma per i segmenti di barre
+// stacked. Il valore e' diverso (14 invece di 16) nel codice originale;
+// la ragione della differenza non e' documentata, da verificare se si
+// interviene su questa soglia in futuro.
+const MIN_STACKED_BAR_HEIGHT_FOR_LABEL = 14;
+
+// Moltiplicatore di `padding` per lo spazio extra riservato sotto lo zero
+// nei grafici con valori negativi (serve a fare posto alle label dell'asse X
+// sotto la linea centrale). Riusato anche in axis.tsx per coerenza visiva.
+// Nota: threshold.tsx usa un moltiplicatore simile ma diverso (3.1, vedi
+// NEGATIVE_THRESHOLD_Y_OFFSET_MULTIPLIER in quel file) per lo stesso concetto
+// applicato alle soglie: discrepanza preesistente, non uniformata qui per
+// non introdurre un cambio di comportamento non richiesto.
+export const NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER = 3.5;
+
+// Offset orizzontale di default (in px) per i grafici a barre orizzontali
+// quando `barOffset` non viene specificato via config: riserva spazio a
+// sinistra per le etichette dell'asse Y.
+const DEFAULT_HORIZONTAL_BAR_OFFSET = 40;
+
 // Funzione che prende in ingresso il valore massimo di una serie, il valore di un elemento della serie e la dimensione effettiva del grafico e ritorna la posizione sul grafico del valore
 export const getValuePosition = (
 	maxValue: number,
@@ -287,7 +315,9 @@ export const getChartDimensions = (
 	rightAxisCount: number,
 	legendHeight: number,
 ) => {
+	// Margine orizzontale riservato per ogni asse Y, espresso come multiplo di `padding`.
 	const xPaddingMultiplier = 3;
+	// Margine verticale riservato sotto il grafico (asse X + legenda), espresso come multiplo di `padding`.
 	const yPaddingMultiplier = 4;
 	const chartXStart = xPaddingMultiplier * padding * leftAxisCount;
 	const chartXEnd =
@@ -726,7 +756,6 @@ export const generateDonutPaths = (
 		};
 	},
 ) => {
-	const MIN_SLICE_VALUE = 31;
 	const serieData = serie.data as PieSerieEl[];
 
 	const dataPoints = new Map();
@@ -781,7 +810,7 @@ export const generateDonutPaths = (
 
 		const labelPoint = { x: bisectorPoint.x, y: bisectorPoint.y };
 
-		if (sliceValue >= MIN_SLICE_VALUE) {
+		if (sliceValue >= MIN_PIE_SLICE_LABEL_ANGLE) {
 			dataPoints.set(serieEl.name, labelPoint);
 		}
 
@@ -801,7 +830,6 @@ export const generatePiePaths = (
 	serie: Serie,
 	ctx: ChartState & { padding: number },
 ) => {
-	const MIN_SLICE_VALUE = 31;
 	const serieData = serie.data as PieSerieEl[];
 
 	const dataPoints = new Map();
@@ -855,7 +883,7 @@ export const generatePiePaths = (
 
 		const labelPoint = { x: bisectorPoint.x, y: bisectorPoint.y };
 
-		if (sliceValue >= MIN_SLICE_VALUE) {
+		if (sliceValue >= MIN_PIE_SLICE_LABEL_ANGLE) {
 			dataPoints.set(serieEl.name, labelPoint);
 		}
 
@@ -960,7 +988,7 @@ export const generateStackedDataPaths = (
 		const serieElX = xAxisInterval * serieElIndex + (chartXStart + padding / 2);
 
 		const point =
-			value < 14
+			value < MIN_STACKED_BAR_HEIGHT_FOR_LABEL
 				? [-1, -1]
 				: [serieElX + barWidth / 2, serieY + value / 2 + padding / 4];
 
@@ -1093,7 +1121,7 @@ export const generateNegativeDataPaths = (
 			flatMaxValue,
 			absValue,
 			chartYEnd -
-				3.5 * padding -
+				NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER * padding -
 				((ctx?.globalConfig?.legendHeight as number) ?? 0),
 		);
 
@@ -1109,7 +1137,7 @@ export const generateNegativeDataPaths = (
 				xAxisInterval * serieElIndex + (chartXStart + padding / 2);
 
 			const point =
-				value < 16
+				value < MIN_BAR_HEIGHT_FOR_LABEL
 					? [-1, -1]
 					: [serieElX + barWidth / 2, chartYEnd - value / 2 + padding / 4];
 
@@ -1273,7 +1301,7 @@ export const generateDataPaths = (
 				xAxisInterval * serieElIndex + (chartXStart + padding / 2);
 
 			const point =
-				value < 16
+				value < MIN_BAR_HEIGHT_FOR_LABEL
 					? [-1, -1]
 					: [serieElX + barWidth / 2, chartYEnd - value / 2 + padding / 4];
 
@@ -1410,7 +1438,7 @@ export const generateGroupDataPaths = (
 			(chartXStart + padding / 4);
 
 		const point =
-			value < 16
+			value < MIN_BAR_HEIGHT_FOR_LABEL
 				? [-1, -1]
 				: [serieElX + barWidth / 2, chartYEnd - value / 2 + padding / 4];
 
@@ -1583,7 +1611,7 @@ export const generateStackedGroupDataPaths = (
 			(chartXStart + padding / 2);
 
 		const point =
-			value < 14
+			value < MIN_STACKED_BAR_HEIGHT_FOR_LABEL
 				? [-1, -1]
 				: [serieElX + barWidth / 2, serieY + value / 2 + padding / 4];
 
@@ -1756,7 +1784,8 @@ export const generateHorizontalDataPaths = (
 	} = ctx;
 
 	// barOffset ora è parametrico
-	const effectiveBarOffset = typeof barOffset === "number" ? barOffset : 40;
+	const effectiveBarOffset =
+		typeof barOffset === "number" ? barOffset : DEFAULT_HORIZONTAL_BAR_OFFSET;
 	const chartXStart = (_chartXStart as number) + effectiveBarOffset;
 	const chartXEnd = (_chartXEnd as number) - 8;
 	const chartYEnd = _chartYEnd as number;
@@ -1779,7 +1808,7 @@ export const generateHorizontalDataPaths = (
 
 		if (type === "bar") {
 			const point =
-				value < 16
+				value < MIN_BAR_HEIGHT_FOR_LABEL
 					? [-1, -1]
 					: [chartXStart + value / 2, serieElY + barHeight / 2];
 

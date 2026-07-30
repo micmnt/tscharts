@@ -6,7 +6,11 @@ import {
 	useChartsTheme,
 } from "../../contexts/chartContext";
 /* Core Imports */
-import { generateXAxis, generateYAxis } from "../../lib/core";
+import {
+	generateXAxis,
+	generateYAxis,
+	NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER,
+} from "../../lib/core";
 /* Utils Imports */
 import { isFunction } from "../../lib/utils";
 /* Type Imports */
@@ -249,7 +253,9 @@ const Axis = (props: AxisProps) => {
 			return {
 				value: label,
 				x: xAxisInterval * labelIndex + chartXStart + xSpacing,
-				y: ctx.negative ? chartYEnd + 3.5 * padding : chartYEnd + padding,
+				y: ctx.negative
+					? chartYEnd + NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER * padding
+					: chartYEnd + padding,
 			};
 		});
 
