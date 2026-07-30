@@ -69,7 +69,7 @@ Componente radice: fornisce il contesto condiviso (dimensioni, dati, tema) a tut
 | `height` | `number` | — (richiesta) | Altezza dell'SVG in px |
 | `children` | `ReactNode` | — (richiesta) | I componenti figli del grafico (`Axis`, `Bar`, `Line`, ...) |
 | `name` | `string` | `"chart"` | Nome usato per generare l'id univoco del grafico |
-| `flatMax` | `boolean` | `true` | Arrotonda il valore massimo degli assi al numero "pulito" più vicino (es. 1234 → 1300) invece di usarlo esatto |
+| `flatMax` | `boolean` | `true` | Arrotonda per eccesso il valore massimo degli assi all'ordine di grandezza superiore (es. 1234 → 2000) invece di usarlo esatto |
 | `style` | `any` | — | Stile CSS applicato all'elemento `<svg>` |
 
 ### `<Axis>`

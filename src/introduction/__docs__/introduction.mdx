@@ -1,0 +1,63 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Introduction" />
+
+# tscharts
+
+Libreria di componenti React per costruire grafici componibili (bar, line, pie, donut, angle-donut, group-bar, threshold), con un modello di composizione dichiarativo simile a Recharts. Non usa D3: i path SVG sono generati internamente.
+
+## Installazione
+
+```bash
+npm install tscharts
+```
+
+`react` e `react-dom` (>=18.2.0) sono peer dependency, non vengono installati automaticamente.
+
+Il pacchetto include un foglio di stile separato, necessario per la Legend e il Tooltip: va importato una volta, ad esempio nell'entry point dell'app.
+
+```ts
+import "tscharts/dist/style.css";
+```
+
+## Quick start
+
+```tsx
+import { Axis, Bar, Chart, Legend } from "tscharts";
+
+const elements = [
+  {
+    name: "vendite",
+    type: "bar",
+    uom: "€",
+    data: [
+      { date: "2024-03-13", value: 120 },
+      { date: "2024-03-14", value: 180 },
+      { date: "2024-03-15", value: 90 },
+      { date: "2024-03-16", value: 210 },
+    ],
+  },
+];
+
+function App() {
+  return (
+    <Chart width={400} height={400} elements={elements}>
+      <Axis type="yAxis" name="vendite" showLine showName />
+      <Bar name="vendite" />
+      <Axis
+        type="xAxis"
+        dataPoints={["13/03", "14/03", "15/03", "16/03"]}
+        showLine
+        showName
+      />
+      <Legend legendType="horizontal" height={90} />
+    </Chart>
+  );
+}
+```
+
+`<Chart>` riceve `elements` (le serie dati) e dimensioni fisse (`width`/`height`); i figli (`Axis`, `Bar`, `Legend`, ...) leggono lo stato condiviso e si occupano ciascuno di una parte del grafico. Ogni serie in `elements` è collegata ai componenti tramite la prop `name`.
+
+## Documentazione dei singoli componenti
+
+Le pagine nella sidebar a sinistra (Bar, Line, Pie, Donut, Threshold, Tooltip, ...) mostrano esempi live per ogni componente. Per il riferimento completo di tutte le prop di ogni componente, vedi il [README del repository](https://github.com/micmnt/tscharts#riferimento-prop).
