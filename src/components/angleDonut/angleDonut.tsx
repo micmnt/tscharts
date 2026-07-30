@@ -5,7 +5,7 @@ import {
 } from "../../contexts/chartContext";
 import { generateAngleDonutPaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isDefined } from "../../lib/utils";
+import { isAngleDonutSerie, isDefined } from "../../lib/utils";
 import type { AngleDonutSerieEl } from "../../types";
 
 export type AngleDonutProps = {
@@ -50,7 +50,11 @@ const AngleDonut = (props: AngleDonutProps) => {
 
 	const elements = ctx?.elements;
 
-	const serieElement = elements?.find((el) => el.name === name);
+	const foundSerieElement = elements?.find((el) => el.name === name);
+	const serieElement =
+		foundSerieElement && isAngleDonutSerie(foundSerieElement)
+			? foundSerieElement
+			: undefined;
 
 	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
 	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
@@ -79,7 +83,7 @@ const AngleDonut = (props: AngleDonutProps) => {
 	if (!ctx || !theme || !serieElement || !result) return null;
 
 	const { paths, centerPoint, labelElement } = result;
-	const serieData = serieElement.data as AngleDonutSerieEl[];
+	const serieData = serieElement.data;
 
 	const slicesColors = serieData.map(
 		(el, elIndex) => el.color ?? theme.seriesColors?.[elIndex],

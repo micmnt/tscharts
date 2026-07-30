@@ -5,7 +5,13 @@ import {
 	useChartsStructural,
 	useChartsTheme,
 } from "../../contexts/chartContext";
-import type { ChartState, PieSerieEl, Serie, ThemeState } from "../../types";
+import type {
+	ChartState,
+	PieSerie,
+	PieSerieEl,
+	Serie,
+	ThemeState,
+} from "../../types";
 
 /* Styles Imports */
 import "../../styles.css";
@@ -131,8 +137,10 @@ const Legend = (props: LegendProps) => {
 
 	const timeSerieElements = elements.filter((el) => el.type !== "pie");
 
-	const pieSerieElements = elements.filter((el) => el.type === "pie")?.[0]
-		?.data;
+	// Solo "pie", non "donut": preservo lo scope esatto del filtro originale
+	// (isPieSerie da sola includerebbe anche "donut", cambiando comportamento).
+	const pieSerieElements =
+		elements.find((el): el is PieSerie => el.type === "pie")?.data ?? [];
 
 	const legendContainerSyle =
 		legendType === "vertical" ? "legendVerticalContainer" : "legendContainer";
@@ -154,7 +162,7 @@ const Legend = (props: LegendProps) => {
 							hideSeries,
 						)
 					: generatePieChartLegend(
-							pieSerieElements as PieSerieEl[],
+							pieSerieElements,
 							theme,
 							showDots,
 							customLabel,

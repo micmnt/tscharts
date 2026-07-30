@@ -13,7 +13,7 @@ import {
 	generateNegativeDataPaths,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import type { TimeSerieEl } from "../../types";
+import { isTimeSerie } from "../../lib/utils";
 
 export type LineProps = {
 	name: string;
@@ -64,7 +64,11 @@ const Line = (props: LineProps) => {
 	const hoveredElement = interactive?.hoveredElement;
 	const elements = ctx?.elements;
 
-	const serieElement = elements?.find((el) => el.name === name);
+	const foundSerieElement = elements?.find((el) => el.name === name);
+	const serieElement =
+		foundSerieElement && isTimeSerie(foundSerieElement)
+			? foundSerieElement
+			: undefined;
 
 	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
 	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
@@ -159,11 +163,9 @@ const Line = (props: LineProps) => {
 							>
 								{serieElement.format
 									? serieElement.format(
-											(serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-												?.value,
+											serieElement?.data?.[dataPointIndex]?.value,
 										)
-									: (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-											?.value}
+									: serieElement?.data?.[dataPointIndex]?.value}
 							</text>
 						);
 					},

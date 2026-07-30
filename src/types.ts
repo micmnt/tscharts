@@ -15,17 +15,45 @@ export type AngleDonutSerieEl = PieSerieEl & {
 	trackColor?: string;
 };
 
-export type Serie = {
+type BaseSerie = {
 	name: string;
 	uom?: string;
-	data: TimeSerieEl[] | PieSerieEl[] | AngleDonutSerieEl[] | number;
 	labels?: { name: string; value?: string }[];
-	type?: string;
 	axisName?: string;
 	stackedName?: string;
 	color?: string;
 	format?: (value: number) => string;
 };
+
+export type TimeSerie = BaseSerie & {
+	type: "line" | "bar" | "bar-stacked" | "group-bar";
+	data: TimeSerieEl[];
+};
+
+export type PieSerie = BaseSerie & {
+	type: "pie" | "donut";
+	data: PieSerieEl[];
+};
+
+export type AngleDonutSerie = BaseSerie & {
+	type: "angle-donut";
+	data: AngleDonutSerieEl[];
+};
+
+export type ThresholdSerie = BaseSerie & {
+	type: "threshold";
+	data: number;
+};
+
+// Union discriminata su `type`: a seconda del valore di `type`, TypeScript
+// restringe automaticamente la forma di `data` senza bisogno di cast (as
+// TimeSerieEl[] / as PieSerieEl[] / as number) sparsi nel codice. `type` e'
+// obbligatorio (prima era opzionale): e' il campo discriminante, senza il
+// quale la union non puo' restringere nulla. Cambio di tipo "breaking" per
+// chi omette `type` oggi - da trattare come major bump alla pubblicazione.
+// I type guard runtime associati (isTimeSerie, isPieSerie, ecc.) sono in
+// lib/utils.ts, insieme agli altri predicate di runtime (isDefined, isFunction).
+export type Serie = TimeSerie | PieSerie | AngleDonutSerie | ThresholdSerie;
 
 export type ChartState = {
 	elements?: Serie[];

@@ -7,8 +7,7 @@ import {
 } from "../../contexts/chartContext";
 import { generateDonutPaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isDefined } from "../../lib/utils";
-import type { PieSerieEl } from "../../types";
+import { isDefined, isPieSerie } from "../../lib/utils";
 
 export type DonutProps = {
 	name: string;
@@ -43,7 +42,11 @@ const Donut = (props: DonutProps) => {
 
 	const elements = ctx?.elements;
 
-	const serieElement = elements?.find((el) => el.name === name);
+	const foundSerieElement = elements?.find((el) => el.name === name);
+	const serieElement =
+		foundSerieElement && isPieSerie(foundSerieElement)
+			? foundSerieElement
+			: undefined;
 
 	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
 	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
@@ -64,7 +67,7 @@ const Donut = (props: DonutProps) => {
 
 	const serieLabels = serieElement.labels ?? [];
 
-	const serieData = serieElement.data as PieSerieEl[];
+	const serieData = serieElement.data;
 
 	const slicesColors = serieData.map(
 		(el, elIndex) => el.color ?? theme.seriesColors?.[elIndex],

@@ -1,5 +1,28 @@
+import type {
+	AngleDonutSerie,
+	PieSerie,
+	Serie,
+	ThresholdSerie,
+	TimeSerie,
+} from "../types";
+
 export const isDefined = (value: number | string | undefined | null) =>
 	value !== null && value !== undefined;
+
+export const isTimeSerie = (serie: Serie): serie is TimeSerie =>
+	serie.type === "line" ||
+	serie.type === "bar" ||
+	serie.type === "bar-stacked" ||
+	serie.type === "group-bar";
+
+export const isPieSerie = (serie: Serie): serie is PieSerie =>
+	serie.type === "pie" || serie.type === "donut";
+
+export const isAngleDonutSerie = (serie: Serie): serie is AngleDonutSerie =>
+	serie.type === "angle-donut";
+
+export const isThresholdSerie = (serie: Serie): serie is ThresholdSerie =>
+	serie.type === "threshold";
 
 export const isFunction = (
 	value: unknown,

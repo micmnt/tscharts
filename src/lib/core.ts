@@ -1,14 +1,18 @@
 import type {
-	AngleDonutSerieEl,
+	AngleDonutSerie,
 	ChartState,
-	PieSerieEl,
+	PieSerie,
 	Serie,
+	ThresholdSerie,
+	TimeSerie,
 	TimeSerieEl,
 } from "../types";
 import {
 	calculateFlatValue,
 	getFirstValorizedElementIndex,
 	isDefined,
+	isThresholdSerie,
+	isTimeSerie,
 	normalizeBarRadius,
 	trimZerosAndNullLinePath,
 } from "./utils";
@@ -341,14 +345,13 @@ export const generateXAxis = (ctx: ChartState & { padding: number }) => {
 };
 
 // Funzione che calcola il massimo sommando i massimi delle serie da mostrare come colonne stacked
-const calculateStackedSeriesMax = (series: Serie[]) => {
+const calculateStackedSeriesMax = (series: TimeSerie[]) => {
 	// Prendo le labels per costruire una serie unificata
-	const serieLabels =
-		(series?.[0].data as TimeSerieEl[]).map((el) => el.date) ?? [];
+	const serieLabels = series?.[0].data.map((el) => el.date) ?? [];
 	// Creo una serie dove per ogni label c'è la somma dei valori di tutte le serie per quella label
 	const unifiedSerie = serieLabels.map((label) => {
 		const seriesElements = series.flatMap((serie) =>
-			(serie.data as TimeSerieEl[]).find((el) => el.date === label),
+			serie.data.find((el) => el.date === label),
 		);
 		const value = (seriesElements as TimeSerieEl[]).reduce((acc, el) => {
 			acc += el.value ?? 0;
@@ -362,12 +365,15 @@ const calculateStackedSeriesMax = (series: Serie[]) => {
 };
 
 // Funzione che prende in ingresso le serie del grafico e ritorna le serie a linea e a barre presenti associate ad un determinato asse
-export const getSeriesByAxisName = (elements: Serie[], axisName: string) => {
+export const getSeriesByAxisName = (
+	elements: Serie[],
+	axisName: string,
+): TimeSerieEl[][] => {
 	if (!elements || !axisName) return [];
 	// Prendo i valori delle serie presenti associate all'asse da graficare
 	const axisSeries = elements
 		.filter(
-			(el) =>
+			(el): el is TimeSerie =>
 				(el.type === "line" || el.type === "bar") &&
 				(el.axisName === axisName || el.name === axisName),
 		)
@@ -383,8 +389,11 @@ export const getSerieAssociatedThresholds = (
 	if (!elements || !axisName) return [];
 	// Prendo i valori delle eventuali soglie presenti associate all'asse della serie da graficare
 	const seriesThresholds = elements
-		.filter((el) => el.type === "threshold" && el.axisName === axisName)
-		.map((el) => ({ date: "null", value: el.data as number }));
+		.filter(
+			(el): el is ThresholdSerie =>
+				isThresholdSerie(el) && el.axisName === axisName,
+		)
+		.map((el) => ({ date: "null", value: el.data }));
 
 	return seriesThresholds;
 };
@@ -393,33 +402,23 @@ export const getSerieAssociatedThresholds = (
 export const normalizeSerieElementsData = (elements: Serie[]) => {
 	if (!elements) return [];
 
-	// Prendo le serie che sono delle soglie
-	const thresholdsSeries = elements
-		.filter((el) => el.type === "threshold")
-		.map((el) => ({
-			...el,
-			data: [{ date: "null", value: el.data as number }],
-		}));
+	// Prendo le serie che sono delle soglie, e le riporto alla stessa forma
+	// di data (TimeSerieEl[]) delle serie a linea/barre per poterle unire.
+	const thresholdsSeries = elements.filter(isThresholdSerie).map((el) => ({
+		...el,
+		data: [{ date: "null", value: el.data }],
+	}));
 
-	const lineOrBarSeries = elements.filter(
-		(el) =>
-			el.type === "line" ||
-			el.type === "bar" ||
-			el.type === "bar-stacked" ||
-			el.type === "group-bar",
-	);
+	const lineOrBarSeries = elements.filter(isTimeSerie);
 
 	return [...lineOrBarSeries, ...thresholdsSeries];
 };
 
 // funzione che genera gli assi di un grafico
 export const generateYAxis = (
-	serie: Serie,
+	serie: TimeSerie,
 	ctx: ChartState & { padding: number; yInterval: number },
 ) => {
-	// Prendo i dati della serie da garficare
-	// const serieData = serie.data as TimeSerieEl[];
-
 	const isStacked = serie.type === "bar-stacked";
 	const isGroupStacked = serie.stackedName;
 
@@ -435,36 +434,36 @@ export const generateYAxis = (
 		serie.axisName ?? serie.name,
 	);
 
-	const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
+	const flatAxisSeriesData = axisSeries.flat();
 
 	let serieMaxValue = 0;
 	let negativeSerieMaxValue = 0;
 	if (ctx.negative) {
 		const normalizedElements = normalizeSerieElementsData(ctx.elements);
 		const negativeSeries = normalizedElements.filter((el) =>
-			(el.data as TimeSerieEl[])?.some((dataEl) => dataEl.value < 0),
+			el.data?.some((dataEl) => dataEl.value < 0),
 		);
 		const positiveSeries = normalizedElements.filter(
-			(el) => !(el.data as TimeSerieEl[])?.some((dataEl) => dataEl.value < 0),
+			(el) => !el.data?.some((dataEl) => dataEl.value < 0),
 		);
 		serieMaxValue = getTimeSerieMaxValue([
-			...positiveSeries.flatMap((el) => el.data as TimeSerieEl[]),
+			...positiveSeries.flatMap((el) => el.data),
 		]);
 		negativeSerieMaxValue = getTimeSerieMaxValue([
-			...negativeSeries.flatMap((el) => el.data as TimeSerieEl[]),
+			...negativeSeries.flatMap((el) => el.data),
 		]);
 	} else if (isStacked) {
 		serieMaxValue = calculateStackedSeriesMax(
-			ctx.elements.filter((el) => el.type === "bar-stacked"),
+			ctx.elements.filter((el): el is TimeSerie => el.type === "bar-stacked"),
 		);
 	} else if (isGroupStacked) {
 		// Listo tutte le serie non stacked
 		const nonStackedSeries = ctx.elements.filter(
-			(el) => el.type === "group-bar" && !el.stackedName,
+			(el): el is TimeSerie => el.type === "group-bar" && !el.stackedName,
 		);
 
 		const allStackedSeries = ctx.elements.filter(
-			(el) => el.type === "group-bar" && el.stackedName,
+			(el): el is TimeSerie => el.type === "group-bar" && !!el.stackedName,
 		);
 
 		const allStackedNames = allStackedSeries.map((el) => el.stackedName);
@@ -480,7 +479,7 @@ export const generateYAxis = (
 		});
 
 		const nonStackedSeriesMaxArray = nonStackedSeries.map((serie) =>
-			getTimeSerieMaxValue(serie.data as TimeSerieEl[]),
+			getTimeSerieMaxValue(serie.data),
 		);
 		const stackedMaxValue = Math.max(
 			...stackedSeriesMaxArray,
@@ -642,7 +641,7 @@ export const generateYAxis = (
 
 // Funzione che genera i path per una serie di un grafico a ciambella aperto con un angolo
 export const generateAngleDonutPaths = (
-	serie: Serie,
+	serie: AngleDonutSerie,
 	ctx: ChartState & {
 		padding: number;
 		innerRadius?: number;
@@ -663,7 +662,7 @@ export const generateAngleDonutPaths = (
 		};
 	},
 ) => {
-	const serieData = serie.data as AngleDonutSerieEl[];
+	const serieData = serie.data;
 
 	const {
 		width,
@@ -737,7 +736,7 @@ export const generateAngleDonutPaths = (
 
 // Funzioen che genera i path per una serie di un grafico a ciambella
 export const generateDonutPaths = (
-	serie: Serie,
+	serie: PieSerie,
 	ctx: ChartState & {
 		padding: number;
 		innerRadius?: number;
@@ -756,7 +755,7 @@ export const generateDonutPaths = (
 		};
 	},
 ) => {
-	const serieData = serie.data as PieSerieEl[];
+	const serieData = serie.data;
 
 	const dataPoints = new Map();
 
@@ -827,10 +826,10 @@ export const generateDonutPaths = (
 
 // Funzione che genera i path per una serie di un grafico a torta
 export const generatePiePaths = (
-	serie: Serie,
+	serie: PieSerie,
 	ctx: ChartState & { padding: number },
 ) => {
-	const serieData = serie.data as PieSerieEl[];
+	const serieData = serie.data;
 
 	const dataPoints = new Map();
 
@@ -895,7 +894,7 @@ export const generatePiePaths = (
 
 // Funzione che calcola i valori di partenza di una colonna stacked
 const getStackedBarStartValue = (
-	series: Serie[],
+	series: TimeSerie[],
 	serieIndex: number,
 	elementIndex: number,
 ) => {
@@ -904,7 +903,7 @@ const getStackedBarStartValue = (
 	let startValue = 0;
 
 	for (let i = serieIndex - 1; i > -1; i--) {
-		const currentSerie = series[i].data as TimeSerieEl[];
+		const currentSerie = series[i].data;
 		startValue += currentSerie?.[elementIndex]?.value;
 	}
 
@@ -913,7 +912,7 @@ const getStackedBarStartValue = (
 
 // Funzione che genera i dataPaths per le barre stacked
 export const generateStackedDataPaths = (
-	serie: Serie,
+	serie: TimeSerie,
 	ctx: ChartState & {
 		padding: number;
 		barWidth?: number;
@@ -931,9 +930,11 @@ export const generateStackedDataPaths = (
 	const topLabelsPoints = new Map();
 	topLabelsPoints.set(serie.name, []);
 
-	const timeSerieData = serie.data as TimeSerieEl[];
+	const timeSerieData = serie.data;
 
-	const barSeries = ctx.elements.filter((el) => el.type === "bar-stacked");
+	const barSeries = ctx.elements.filter(
+		(el): el is TimeSerie => el.type === "bar-stacked",
+	);
 
 	const stackedMaxValue = calculateStackedSeriesMax(barSeries);
 
@@ -1026,7 +1027,7 @@ export const generateStackedDataPaths = (
 
 // Funzione che genera i dataPaths per grafici che ammettono valori negativi in base al tipo di serie da graficare
 export const generateNegativeDataPaths = (
-	serie: Serie,
+	serie: TimeSerie,
 	ctx: ChartState & {
 		padding: number;
 		barWidth?: number;
@@ -1051,11 +1052,11 @@ export const generateNegativeDataPaths = (
 
 	// Converto gli zeri in null per ottenere delle spezzate in caso di ctx.trimZeros === true
 	const timeSerieData = ctx.trimZeros
-		? (serie.data as TimeSerieEl[]).map((el) => ({
+		? serie.data.map((el) => ({
 				...el,
 				value: el.value === 0 ? null : el.value,
 			}))
-		: (serie.data as TimeSerieEl[]);
+		: serie.data;
 
 	// raggruppo le serie per asse Y
 	const axisSeries = getSeriesByAxisName(
@@ -1064,7 +1065,7 @@ export const generateNegativeDataPaths = (
 	);
 
 	// Ottengo un unico array di punti da graficare
-	const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
+	const flatAxisSeriesData = axisSeries.flat();
 
 	// Prendo le soglie associate ad una serie
 	const seriesThresholds = getSerieAssociatedThresholds(
@@ -1204,7 +1205,7 @@ export const generateNegativeDataPaths = (
 
 // funzione che genera i dataPaths in base al tipo di serie da graficare
 export const generateDataPaths = (
-	serie: Serie,
+	serie: TimeSerie,
 	ctx: ChartState & {
 		padding: number;
 		barWidth?: number;
@@ -1229,11 +1230,11 @@ export const generateDataPaths = (
 
 	// Converto gli zeri in null per ottenere delle spezzate in caso di ctx.trimZeros === true
 	const timeSerieData = ctx.trimZeros
-		? (serie.data as TimeSerieEl[]).map((el) => ({
+		? serie.data.map((el) => ({
 				...el,
 				value: el.value === 0 ? null : el.value,
 			}))
-		: (serie.data as TimeSerieEl[]);
+		: serie.data;
 
 	// raggruppo le serie per asse Y
 	const axisSeries = getSeriesByAxisName(
@@ -1242,7 +1243,7 @@ export const generateDataPaths = (
 	);
 
 	// Ottengo un unico array di punti da graficare
-	const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
+	const flatAxisSeriesData = axisSeries.flat();
 
 	// Prendo le soglie associate ad una serie
 	const seriesThresholds = getSerieAssociatedThresholds(
@@ -1366,7 +1367,7 @@ export const generateDataPaths = (
 
 // Funzione che genera i dataPaths per le barre raggruppate
 export const generateGroupDataPaths = (
-	serie: Serie,
+	serie: TimeSerie,
 	ctx: ChartState & {
 		padding: number;
 		barWidth?: number;
@@ -1384,13 +1385,15 @@ export const generateGroupDataPaths = (
 	const topLabelsPoints = new Map();
 	topLabelsPoints.set(serie.name, []);
 
-	const timeSerieData = serie.data as TimeSerieEl[];
+	const timeSerieData = serie.data;
 
-	const barSeries = ctx.elements.filter((el) => el.type === "group-bar");
+	const barSeries = ctx.elements.filter(
+		(el): el is TimeSerie => el.type === "group-bar",
+	);
 
 	const flatSeries = [...barSeries.map((serie) => serie.data)].flat();
 
-	const serieMaxValue = getTimeSerieMaxValue(flatSeries as TimeSerieEl[]);
+	const serieMaxValue = getTimeSerieMaxValue(flatSeries);
 
 	const serieIndex = barSeries.findIndex((el) => el.name === serie.name);
 
@@ -1473,7 +1476,7 @@ export const generateGroupDataPaths = (
 
 // Funzione che genera i dataPaths per le barre raggruppate stacked
 export const generateStackedGroupDataPaths = (
-	serie: Serie,
+	serie: TimeSerie,
 	ctx: ChartState & {
 		padding: number;
 		barWidth?: number;
@@ -1491,21 +1494,22 @@ export const generateStackedGroupDataPaths = (
 	const topLabelsPoints = new Map();
 	topLabelsPoints.set(serie.name, []);
 
-	const timeSerieData = serie.data as TimeSerieEl[];
+	const timeSerieData = serie.data;
 
 	// Prendo le altre serie che vanno impilate con quella corrente
 	const stackedSeries = ctx.elements.filter(
-		(el) => el.stackedName === serie.stackedName,
+		(el): el is TimeSerie =>
+			isTimeSerie(el) && el.stackedName === serie.stackedName,
 	);
 
 	// Listo tutte le serie non stacked
 	const nonStackedSeries = ctx.elements.filter(
-		(el) => el.type === "group-bar" && !el.stackedName,
+		(el): el is TimeSerie => el.type === "group-bar" && !el.stackedName,
 	);
 
 	// Listo tutte le serie stacked
 	const allStackedSeries = ctx.elements.filter(
-		(el) => el.type === "group-bar" && el.stackedName,
+		(el): el is TimeSerie => el.type === "group-bar" && !!el.stackedName,
 	);
 
 	// Prendo tutti gli stackedName delle serie
@@ -1524,7 +1528,7 @@ export const generateStackedGroupDataPaths = (
 	});
 
 	const nonStackedSeriesMaxArray = nonStackedSeries.map((serie) =>
-		getTimeSerieMaxValue(serie.data as TimeSerieEl[]),
+		getTimeSerieMaxValue(serie.data),
 	);
 
 	// Numero di barre del gruppo
@@ -1721,7 +1725,7 @@ export const generateHorizontalBarPath = (
 
 // Funzione che genera i dataPaths per barre orizzontali
 export const generateHorizontalDataPaths = (
-	serie: Serie,
+	serie: TimeSerie,
 	ctx: ChartState & {
 		padding: number;
 		barWidth?: number;
@@ -1744,18 +1748,18 @@ export const generateHorizontalDataPaths = (
 	topLabelsPoints.set(serie.name, []);
 
 	const timeSerieData = ctx.trimZeros
-		? (serie.data as TimeSerieEl[]).map((el) => ({
+		? serie.data.map((el) => ({
 				...el,
 				value: el.value === 0 ? null : el.value,
 			}))
-		: (serie.data as TimeSerieEl[]);
+		: serie.data;
 
 	const axisSeries = getSeriesByAxisName(
 		ctx.elements,
 		serie.axisName ?? serie.name,
 	);
 
-	const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
+	const flatAxisSeriesData = axisSeries.flat();
 	const seriesThresholds = getSerieAssociatedThresholds(
 		ctx.elements,
 		serie.name,

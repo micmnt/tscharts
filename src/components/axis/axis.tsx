@@ -13,7 +13,7 @@ import {
 	NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER,
 } from "../../lib/core";
 /* Utils Imports */
-import { isFunction } from "../../lib/utils";
+import { isFunction, isTimeSerie } from "../../lib/utils";
 /* Type Imports */
 import type { TimeSerieEl } from "../../types";
 
@@ -403,7 +403,11 @@ const Axis = (props: AxisProps) => {
 		);
 	}
 
-	const serieElement = elements?.find((el) => el.name === name);
+	const foundSerieElement = elements?.find((el) => el.name === name);
+	const serieElement =
+		foundSerieElement && isTimeSerie(foundSerieElement)
+			? foundSerieElement
+			: undefined;
 
 	if (!serieElement) return null;
 

@@ -7,7 +7,7 @@ import { ChartProvider } from "../../contexts/chartContext";
 
 /* Core Imports */
 import { getAxisCount, getTimeSerieMaxValue } from "../../lib/core";
-import type { Serie, TimeSerieEl } from "../../types";
+import type { Serie, TimeSerie } from "../../types";
 
 /* Styles Imports */
 import "../../styles.css";
@@ -63,18 +63,21 @@ const Chart = (props: ChartProps) => {
 			childEl.props?.horizontal === true,
 	);
 
+	// Solo "line"/"bar": scope volutamente piu' stretto di isTimeSerie (che
+	// includerebbe anche "bar-stacked"/"group-bar"), preservo il comportamento
+	// originale invariato.
 	const timeSeriesElements = elements.filter(
-		(el) => el.type === "line" || el.type === "bar",
+		(el): el is TimeSerie => el.type === "line" || el.type === "bar",
 	);
 	const timeSeriesMaxValue = Math.max(
 		...timeSeriesElements.map((timeSerie) =>
-			getTimeSerieMaxValue(timeSerie.data as TimeSerieEl[]),
+			getTimeSerieMaxValue(timeSerie.data),
 		),
 	);
 
 	// Controllo se nelle serie da graficare ci sono elementi con valore negativo
 	const negative = timeSeriesElements
-		.flatMap((timeSerieEl) => timeSerieEl.data as TimeSerieEl[])
+		.flatMap((timeSerieEl) => timeSerieEl.data)
 		?.some((el) => el.value < 0);
 
 	const { leftAxisCount, rightAxisCount } = getAxisCount(yAxisCount);

@@ -13,8 +13,12 @@ import {
 	getValuePosition,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { calculateFlatValue, isDefined } from "../../lib/utils";
-import type { TimeSerieEl } from "../../types";
+import {
+	calculateFlatValue,
+	isDefined,
+	isThresholdSerie,
+	isTimeSerie,
+} from "../../lib/utils";
 
 // Moltiplicatore di `padding` per lo spazio riservato sotto lo zero nei
 // grafici con valori negativi, applicato al posizionamento delle soglie.
@@ -59,22 +63,30 @@ const Threshold = (props: ThresholdProps) => {
 		elements,
 	} = ctx ?? {};
 
-	const thresholdElement = elements?.find((el) => el.name === name);
+	const foundThresholdElement = elements?.find((el) => el.name === name);
+	const thresholdElement =
+		foundThresholdElement && isThresholdSerie(foundThresholdElement)
+			? foundThresholdElement
+			: undefined;
 
 	if (!ctx || !theme || !thresholdElement) return null;
 
-	const thresholdValue = thresholdElement.data as number;
+	const thresholdValue = thresholdElement.data;
 
 	if (!isDefined(thresholdValue)) return null;
 
 	let serieMax = timeSeriesMaxValue as number;
 
-	const referenceAxisSerie = elements?.find((el) => el.name === axisName);
+	const foundReferenceAxisSerie = elements?.find((el) => el.name === axisName);
+	const referenceAxisSerie =
+		foundReferenceAxisSerie && isTimeSerie(foundReferenceAxisSerie)
+			? foundReferenceAxisSerie
+			: undefined;
 
 	if (referenceAxisSerie && elements) {
 		const otherThresholds = getSerieAssociatedThresholds(elements, axisName);
 		serieMax = getTimeSerieMaxValue([
-			...(referenceAxisSerie?.data as TimeSerieEl[]),
+			...referenceAxisSerie.data,
 			...otherThresholds,
 		]);
 	}

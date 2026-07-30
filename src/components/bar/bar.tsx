@@ -18,8 +18,7 @@ import {
 	getTimeSerieMaxValue,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { calculateFlatValue, isFunction } from "../../lib/utils";
-import type { TimeSerieEl } from "../../types";
+import { calculateFlatValue, isFunction, isTimeSerie } from "../../lib/utils";
 
 export type BarDragPayload = {
 	value: number;
@@ -89,11 +88,19 @@ const Bar = (props: BarProps) => {
 
 	const elements = ctx?.elements;
 
-	const serieElement = elements?.find((el) => el.name === name);
+	const foundSerieElement = elements?.find((el) => el.name === name);
+	const serieElement =
+		foundSerieElement && isTimeSerie(foundSerieElement)
+			? foundSerieElement
+			: undefined;
 
-	const topLabelSerieElement = elements?.find(
+	const foundTopLabelSerieElement = elements?.find(
 		(el) => el.name === topLabelSerie,
 	);
+	const topLabelSerieElement =
+		foundTopLabelSerieElement && isTimeSerie(foundTopLabelSerieElement)
+			? foundTopLabelSerieElement
+			: undefined;
 
 	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
 	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
@@ -152,7 +159,7 @@ const Bar = (props: BarProps) => {
 		elements ?? [],
 		serieElement.axisName ?? serieElement.name,
 	);
-	const flatAxisSeriesData = axisSeries.flat() as TimeSerieEl[];
+	const flatAxisSeriesData = axisSeries.flat();
 	const associatedThresholds = elements
 		? getSerieAssociatedThresholds(elements, serieElement.name)
 		: [];
@@ -191,9 +198,7 @@ const Bar = (props: BarProps) => {
 						}}
 						onClick={() => {
 							if (config?.barClickAction && isFunction(config.barClickAction)) {
-								const currentDataPoint = (serieElement.data as TimeSerieEl[])[
-									pathIndex
-								];
+								const currentDataPoint = serieElement.data[pathIndex];
 								config.barClickAction(currentDataPoint);
 							}
 						}}
@@ -204,9 +209,7 @@ const Bar = (props: BarProps) => {
 
 							// event.preventDefault();
 
-							const currentDataPoint = (serieElement.data as TimeSerieEl[])[
-								pathIndex
-							];
+							const currentDataPoint = serieElement.data[pathIndex];
 							const currentValue = currentDataPoint?.value ?? 0;
 
 							if (dragMaxValue <= 0) {
@@ -293,13 +296,9 @@ const Bar = (props: BarProps) => {
 							>
 								{topLabelSerieElement?.format
 									? topLabelSerieElement.format(
-											(topLabelSerieElement?.data as TimeSerieEl[])?.[
-												dataPointIndex
-											]?.value,
+											topLabelSerieElement?.data?.[dataPointIndex]?.value,
 										)
-									: (topLabelSerieElement?.data as TimeSerieEl[])?.[
-											dataPointIndex
-										]?.value}
+									: topLabelSerieElement?.data?.[dataPointIndex]?.value}
 							</text>
 						) : null,
 				)}
@@ -318,11 +317,9 @@ const Bar = (props: BarProps) => {
 							>
 								{serieElement.format
 									? serieElement.format(
-											(serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-												?.value,
+											serieElement?.data?.[dataPointIndex]?.value,
 										)
-									: (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-											?.value}
+									: serieElement?.data?.[dataPointIndex]?.value}
 							</text>
 						) : null,
 					)

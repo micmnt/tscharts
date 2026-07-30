@@ -21,8 +21,7 @@ import {
 	convertToSVGPoint,
 	getChartDimensions,
 } from "../../lib/core";
-import { isDefined } from "../../lib/utils";
-import type { TimeSerieEl } from "../../types";
+import { isDefined, isTimeSerie } from "../../lib/utils";
 import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
 
 type SVGProps = {
@@ -158,9 +157,7 @@ const Svg = (props: SVGProps) => {
 	// Serie di riferimento per il calcolo dell'hover: deve avere data come
 	// TimeSerieEl[] (bar/line/bar-stacked/group-bar), non un valore singolo
 	// come threshold o un array di forma diversa come pie.
-	const hoverableSerie = ctxElements?.find((el) =>
-		["line", "bar", "bar-stacked", "group-bar"].includes(el.type ?? ""),
-	);
+	const hoverableSerie = ctxElements?.find(isTimeSerie);
 
 	const handleMouseLeave = () => {
 		const tooltipElement = document.getElementById(`cts-tooltip-${chartID}`);
@@ -210,7 +207,7 @@ const Svg = (props: SVGProps) => {
 				// scatta ad ogni pixel, sovrascriverebbe il valore corretto con uno
 				// sbagliato calcolato sull'asse sbagliato.
 				if (!ctxHorizontal && hoverableSerie) {
-					const serieData = hoverableSerie.data as TimeSerieEl[];
+					const serieData = hoverableSerie.data;
 					const xInterval = (chartXEnd - chartXStart) / (serieData.length || 1);
 					const xSpace = ctxGlobalConfig?.barWidth
 						? (Number(ctxGlobalConfig.barWidth) + (padding ?? 0)) / 2

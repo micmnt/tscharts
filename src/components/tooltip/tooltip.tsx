@@ -7,13 +7,19 @@ import {
 	useChartsStructural,
 	useChartsTheme,
 } from "../../contexts/chartContext";
-import type { PieSerieEl, Serie, ThemeState, TimeSerieEl } from "../../types";
+import type {
+	PieSerie,
+	PieSerieEl,
+	Serie,
+	ThemeState,
+	TimeSerieEl,
+} from "../../types";
 
 /* Styles Imports */
 import "../../styles.css";
 
 /* Utils Imports */
-import { isDefined } from "../../lib/utils";
+import { isDefined, isThresholdSerie, isTimeSerie } from "../../lib/utils";
 
 type Position = {
 	x: number;
@@ -49,16 +55,11 @@ const getFormattedValue = (
 	return `${value}`;
 };
 
-const getElementValueByType = (
-	data: TimeSerieEl[] | PieSerieEl[] | number,
-	type: string,
-	dataIndex: number,
-) => {
-	if (type === "threshold") return data as number;
+const getElementValueByType = (element: Serie, dataIndex: number) => {
+	if (isThresholdSerie(element)) return element.data;
 
-	if (dataIndex > -1) {
-		const serieEl = data as TimeSerieEl[];
-		return serieEl[dataIndex]?.value;
+	if (isTimeSerie(element) && dataIndex > -1) {
+		return element.data[dataIndex]?.value;
 	}
 
 	return null;
@@ -91,17 +92,14 @@ const generateTimeSerieContent = (
 	return seriesToShow.map((element, serieIndex) => {
 		const hoveredElementIndex = hoveredElement?.elementIndex ?? -1;
 
-		const elementValue = getElementValueByType(
-			element.data,
-			element.type as string,
-			hoveredElementIndex,
-		);
+		const elementValue = getElementValueByType(element, hoveredElementIndex);
 
 		if (customElement && hoveredElementIndex > -1) {
 			return customElement({
 				elementIndex: hoveredElementIndex,
 				name: element.name,
-				...((element.data as TimeSerieEl[])?.[hoveredElementIndex] ?? {}),
+				...((isTimeSerie(element) ? element.data : [])[hoveredElementIndex] ??
+					{}),
 			});
 		}
 
@@ -192,8 +190,7 @@ const computeStackedSeriesElementsTotal = (
 
 	const totalValue = filteredTimeSeriesElements.reduce((acc, element) => {
 		const elementValue = getElementValueByType(
-			element.data,
-			element.type as string,
+			element,
 			hoveredElement?.elementIndex ?? -1,
 		);
 
@@ -248,8 +245,10 @@ const Tooltip = (props: TooltipProps) => {
 		(el) => el.type !== "threshold" && el.type !== "pie",
 	);
 
-	const pieSeriesElements = elements.filter((el) => el.type === "pie")?.[0]
-		?.data;
+	// Solo "pie", non "donut": preservo lo scope esatto del filtro originale
+	// (isPieSerie da sola includerebbe anche "donut", cambiando comportamento).
+	const pieSeriesElements =
+		elements.find((el): el is PieSerie => el.type === "pie")?.data ?? [];
 
 	const hoveredElement = _hoveredElement as {
 		elementIndex: number;
@@ -303,7 +302,7 @@ const Tooltip = (props: TooltipProps) => {
 								customElement,
 							)
 						: generatePieSerieContent(
-								pieSeriesElements as PieSerieEl[],
+								pieSeriesElements,
 								theme,
 								hideSeries,
 								customElement,

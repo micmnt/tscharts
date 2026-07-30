@@ -13,7 +13,7 @@ import {
 	generateStackedGroupDataPaths,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import type { TimeSerieEl } from "../../types";
+import { isTimeSerie } from "../../lib/utils";
 
 export type GroupBarProps = {
 	name: string;
@@ -64,11 +64,19 @@ const GroupBar = (props: GroupBarProps) => {
 
 	const elements = ctx?.elements;
 
-	const serieElement = elements?.find((el) => el.name === name);
+	const foundSerieElement = elements?.find((el) => el.name === name);
+	const serieElement =
+		foundSerieElement && isTimeSerie(foundSerieElement)
+			? foundSerieElement
+			: undefined;
 
-	const topLabelSerieElement = elements?.find(
+	const foundTopLabelSerieElement = elements?.find(
 		(el) => el.name === topLabelSerie,
 	);
+	const topLabelSerieElement =
+		foundTopLabelSerieElement && isTimeSerie(foundTopLabelSerieElement)
+			? foundTopLabelSerieElement
+			: undefined;
 
 	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
 	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
@@ -146,13 +154,9 @@ const GroupBar = (props: GroupBarProps) => {
 							>
 								{topLabelSerieElement?.format
 									? topLabelSerieElement.format(
-											(topLabelSerieElement?.data as TimeSerieEl[])?.[
-												dataPointIndex
-											]?.value,
+											topLabelSerieElement?.data?.[dataPointIndex]?.value,
 										)
-									: (topLabelSerieElement?.data as TimeSerieEl[])?.[
-											dataPointIndex
-										]?.value}
+									: topLabelSerieElement?.data?.[dataPointIndex]?.value}
 							</text>
 						) : null,
 				)}
@@ -171,11 +175,9 @@ const GroupBar = (props: GroupBarProps) => {
 							>
 								{serieElement.format
 									? serieElement.format(
-											(serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-												?.value,
+											serieElement?.data?.[dataPointIndex]?.value,
 										)
-									: (serieElement?.data as TimeSerieEl[])?.[dataPointIndex]
-											?.value}
+									: serieElement?.data?.[dataPointIndex]?.value}
 							</text>
 						) : null,
 					)
