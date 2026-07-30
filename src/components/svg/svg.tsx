@@ -142,8 +142,8 @@ const Svg = (props: SVGProps) => {
 
 	useEffect(() => {
 		intializeChart();
-		window.addEventListener("resize", () => intializeChart());
-		return () => window.removeEventListener("resize", () => intializeChart());
+		window.addEventListener("resize", intializeChart);
+		return () => window.removeEventListener("resize", intializeChart);
 	}, [intializeChart]);
 
 	const { svgRef, chartXStart, chartXEnd, chartYEnd, width, height } =
