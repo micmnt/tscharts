@@ -101,9 +101,6 @@ const generateTimeSerieContent = (
 			});
 		}
 
-		// console.log("isDefined(element.value)", isDefined(elementValue));
-		// console.log("element.value", elementValue);
-
 		return (
 			<div className="tooltipSerieContainer" key={`tooltip-${element.name}`}>
 				<div
@@ -142,9 +139,6 @@ const generatePieSerieContent = (
 		if (customElement) {
 			return customElement({ name: element.name, value: element.value });
 		}
-
-		// console.log("isDefined(element.value)", isDefined(element.value));
-		// console.log("element.value", element.value);
 
 		return (
 			<div className="tooltipSerieContainer" key={`tooltip-${element.name}`}>
@@ -240,15 +234,11 @@ const Tooltip = (props: TooltipProps) => {
 		chartID,
 	} = ctx;
 
-	// console.log("ctx in tooltip", ctx);
-
 	if (!elements) return null;
 
 	const timeSeriesElements = elements.filter(
 		(el) => el.type !== "threshold" && el.type !== "pie",
 	);
-
-	// console.log("timeSeriesElements", timeSeriesElements);
 
 	const pieSeriesElements = elements.filter((el) => el.type === "pie")?.[0]
 		?.data;
@@ -257,10 +247,6 @@ const Tooltip = (props: TooltipProps) => {
 		elementIndex: number;
 		label: string;
 	};
-
-	// console.log("_hoveredElement", _hoveredElement, hoveredElement);
-
-	// console.log("hoveredElement in tooltip", hoveredElement);
 
 	const tooltipPosition = _tooltipPosition as Position;
 

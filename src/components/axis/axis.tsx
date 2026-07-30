@@ -335,40 +335,23 @@ const Axis = (props: AxisProps) => {
 						) : null}
 					</>
 					{dataPoints.length > 20 && tiltLabels ? (
-						<>
-							{/* <defs>
-								<path
-									id={`xAxisLabel-${labelIndex}`}
-									d={`M ${label.x - 40} ${label.y + 20} L ${label.x} ${label.y}`}
-								/>
-							</defs> */}
-							{/* <use href={`#xAxisLabel-${labelIndex}`} fill="none" /> */}
-							<text
-								dx={titleDx}
-								dy={titleDy}
-								fontSize={theme?.axis?.labelSize}
-								fontWeight={labelFontWeight}
-								fill={labelTextColor}
-								textAnchor="start"
-								x={labelX}
-								y={labelY}
-								transform={
-									tiltLabels
-										? `rotate(${tiltLabelsAngle}, ${label.x}, ${label.y})`
-										: undefined
-								}
-							>
-								{label.value}
-								{/* <textPath
-									textAnchor="start"
-									x={label.x}
-									y={label.y}
-									href={`#xAxisLabel-${labelIndex}`}
-								>
-									{label.value}
-								</textPath> */}
-							</text>
-						</>
+						<text
+							dx={titleDx}
+							dy={titleDy}
+							fontSize={theme?.axis?.labelSize}
+							fontWeight={labelFontWeight}
+							fill={labelTextColor}
+							textAnchor="start"
+							x={labelX}
+							y={labelY}
+							transform={
+								tiltLabels
+									? `rotate(${tiltLabelsAngle}, ${label.x}, ${label.y})`
+									: undefined
+							}
+						>
+							{label.value}
+						</text>
 					) : (
 						<text
 							textAnchor="middle"

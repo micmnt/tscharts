@@ -329,15 +329,6 @@ const calculateStackedSeriesMax = (series: Serie[]) => {
 	});
 
 	return getTimeSerieMaxValue((unifiedSerie as TimeSerieEl[]) ?? []);
-
-	// return series.reduce((acc, stackedSerie) => {
-	// 	const serieMaxValue = getTimeSerieMaxValue(
-	// 		(stackedSerie.data as TimeSerieEl[]) ?? [],
-	// 	);
-	// 	acc += serieMaxValue;
-
-	// 	return acc;
-	// }, 0);
 };
 
 // Funzione che prende in ingresso le serie del grafico e ritorna le serie a linea e a barre presenti associate ad un determinato asse
