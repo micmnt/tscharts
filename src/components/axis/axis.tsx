@@ -104,7 +104,7 @@ const Axis = (props: AxisProps) => {
 	if (type === "xAxis") {
 		// Nuova gestione per grafici orizzontali
 		if (horizontal) {
-			const serie = elements?.[0] || { data: [] };
+			const serie = elements?.find(isTimeSerie) ?? { data: [] };
 			const serieData = serie.data as TimeSerieEl[];
 
 			const yAxisInterval = (chartYEnd - padding) / (serieData?.length || 1);
@@ -252,7 +252,7 @@ const Axis = (props: AxisProps) => {
 
 		const xAxis = generateXAxis({ ...ctx, padding });
 
-		const serie = elements?.[0] || { data: [] };
+		const serie = elements?.find(isTimeSerie) ?? { data: [] };
 
 		const serieData = serie.data as TimeSerieEl[];
 
