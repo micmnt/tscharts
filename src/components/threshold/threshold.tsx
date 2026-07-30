@@ -1,7 +1,10 @@
 /* Types Imports */
 
 /* Context Imports */
-import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+import {
+	useChartsStructural,
+	useChartsTheme,
+} from "../../contexts/chartContext";
 
 /* Core Imports */
 import {
@@ -9,8 +12,9 @@ import {
 	getTimeSerieMaxValue,
 	getValuePosition,
 } from "../../lib/core";
+import defaultTheme from "../../lib/defaultTheme";
 import { calculateFlatValue, isDefined } from "../../lib/utils";
-import type { ChartState, ThemeState, TimeSerieEl } from "../../types";
+import type { TimeSerieEl } from "../../types";
 
 // Moltiplicatore di `padding` per lo spazio riservato sotto lo zero nei
 // grafici con valori negativi, applicato al posizionamento delle soglie.
@@ -31,15 +35,17 @@ type ThresholdProps = {
 	dy?: number;
 };
 const Threshold = (props: ThresholdProps) => {
-	const theme = useChartsTheme() as ThemeState;
-	const ctx = useCharts() as ChartState;
+	const theme = useChartsTheme();
+	const ctx = useChartsStructural();
+
+	const { padding = defaultTheme.padding } = theme ?? {};
 
 	const {
 		dashed = false,
 		type = "horizontal",
 		name,
 		showLabel = false,
-		size = theme.threshold?.size,
+		size = theme?.threshold?.size,
 		axisName = "",
 		dx = 0,
 		dy = 0,
@@ -51,17 +57,15 @@ const Threshold = (props: ThresholdProps) => {
 		chartYEnd: _chartYEnd,
 		timeSeriesMaxValue,
 		elements,
-	} = ctx;
+	} = ctx ?? {};
 
 	const thresholdElement = elements?.find((el) => el.name === name);
 
-	if (!thresholdElement) return null;
+	if (!ctx || !theme || !thresholdElement) return null;
 
 	const thresholdValue = thresholdElement.data as number;
 
 	if (!isDefined(thresholdValue)) return null;
-
-	const { padding } = theme;
 
 	let serieMax = timeSeriesMaxValue as number;
 

@@ -7,11 +7,17 @@ import {
 	type ReactNode,
 	useContext,
 	useEffect,
+	useMemo,
 	useReducer,
 } from "react";
 /* Theme Imports */
 import defaultTheme from "../lib/defaultTheme";
-import type { ChartState, ThemeState } from "../types";
+import type {
+	ChartInteractiveState,
+	ChartState,
+	ChartStructuralState,
+	ThemeState,
+} from "../types";
 
 type ChartProviderProps = {
 	children: ReactNode;
@@ -20,7 +26,16 @@ type ChartProviderProps = {
 };
 
 export const ChartThemeContext = createContext<ThemeState | null>(null);
-export const ChartContext = createContext<ChartState | null>(null);
+// Due context separati al posto di un unico ChartContext: i componenti che
+// consumano solo ChartStructuralContext non si ri-renderizzano quando cambia
+// solo lo stato interattivo (mousePosition/tooltipPosition/hoveredElement),
+// che oggi cambia ad ogni mousemove. Il dispatch resta condiviso: e' gia'
+// stabile per riferimento (garanzia di useReducer), non ha mai causato
+// re-render di suo, quindi non serve splittarlo.
+export const ChartStructuralContext =
+	createContext<ChartStructuralState | null>(null);
+export const ChartInteractiveContext =
+	createContext<ChartInteractiveState | null>(null);
 export const ChartDispatchContext = createContext<Dispatch<{
 	type: string;
 	payload: ChartState;
@@ -50,12 +65,64 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 		initialState.timeSeriesMaxValue,
 	]);
 
+	// Slice memoizzate: cambiano riferimento solo quando cambia uno dei loro
+	// campi, non ad ogni dispatch qualsiasi (es. un SET_TOOLTIP_POSITION non
+	// tocca nessuno dei campi di `structural`, quindi la sua reference resta
+	// stabile e i consumer di ChartStructuralContext non si ri-renderizzano).
+	const structural: ChartStructuralState = useMemo(
+		() => ({
+			elements: chart.elements,
+			svgRef: chart.svgRef,
+			width: chart.width,
+			height: chart.height,
+			chartXStart: chart.chartXStart,
+			chartXEnd: chart.chartXEnd,
+			chartYEnd: chart.chartYEnd,
+			chartYMiddle: chart.chartYMiddle,
+			negative: chart.negative,
+			horizontal: chart.horizontal,
+			flatMax: chart.flatMax,
+			timeSeriesMaxValue: chart.timeSeriesMaxValue,
+			chartID: chart.chartID,
+			globalConfig: chart.globalConfig,
+		}),
+		[
+			chart.elements,
+			chart.svgRef,
+			chart.width,
+			chart.height,
+			chart.chartXStart,
+			chart.chartXEnd,
+			chart.chartYEnd,
+			chart.chartYMiddle,
+			chart.negative,
+			chart.horizontal,
+			chart.flatMax,
+			chart.timeSeriesMaxValue,
+			chart.chartID,
+			chart.globalConfig,
+		],
+	);
+
+	const interactive: ChartInteractiveState = useMemo(
+		() => ({
+			mousePosition: chart.mousePosition,
+			tooltipPosition: chart.tooltipPosition,
+			hoveredElement: chart.hoveredElement,
+		}),
+		[chart.mousePosition, chart.tooltipPosition, chart.hoveredElement],
+	);
+
 	if (!(chart && dispatch)) return null;
 
 	return (
 		<ChartThemeContext.Provider value={theme}>
 			<ChartDispatchContext.Provider value={dispatch}>
-				<ChartContext.Provider value={chart}>{children}</ChartContext.Provider>
+				<ChartStructuralContext.Provider value={structural}>
+					<ChartInteractiveContext.Provider value={interactive}>
+						{children}
+					</ChartInteractiveContext.Provider>
+				</ChartStructuralContext.Provider>
 			</ChartDispatchContext.Provider>
 		</ChartThemeContext.Provider>
 	);
@@ -123,8 +190,12 @@ function chartReducer(
 	}
 }
 
-export function useCharts() {
-	return useContext(ChartContext);
+export function useChartsStructural() {
+	return useContext(ChartStructuralContext);
+}
+
+export function useChartsInteractive() {
+	return useContext(ChartInteractiveContext);
 }
 
 export function useChartsDispatch() {

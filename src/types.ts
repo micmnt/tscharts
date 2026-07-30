@@ -49,6 +49,35 @@ export type ChartState = {
 	};
 };
 
+// Slice "strutturale" del ChartState: dati che cambiano raramente (elementi,
+// dimensioni del grafico, config). Usata da tutti i componenti che disegnano
+// dati ma non hanno bisogno di sapere dove si trova il mouse.
+export type ChartStructuralState = Pick<
+	ChartState,
+	| "elements"
+	| "svgRef"
+	| "width"
+	| "height"
+	| "chartXStart"
+	| "chartXEnd"
+	| "chartYEnd"
+	| "chartYMiddle"
+	| "negative"
+	| "horizontal"
+	| "flatMax"
+	| "timeSeriesMaxValue"
+	| "chartID"
+	| "globalConfig"
+>;
+
+// Slice "interattiva" del ChartState: dati che cambiano ad ogni movimento del
+// mouse. Usata solo dai componenti che devono reagire all'hover (Tooltip,
+// evidenziazione di punti/etichette).
+export type ChartInteractiveState = Pick<
+	ChartState,
+	"mousePosition" | "tooltipPosition" | "hoveredElement"
+>;
+
 export type ThemeState = {
 	padding: number;
 	yInterval: number;

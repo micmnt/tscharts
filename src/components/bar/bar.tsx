@@ -3,7 +3,10 @@
 /* React Imports */
 import { useMemo } from "react";
 /* Context Imports */
-import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+import {
+	useChartsStructural,
+	useChartsTheme,
+} from "../../contexts/chartContext";
 /* Core Imports */
 import {
 	generateDataPaths,
@@ -63,7 +66,7 @@ const Bar = (props: BarProps) => {
 		horizontal = false,
 	} = props;
 
-	const ctx = useCharts();
+	const ctx = useChartsStructural();
 
 	const theme = useChartsTheme();
 
@@ -92,32 +95,14 @@ const Bar = (props: BarProps) => {
 		(el) => el.name === topLabelSerie,
 	);
 
-	// Campi di ctx usati dal calcolo dei path: solo questi in dipendenza al
-	// memo sotto, non ctx intero (che cambia ad ogni mousemove per via di
-	// mousePosition/tooltipPosition/hoveredElement, il che vanificherebbe
-	// l'ottimizzazione facendo ricalcolare i path ad ogni pixel di movimento).
-	const {
-		chartXStart,
-		chartXEnd,
-		chartYEnd,
-		chartYMiddle,
-		negative,
-		flatMax,
-		globalConfig,
-	} = ctx ?? {};
-
+	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
+	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
+	// singoli campi e' sicuro e piu' semplice da mantenere corretto.
 	const result = useMemo(() => {
-		if (!theme || !serieElement) return null;
+		if (!ctx || !theme || !serieElement) return null;
 
 		const pathsConfig = {
-			elements,
-			chartXStart,
-			chartXEnd,
-			chartYEnd,
-			chartYMiddle,
-			negative,
-			flatMax,
-			globalConfig,
+			...ctx,
 			padding,
 			barWidth,
 			radius,
@@ -129,22 +114,15 @@ const Bar = (props: BarProps) => {
 		};
 
 		if (stacked) return generateStackedDataPaths(serieElement, pathsConfig);
-		if (negative)
+		if (ctx.negative)
 			return generateNegativeDataPaths(serieElement, pathsConfig, "bar");
 		if (horizontal)
 			return generateHorizontalDataPaths(serieElement, pathsConfig, "bar");
 		return generateDataPaths(serieElement, pathsConfig, "bar");
 	}, [
+		ctx,
 		theme,
 		serieElement,
-		elements,
-		chartXStart,
-		chartXEnd,
-		chartYEnd,
-		chartYMiddle,
-		negative,
-		flatMax,
-		globalConfig,
 		padding,
 		barWidth,
 		radius,

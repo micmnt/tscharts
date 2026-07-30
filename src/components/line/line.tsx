@@ -1,7 +1,11 @@
 /* Types Imports */
 
 import { useMemo } from "react";
-import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+import {
+	useChartsInteractive,
+	useChartsStructural,
+	useChartsTheme,
+} from "../../contexts/chartContext";
 /* Core Imports */
 import {
 	generateDataPaths,
@@ -50,45 +54,27 @@ const Line = (props: LineProps) => {
 		fillOpacity = 0,
 	} = props;
 
-	const ctx = useCharts();
+	const ctx = useChartsStructural();
+	const interactive = useChartsInteractive();
 
 	const theme = useChartsTheme();
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
-	const hoveredElement = ctx?.hoveredElement;
+	const hoveredElement = interactive?.hoveredElement;
 	const elements = ctx?.elements;
 
 	const serieElement = elements?.find((el) => el.name === name);
 
-	// Campi di ctx usati dal calcolo dei path: solo questi in dipendenza,
-	// non ctx intero (che cambia ad ogni mousemove, vanificando il memo).
-	const {
-		chartXStart,
-		chartXEnd,
-		chartYEnd,
-		chartYMiddle,
-		negative,
-		flatMax,
-		globalConfig,
-	} = ctx ?? {};
-
+	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
+	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
+	// singoli campi e' sicuro e piu' semplice da mantenere corretto.
 	const result = useMemo(() => {
-		if (!theme || !serieElement) return null;
+		if (!ctx || !theme || !serieElement) return null;
 
-		const pathsConfig = {
-			elements,
-			chartXStart,
-			chartXEnd,
-			chartYEnd,
-			chartYMiddle,
-			negative,
-			flatMax,
-			globalConfig,
-			padding,
-		};
+		const pathsConfig = { ...ctx, padding };
 
-		if (negative) {
+		if (ctx.negative) {
 			return generateNegativeDataPaths(
 				serieElement,
 				{ ...pathsConfig, trimZeros: Number(trimZeros) },
@@ -107,22 +93,7 @@ const Line = (props: LineProps) => {
 			{ ...pathsConfig, trimZeros },
 			"line",
 		);
-	}, [
-		theme,
-		serieElement,
-		elements,
-		chartXStart,
-		chartXEnd,
-		chartYEnd,
-		chartYMiddle,
-		negative,
-		flatMax,
-		globalConfig,
-		padding,
-		trimZeros,
-		horizontal,
-		lineOffset,
-	]);
+	}, [ctx, theme, serieElement, padding, trimZeros, horizontal, lineOffset]);
 
 	if (!ctx || !theme || !elements || !serieElement || !result) return null;
 

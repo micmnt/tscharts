@@ -2,7 +2,11 @@
 import type { ReactNode } from "react";
 
 /* Context Imports */
-import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+import {
+	useChartsInteractive,
+	useChartsStructural,
+	useChartsTheme,
+} from "../../contexts/chartContext";
 import type { PieSerieEl, Serie, ThemeState, TimeSerieEl } from "../../types";
 
 /* Styles Imports */
@@ -217,7 +221,8 @@ const Tooltip = (props: TooltipProps) => {
 		customElement = undefined,
 	} = props;
 
-	const ctx = useCharts();
+	const ctx = useChartsStructural();
+	const interactive = useChartsInteractive();
 
 	const theme = useChartsTheme();
 
@@ -228,11 +233,14 @@ const Tooltip = (props: TooltipProps) => {
 		chartXStart: _chartXStart,
 		chartXEnd: _chartXEnd,
 		chartYEnd: _chartYEnd,
+		chartID,
+	} = ctx;
+
+	const {
 		tooltipPosition: _tooltipPosition,
 		mousePosition: _mousePosition,
 		hoveredElement: _hoveredElement,
-		chartID,
-	} = ctx;
+	} = interactive ?? {};
 
 	if (!elements) return null;
 

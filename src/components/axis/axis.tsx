@@ -1,8 +1,9 @@
 import { Fragment } from "react";
 /* Context Imports */
 import {
-	useCharts,
 	useChartsDispatch,
+	useChartsInteractive,
+	useChartsStructural,
 	useChartsTheme,
 } from "../../contexts/chartContext";
 /* Core Imports */
@@ -67,7 +68,8 @@ const Axis = (props: AxisProps) => {
 		showLabels = true,
 	} = props;
 
-	const ctx = useCharts();
+	const ctx = useChartsStructural();
+	const interactive = useChartsInteractive();
 
 	const dispatch = useChartsDispatch();
 
@@ -82,10 +84,11 @@ const Axis = (props: AxisProps) => {
 		chartXStart: _chartXStart,
 		chartYEnd: _chartYEnd,
 		elements,
-		hoveredElement,
 		chartID,
 		globalConfig,
 	} = ctx;
+
+	const hoveredElement = interactive?.hoveredElement;
 
 	const chartXEnd = _chartXEnd as number;
 	const chartXStart = _chartXStart as number;

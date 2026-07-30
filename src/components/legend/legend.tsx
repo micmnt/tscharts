@@ -1,7 +1,10 @@
 /* Types Imports */
 
 /* Context Imports */
-import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+import {
+	useChartsStructural,
+	useChartsTheme,
+} from "../../contexts/chartContext";
 import type { ChartState, PieSerieEl, Serie, ThemeState } from "../../types";
 
 /* Styles Imports */
@@ -95,7 +98,7 @@ const Legend = (props: LegendProps) => {
 		hideSeries = [],
 	} = props;
 
-	const ctx = useCharts();
+	const ctx = useChartsStructural();
 
 	const theme = useChartsTheme();
 

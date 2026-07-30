@@ -3,7 +3,10 @@
 /* React Imports */
 import { useMemo } from "react";
 /* Context Imports */
-import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+import {
+	useChartsStructural,
+	useChartsTheme,
+} from "../../contexts/chartContext";
 /* Core Imports */
 import {
 	generateGroupDataPaths,
@@ -40,7 +43,7 @@ const GroupBar = (props: GroupBarProps) => {
 		stacked = false,
 	} = props;
 
-	const ctx = useCharts();
+	const ctx = useChartsStructural();
 
 	const theme = useChartsTheme();
 
@@ -67,21 +70,14 @@ const GroupBar = (props: GroupBarProps) => {
 		(el) => el.name === topLabelSerie,
 	);
 
-	// Campi di ctx usati dal calcolo dei path: solo questi in dipendenza,
-	// non ctx intero (che cambia ad ogni mousemove, vanificando il memo).
-	const { chartXStart, chartXEnd, chartYEnd, chartYMiddle, globalConfig } =
-		ctx ?? {};
-
+	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
+	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
+	// singoli campi e' sicuro e piu' semplice da mantenere corretto.
 	const result = useMemo(() => {
-		if (!theme || !serieElement) return null;
+		if (!ctx || !theme || !serieElement) return null;
 
 		const pathsConfig = {
-			elements,
-			chartXStart,
-			chartXEnd,
-			chartYEnd,
-			chartYMiddle,
-			globalConfig,
+			...ctx,
 			padding,
 			barWidth,
 			radius,
@@ -95,14 +91,9 @@ const GroupBar = (props: GroupBarProps) => {
 			? generateStackedGroupDataPaths(serieElement, pathsConfig)
 			: generateGroupDataPaths(serieElement, pathsConfig);
 	}, [
+		ctx,
 		theme,
 		serieElement,
-		elements,
-		chartXStart,
-		chartXEnd,
-		chartYEnd,
-		chartYMiddle,
-		globalConfig,
 		padding,
 		barWidth,
 		radius,

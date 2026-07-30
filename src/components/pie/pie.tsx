@@ -1,7 +1,10 @@
 /* React Imports */
 import { useMemo } from "react";
 /* Context Imports */
-import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+import {
+	useChartsStructural,
+	useChartsTheme,
+} from "../../contexts/chartContext";
 
 /* Core Imports */
 import { generatePiePaths } from "../../lib/core";
@@ -15,7 +18,7 @@ export type PieProps = {
 const Pie = (props: PieProps) => {
 	const { name } = props;
 
-	const ctx = useCharts();
+	const ctx = useChartsStructural();
 
 	const theme = useChartsTheme();
 
@@ -25,14 +28,13 @@ const Pie = (props: PieProps) => {
 
 	const serieElement = elements?.find((el) => el.name === name);
 
-	// Campi di ctx usati dal calcolo dei path: width/height/padding, non
-	// ctx intero (che cambia ad ogni mousemove, vanificando il memo).
-	const { width, height } = ctx ?? {};
-
+	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
+	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
+	// singoli campi e' sicuro e piu' semplice da mantenere corretto.
 	const result = useMemo(() => {
-		if (!theme || !serieElement) return null;
-		return generatePiePaths(serieElement, { width, height, padding });
-	}, [theme, serieElement, width, height, padding]);
+		if (!ctx || !theme || !serieElement) return null;
+		return generatePiePaths(serieElement, { ...ctx, padding });
+	}, [ctx, theme, serieElement, padding]);
 
 	if (!ctx || !theme || !serieElement || !result) return null;
 

@@ -1,7 +1,10 @@
 /* React Imports */
 import { useMemo } from "react";
 /* Contezt Imports */
-import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+import {
+	useChartsStructural,
+	useChartsTheme,
+} from "../../contexts/chartContext";
 import { generateDonutPaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
 import { isDefined } from "../../lib/utils";
@@ -32,7 +35,7 @@ const Donut = (props: DonutProps) => {
 
 	const { innerRadius, centerElement } = config ?? {};
 
-	const ctx = useCharts();
+	const ctx = useChartsStructural();
 
 	const theme = useChartsTheme();
 
@@ -42,20 +45,18 @@ const Donut = (props: DonutProps) => {
 
 	const serieElement = elements?.find((el) => el.name === name);
 
-	// Campi di ctx usati dal calcolo dei path: width/height/padding, non
-	// ctx intero (che cambia ad ogni mousemove, vanificando il memo).
-	const { width, height } = ctx ?? {};
-
+	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
+	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
+	// singoli campi e' sicuro e piu' semplice da mantenere corretto.
 	const result = useMemo(() => {
-		if (!theme || !serieElement) return null;
+		if (!ctx || !theme || !serieElement) return null;
 		return generateDonutPaths(serieElement, {
-			width,
-			height,
+			...ctx,
 			padding,
 			innerRadius,
 			centerElement,
 		});
-	}, [theme, serieElement, width, height, padding, innerRadius, centerElement]);
+	}, [ctx, theme, serieElement, padding, innerRadius, centerElement]);
 
 	if (!ctx || !theme || !serieElement || !result) return null;
 

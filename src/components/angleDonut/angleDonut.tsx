@@ -1,5 +1,8 @@
 import { Fragment, type ReactNode, useMemo } from "react";
-import { useCharts, useChartsTheme } from "../../contexts/chartContext";
+import {
+	useChartsStructural,
+	useChartsTheme,
+} from "../../contexts/chartContext";
 import { generateAngleDonutPaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
 import { isDefined } from "../../lib/utils";
@@ -39,7 +42,7 @@ const AngleDonut = (props: AngleDonutProps) => {
 		customLabel = undefined,
 	} = config ?? {};
 
-	const ctx = useCharts();
+	const ctx = useChartsStructural();
 
 	const theme = useChartsTheme();
 
@@ -49,15 +52,13 @@ const AngleDonut = (props: AngleDonutProps) => {
 
 	const serieElement = elements?.find((el) => el.name === name);
 
-	// Campi di ctx usati dal calcolo dei path: width/height/padding, non
-	// ctx intero (che cambia ad ogni mousemove, vanificando il memo).
-	const { width, height } = ctx ?? {};
-
+	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
+	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
+	// singoli campi e' sicuro e piu' semplice da mantenere corretto.
 	const result = useMemo(() => {
-		if (!theme || !serieElement) return null;
+		if (!ctx || !theme || !serieElement) return null;
 		return generateAngleDonutPaths(serieElement, {
-			width,
-			height,
+			...ctx,
 			padding,
 			innerRadius,
 			centerElement,
@@ -65,10 +66,9 @@ const AngleDonut = (props: AngleDonutProps) => {
 			showTrack,
 		});
 	}, [
+		ctx,
 		theme,
 		serieElement,
-		width,
-		height,
 		padding,
 		innerRadius,
 		centerElement,

@@ -11,8 +11,8 @@ import {
 } from "react";
 /* Context Imports */
 import {
-	useCharts,
 	useChartsDispatch,
+	useChartsStructural,
 	useChartsTheme,
 } from "../../contexts/chartContext";
 /* Core Imports */
@@ -86,7 +86,7 @@ const Svg = (props: SVGProps) => {
 
 	const rootRef = useRef<SVGSVGElement>(null);
 
-	const ctx = useCharts();
+	const ctx = useChartsStructural();
 	const dispatch = useChartsDispatch();
 	const theme = useChartsTheme();
 
