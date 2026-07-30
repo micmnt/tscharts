@@ -150,6 +150,30 @@ const Axis = (props: AxisProps) => {
 							? selectionFill
 							: "transparent";
 
+				const handleLabelClick = () => {
+					if (
+						globalConfig?.barClickAction &&
+						isFunction(globalConfig.barClickAction)
+					) {
+						const serieEl = serieData[labelIndex];
+						globalConfig.barClickAction(serieEl);
+					}
+				};
+
+				const handleLabelHover = () => {
+					if (dispatch && labelIndex !== hoveredElement?.elementIndex) {
+						dispatch({
+							type: "SET_HOVER_ELEMENT",
+							payload: {
+								hoveredElement: {
+									elementIndex: labelIndex,
+									label: label.value,
+								},
+							},
+						});
+					}
+				};
+
 				return (
 					<Fragment key={`${label.value}-${labelIndex}`}>
 						<>
@@ -163,31 +187,20 @@ const Axis = (props: AxisProps) => {
 							) : null}
 							{tooltipElement ? (
 								<rect
-									onClick={() => {
-										if (
-											globalConfig?.barClickAction &&
-											isFunction(globalConfig.barClickAction)
-										) {
-											const serieEl = serieData[labelIndex];
-											globalConfig.barClickAction(serieEl);
+									tabIndex={globalConfig?.barClickAction ? 0 : undefined}
+									role={globalConfig?.barClickAction ? "button" : undefined}
+									aria-label={
+										globalConfig?.barClickAction ? label.value : undefined
+									}
+									onClick={handleLabelClick}
+									onKeyDown={(event) => {
+										if (event.key === "Enter" || event.key === " ") {
+											event.preventDefault();
+											handleLabelClick();
 										}
 									}}
-									onMouseEnter={() => {
-										if (
-											dispatch &&
-											labelIndex !== hoveredElement?.elementIndex
-										) {
-											dispatch({
-												type: "SET_HOVER_ELEMENT",
-												payload: {
-													hoveredElement: {
-														elementIndex: labelIndex,
-														label: label.value,
-													},
-												},
-											});
-										}
-									}}
+									onMouseEnter={handleLabelHover}
+									onFocus={handleLabelHover}
 									x={0}
 									y={hoverRectY > 0 ? hoverRectY : 0}
 									width={width}

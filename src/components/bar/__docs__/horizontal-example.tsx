@@ -31,7 +31,14 @@ const HorizontalExample: FC = () => {
 			}}
 		>
 			<Chart width={500} height={300} elements={elements}>
-				<Bar name="richieste" horizontal />
+				<Bar
+					name="richieste"
+					horizontal
+					config={{
+						barClickAction: (value: unknown) =>
+							console.log("[F2 proof] barClickAction", value),
+					}}
+				/>
 				<Axis
 					type="xAxis"
 					horizontal

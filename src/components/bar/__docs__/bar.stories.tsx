@@ -17,6 +17,8 @@ export const Simple: Story = {
 		showLabels: false,
 		config: {
 			barWidth: 40,
+			barClickAction: (value: unknown) =>
+				console.log("[F2 proof] barClickAction", value),
 		},
 	},
 };

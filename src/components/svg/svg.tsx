@@ -22,6 +22,7 @@ import {
 	getChartDimensions,
 } from "../../lib/core";
 import { isDefined, isTimeSerie } from "../../lib/utils";
+import type { Serie } from "../../types";
 import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
 
 type SVGProps = {
@@ -31,6 +32,14 @@ type SVGProps = {
 	style?: any;
 	leftAxisCount?: number;
 	rightAxisCount?: number;
+	ariaLabel?: string;
+};
+
+const getDefaultAriaLabel = (elements?: Serie[]) => {
+	if (!elements || elements.length === 0) return "Grafico";
+
+	const seriesNames = elements.map((el) => el.name).join(", ");
+	return `Grafico con ${elements.length} serie: ${seriesNames}`;
 };
 
 // Funzione che prende tutte le props di config degli elementi grafici e le setta nel context globale
@@ -81,6 +90,7 @@ const Svg = (props: SVGProps) => {
 		rightAxisCount,
 		chartID,
 		style,
+		ariaLabel,
 	} = props;
 
 	const rootRef = useRef<SVGSVGElement>(null);
@@ -259,6 +269,8 @@ const Svg = (props: SVGProps) => {
 			height={height + legendHeight}
 			onMouseMove={handleMouseMove}
 			onMouseLeave={handleMouseLeave}
+			role="img"
+			aria-label={ariaLabel ?? getDefaultAriaLabel(ctxElements)}
 		>
 			{children}
 		</svg>

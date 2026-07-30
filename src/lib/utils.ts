@@ -92,5 +92,12 @@ export const trimZerosAndNullLinePath = (paths: string[]) => {
 		}
 	}
 
+	// Se la sequenza vuota finale non e' mai stata chiusa da un path valido
+	// successivo, il placeholder "*" resterebbe nell'array e finirebbe
+	// letteralmente nell'attributo `d` dell'SVG (sintassi non valida).
+	if (validPaths.slice(-1)?.[0] === "*") {
+		validPaths.pop();
+	}
+
 	return validPaths;
 };

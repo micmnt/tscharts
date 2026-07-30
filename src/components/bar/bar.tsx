@@ -174,6 +174,13 @@ const Bar = (props: BarProps) => {
 	const normalizedDragDecimals = Math.max(0, Math.floor(dragValueDecimals));
 	const decimalFactor = 10 ** normalizedDragDecimals;
 
+	const handleBarClick = (pathIndex: number) => {
+		if (config?.barClickAction && isFunction(config.barClickAction)) {
+			const currentDataPoint = serieElement.data[pathIndex];
+			config.barClickAction(currentDataPoint);
+		}
+	};
+
 	if (!ctx.chartXEnd || !ctx.chartYEnd || !paths) return null;
 
 	return (
@@ -196,10 +203,13 @@ const Bar = (props: BarProps) => {
 							touchAction: "none",
 							transition: "d 90ms linear",
 						}}
-						onClick={() => {
-							if (config?.barClickAction && isFunction(config.barClickAction)) {
-								const currentDataPoint = serieElement.data[pathIndex];
-								config.barClickAction(currentDataPoint);
+						tabIndex={config?.barClickAction ? 0 : undefined}
+						role={config?.barClickAction ? "button" : undefined}
+						onClick={() => handleBarClick(pathIndex)}
+						onKeyDown={(event) => {
+							if (event.key === "Enter" || event.key === " ") {
+								event.preventDefault();
+								handleBarClick(pathIndex);
 							}
 						}}
 						onPointerDown={(event) => {

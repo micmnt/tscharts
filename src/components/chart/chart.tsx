@@ -27,6 +27,7 @@ type ChartProps = {
 	children: React.ReactNode;
 	name?: string;
 	flatMax?: boolean;
+	ariaLabel?: string;
 };
 
 const Chart = (props: ChartProps) => {
@@ -38,6 +39,7 @@ const Chart = (props: ChartProps) => {
 		style,
 		name = "chart",
 		flatMax = true,
+		ariaLabel,
 	} = props;
 
 	const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -127,6 +129,7 @@ const Chart = (props: ChartProps) => {
 					leftAxisCount={leftAxisCount}
 					rightAxisCount={rightAxisCount}
 					chartID={chartID}
+					ariaLabel={ariaLabel}
 				>
 					{children}
 				</Svg>

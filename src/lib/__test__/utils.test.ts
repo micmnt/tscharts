@@ -117,11 +117,17 @@ describe("trimZerosAndNullLinePath", () => {
 		expect(trimZerosAndNullLinePath(paths)).toEqual(["M 1 1", "L 2 2"]);
 	});
 
-	it("lascia un placeholder '*' letterale se il gap e' finale (nessun path valido dopo)", () => {
-		// Comportamento attuale, non necessariamente corretto: questo "*" non
-		// viene poi filtrato da line.tsx (che scarta solo le stringhe vuote),
-		// quindi finirebbe nell'attributo `d` dell'SVG come sintassi non valida.
+	it("rimuove il placeholder '*' se il gap e' finale (nessun path valido dopo)", () => {
+		// Prima del fix (task #20), il placeholder "*" sarebbe rimasto
+		// nell'array e sarebbe finito letteralmente nell'attributo `d`
+		// dell'SVG (sintassi non valida). Ora un gap finale viene rimosso
+		// del tutto invece di lasciare un placeholder orfano.
 		const paths = ["L 1 1", "", ""];
-		expect(trimZerosAndNullLinePath(paths)).toEqual(["L 1 1", "*"]);
+		expect(trimZerosAndNullLinePath(paths)).toEqual(["L 1 1"]);
+	});
+
+	it("rimuove il placeholder '*' se l'intero array e' un gap (nessun path valido)", () => {
+		const paths = ["", ""];
+		expect(trimZerosAndNullLinePath(paths)).toEqual([]);
 	});
 });
