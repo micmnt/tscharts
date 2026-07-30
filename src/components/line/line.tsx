@@ -1,5 +1,6 @@
 /* Types Imports */
 
+import { useMemo } from "react";
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 /* Core Imports */
 import {
@@ -7,6 +8,7 @@ import {
 	generateHorizontalDataPaths,
 	generateNegativeDataPaths,
 } from "../../lib/core";
+import defaultTheme from "../../lib/defaultTheme";
 import type { TimeSerieEl } from "../../types";
 
 export type LineProps = {
@@ -52,44 +54,79 @@ const Line = (props: LineProps) => {
 
 	const theme = useChartsTheme();
 
-	if (!ctx || !theme) return null;
+	const { padding = defaultTheme.padding } = theme ?? {};
 
-	const { hoveredElement, elements } = ctx;
+	const hoveredElement = ctx?.hoveredElement;
+	const elements = ctx?.elements;
 
-	const { padding } = theme;
+	const serieElement = elements?.find((el) => el.name === name);
 
-	if (!elements) return null;
+	// Campi di ctx usati dal calcolo dei path: solo questi in dipendenza,
+	// non ctx intero (che cambia ad ogni mousemove, vanificando il memo).
+	const {
+		chartXStart,
+		chartXEnd,
+		chartYEnd,
+		chartYMiddle,
+		negative,
+		flatMax,
+		globalConfig,
+	} = ctx ?? {};
 
-	const serieElement = elements.find((el) => el.name === name);
+	const result = useMemo(() => {
+		if (!theme || !serieElement) return null;
 
-	if (!serieElement) return null;
+		const pathsConfig = {
+			elements,
+			chartXStart,
+			chartXEnd,
+			chartYEnd,
+			chartYMiddle,
+			negative,
+			flatMax,
+			globalConfig,
+			padding,
+		};
 
-	let result: {
-		paths: string[];
-		dataPoints: Map<any, any>;
-	} | null = null;
-
-	if (ctx.negative) {
-		result = generateNegativeDataPaths(
+		if (negative) {
+			return generateNegativeDataPaths(
+				serieElement,
+				{ ...pathsConfig, trimZeros: Number(trimZeros) },
+				"line",
+			);
+		}
+		if (horizontal) {
+			return generateHorizontalDataPaths(
+				serieElement,
+				{ ...pathsConfig, trimZeros, barOffset: lineOffset },
+				"line",
+			);
+		}
+		return generateDataPaths(
 			serieElement,
-			{ ...ctx, padding, trimZeros: Number(trimZeros) },
+			{ ...pathsConfig, trimZeros },
 			"line",
 		);
-	} else if (horizontal) {
-		result = generateHorizontalDataPaths(
-			serieElement,
-			{ ...ctx, padding, trimZeros, barOffset: lineOffset },
-			"line",
-		);
-	} else {
-		result = generateDataPaths(
-			serieElement,
-			{ ...ctx, padding, trimZeros },
-			"line",
-		);
-	}
+	}, [
+		theme,
+		serieElement,
+		elements,
+		chartXStart,
+		chartXEnd,
+		chartYEnd,
+		chartYMiddle,
+		negative,
+		flatMax,
+		globalConfig,
+		padding,
+		trimZeros,
+		horizontal,
+		lineOffset,
+	]);
 
-	const { paths, dataPoints } = result ?? {};
+	if (!ctx || !theme || !elements || !serieElement || !result) return null;
+
+	const { paths, dataPoints } = result;
 
 	const linePath = paths?.filter((p) => p !== "").join() ?? "";
 

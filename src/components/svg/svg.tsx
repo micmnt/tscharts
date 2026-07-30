@@ -149,7 +149,18 @@ const Svg = (props: SVGProps) => {
 	const { svgRef, chartXStart, chartXEnd, chartYEnd, width, height } =
 		ctx ?? {};
 
-	const { elements: ctxElements, globalConfig: ctxGlobalConfig } = ctx ?? {};
+	const {
+		elements: ctxElements,
+		globalConfig: ctxGlobalConfig,
+		horizontal: ctxHorizontal,
+	} = ctx ?? {};
+
+	// Serie di riferimento per il calcolo dell'hover: deve avere data come
+	// TimeSerieEl[] (bar/line/bar-stacked/group-bar), non un valore singolo
+	// come threshold o un array di forma diversa come pie.
+	const hoverableSerie = ctxElements?.find((el) =>
+		["line", "bar", "bar-stacked", "group-bar"].includes(el.type ?? ""),
+	);
 
 	const handleMouseLeave = () => {
 		const tooltipElement = document.getElementById(`cts-tooltip-${chartID}`);
@@ -191,9 +202,15 @@ const Svg = (props: SVGProps) => {
 					payload: { mousePosition: svgPoint, tooltipPosition },
 				});
 
-				// Compute hovered element index from svgPoint.x for non-pie charts
-				if (ctxElements?.[0] && ctxElements[0].type !== "pie") {
-					const serieData = ctxElements[0].data as TimeSerieEl[];
+				// Calcolo l'elemento in hover dalla posizione X del mouse. Solo per
+				// grafici NON orizzontali: nei grafici horizontal e' Axis (nel suo
+				// ramo xAxis horizontal) a gestire l'hover correttamente in base
+				// alla posizione Y, tramite i propri onMouseEnter sulle righe -
+				// ricalcolarlo qui duplicherebbe quella logica e, siccome mousemove
+				// scatta ad ogni pixel, sovrascriverebbe il valore corretto con uno
+				// sbagliato calcolato sull'asse sbagliato.
+				if (!ctxHorizontal && hoverableSerie) {
+					const serieData = hoverableSerie.data as TimeSerieEl[];
 					const xInterval = (chartXEnd - chartXStart) / (serieData.length || 1);
 					const xSpace = ctxGlobalConfig?.barWidth
 						? (Number(ctxGlobalConfig.barWidth) + (padding ?? 0)) / 2
@@ -225,7 +242,8 @@ const Svg = (props: SVGProps) => {
 			chartXEnd,
 			chartYEnd,
 			chartID,
-			ctxElements,
+			ctxHorizontal,
+			hoverableSerie,
 			ctxGlobalConfig,
 			padding,
 		],

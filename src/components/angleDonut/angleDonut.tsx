@@ -1,6 +1,7 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, type ReactNode, useMemo } from "react";
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 import { generateAngleDonutPaths } from "../../lib/core";
+import defaultTheme from "../../lib/defaultTheme";
 import { isDefined } from "../../lib/utils";
 import type { AngleDonutSerieEl } from "../../types";
 
@@ -42,29 +43,42 @@ const AngleDonut = (props: AngleDonutProps) => {
 
 	const theme = useChartsTheme();
 
-	if (!ctx || !theme) return null;
+	const { padding = defaultTheme.padding } = theme ?? {};
 
-	const { elements } = ctx;
+	const elements = ctx?.elements;
 
-	const { padding } = theme;
+	const serieElement = elements?.find((el) => el.name === name);
 
-	if (!elements) return null;
+	// Campi di ctx usati dal calcolo dei path: width/height/padding, non
+	// ctx intero (che cambia ad ogni mousemove, vanificando il memo).
+	const { width, height } = ctx ?? {};
 
-	const serieElement = elements.find((el) => el.name === name);
-
-	if (!serieElement) return null;
-
-	const { paths, centerPoint, labelElement } = generateAngleDonutPaths(
-		serieElement,
-		{
-			...ctx,
+	const result = useMemo(() => {
+		if (!theme || !serieElement) return null;
+		return generateAngleDonutPaths(serieElement, {
+			width,
+			height,
 			padding,
 			innerRadius,
 			centerElement,
 			angle,
 			showTrack,
-		},
-	);
+		});
+	}, [
+		theme,
+		serieElement,
+		width,
+		height,
+		padding,
+		innerRadius,
+		centerElement,
+		angle,
+		showTrack,
+	]);
+
+	if (!ctx || !theme || !serieElement || !result) return null;
+
+	const { paths, centerPoint, labelElement } = result;
 	const serieData = serieElement.data as AngleDonutSerieEl[];
 
 	const slicesColors = serieData.map(

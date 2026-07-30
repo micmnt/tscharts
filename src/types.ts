@@ -40,6 +40,7 @@ export type ChartState = {
 	chartYEnd?: number;
 	chartYMiddle?: number;
 	negative?: boolean;
+	horizontal?: boolean;
 	flatMax?: boolean;
 	timeSeriesMaxValue?: number;
 	chartID?: string | null;

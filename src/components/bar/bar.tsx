@@ -1,5 +1,7 @@
 /* Types Imports */
 
+/* React Imports */
+import { useMemo } from "react";
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 /* Core Imports */
@@ -12,8 +14,9 @@ import {
 	getSeriesByAxisName,
 	getTimeSerieMaxValue,
 } from "../../lib/core";
+import defaultTheme from "../../lib/defaultTheme";
 import { calculateFlatValue, isFunction } from "../../lib/utils";
-import type { ThemeState, TimeSerieEl } from "../../types";
+import type { TimeSerieEl } from "../../types";
 
 export type BarDragPayload = {
 	value: number;
@@ -62,13 +65,9 @@ const Bar = (props: BarProps) => {
 
 	const ctx = useCharts();
 
-	const theme = useChartsTheme() as ThemeState;
+	const theme = useChartsTheme();
 
-	if (!ctx || !theme) return null;
-
-	const { elements } = ctx;
-
-	const { padding } = theme;
+	const { padding = defaultTheme.padding } = theme ?? {};
 
 	const {
 		dragValueDecimals = 2,
@@ -85,17 +84,67 @@ const Bar = (props: BarProps) => {
 		barOffset = undefined,
 	} = config || {};
 
+	const elements = ctx?.elements;
+
 	const serieElement = elements?.find((el) => el.name === name);
 
 	const topLabelSerieElement = elements?.find(
 		(el) => el.name === topLabelSerie,
 	);
 
-	if (!serieElement) return null;
+	// Campi di ctx usati dal calcolo dei path: solo questi in dipendenza al
+	// memo sotto, non ctx intero (che cambia ad ogni mousemove per via di
+	// mousePosition/tooltipPosition/hoveredElement, il che vanificherebbe
+	// l'ottimizzazione facendo ricalcolare i path ad ogni pixel di movimento).
+	const {
+		chartXStart,
+		chartXEnd,
+		chartYEnd,
+		chartYMiddle,
+		negative,
+		flatMax,
+		globalConfig,
+	} = ctx ?? {};
 
-	// Oggetto di configurazione per il calcolo dei paths svg
-	const pathsConfig = {
-		...ctx,
+	const result = useMemo(() => {
+		if (!theme || !serieElement) return null;
+
+		const pathsConfig = {
+			elements,
+			chartXStart,
+			chartXEnd,
+			chartYEnd,
+			chartYMiddle,
+			negative,
+			flatMax,
+			globalConfig,
+			padding,
+			barWidth,
+			radius,
+			topLeftRadius,
+			topRightRadius,
+			bottomRightRadius,
+			bottomLeftRadius,
+			barOffset,
+		};
+
+		if (stacked) return generateStackedDataPaths(serieElement, pathsConfig);
+		if (negative)
+			return generateNegativeDataPaths(serieElement, pathsConfig, "bar");
+		if (horizontal)
+			return generateHorizontalDataPaths(serieElement, pathsConfig, "bar");
+		return generateDataPaths(serieElement, pathsConfig, "bar");
+	}, [
+		theme,
+		serieElement,
+		elements,
+		chartXStart,
+		chartXEnd,
+		chartYEnd,
+		chartYMiddle,
+		negative,
+		flatMax,
+		globalConfig,
 		padding,
 		barWidth,
 		radius,
@@ -104,25 +153,13 @@ const Bar = (props: BarProps) => {
 		bottomRightRadius,
 		bottomLeftRadius,
 		barOffset,
-	};
+		stacked,
+		horizontal,
+	]);
 
-	let result: {
-		paths: string[];
-		dataPoints: Map<any, any>;
-		topLabelsPoints: Map<any, any>;
-	} | null = null;
+	if (!ctx || !theme || !serieElement || !result) return null;
 
-	if (stacked) {
-		result = generateStackedDataPaths(serieElement, pathsConfig);
-	} else if (ctx.negative) {
-		result = generateNegativeDataPaths(serieElement, pathsConfig, "bar");
-	} else if (horizontal) {
-		result = generateHorizontalDataPaths(serieElement, pathsConfig, "bar");
-	} else {
-		result = generateDataPaths(serieElement, pathsConfig, "bar");
-	}
-
-	const { paths, dataPoints, topLabelsPoints } = result ?? {};
+	const { paths, dataPoints, topLabelsPoints } = result;
 
 	const serieIndex = elements?.findIndex((el) => el.name === serieElement.name);
 

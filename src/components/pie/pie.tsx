@@ -1,8 +1,11 @@
+/* React Imports */
+import { useMemo } from "react";
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
 /* Core Imports */
 import { generatePiePaths } from "../../lib/core";
+import defaultTheme from "../../lib/defaultTheme";
 import type { PieSerieEl } from "../../types";
 
 export type PieProps = {
@@ -16,22 +19,24 @@ const Pie = (props: PieProps) => {
 
 	const theme = useChartsTheme();
 
-	if (!ctx || !theme) return null;
+	const { padding = defaultTheme.padding } = theme ?? {};
 
-	const { elements } = ctx;
+	const elements = ctx?.elements;
 
-	const { padding } = theme;
+	const serieElement = elements?.find((el) => el.name === name);
 
-	if (!elements) return null;
+	// Campi di ctx usati dal calcolo dei path: width/height/padding, non
+	// ctx intero (che cambia ad ogni mousemove, vanificando il memo).
+	const { width, height } = ctx ?? {};
 
-	const serieElement = elements.find((el) => el.name === name);
+	const result = useMemo(() => {
+		if (!theme || !serieElement) return null;
+		return generatePiePaths(serieElement, { width, height, padding });
+	}, [theme, serieElement, width, height, padding]);
 
-	if (!serieElement) return null;
+	if (!ctx || !theme || !serieElement || !result) return null;
 
-	const { paths, dataPoints } = generatePiePaths(serieElement, {
-		...ctx,
-		padding,
-	});
+	const { paths, dataPoints } = result;
 
 	const serieLabels = serieElement.labels ?? [];
 

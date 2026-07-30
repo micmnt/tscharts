@@ -14,8 +14,10 @@ import "../../styles.css";
 
 /* Utils Imports */
 import { nanoid } from "nanoid";
-/* Components Imports */
 import Svg from "../../components/svg/svg";
+/* Components Imports */
+import Bar from "../bar/bar";
+import Line from "../line/line";
 
 type ChartProps = {
 	elements: Serie[];
@@ -48,6 +50,19 @@ const Chart = (props: ChartProps) => {
 		(childEl) => childEl.props?.type === "yAxis",
 	)?.length;
 
+	// Deduco l'orientamento del grafico dai componenti Bar/Line che disegnano
+	// dati (non da Axis, la cui prop `horizontal` e' solo di rendering e non
+	// determina l'orientamento del grafico). Confronto per riferimento diretto
+	// al componente (non per nome stringa) per restare robusti anche sotto
+	// minificazione aggressiva nel bundle del consumer. Un Chart e' o
+	// orizzontale o verticale nel suo insieme: tutte le serie condividono lo
+	// stesso sistema di coordinate, quindi non ha senso mescolare orientamenti.
+	const horizontal = (normalizedChildren as JSX.Element[]).some(
+		(childEl) =>
+			(childEl.type === Bar || childEl.type === Line) &&
+			childEl.props?.horizontal === true,
+	);
+
 	const timeSeriesElements = elements.filter(
 		(el) => el.type === "line" || el.type === "bar",
 	);
@@ -79,6 +94,7 @@ const Chart = (props: ChartProps) => {
 			width,
 			height,
 			negative,
+			horizontal,
 			chartXStart: 0,
 			chartXEnd: 0,
 			chartYEnd: 0,
@@ -86,7 +102,15 @@ const Chart = (props: ChartProps) => {
 			flatMax,
 			timeSeriesMaxValue,
 		}),
-		[elements, height, timeSeriesMaxValue, width, negative, flatMax],
+		[
+			elements,
+			height,
+			timeSeriesMaxValue,
+			width,
+			negative,
+			horizontal,
+			flatMax,
+		],
 	);
 
 	if (!chartID) return null;

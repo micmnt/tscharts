@@ -37,6 +37,7 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 			payload: {
 				elements: initialState.elements,
 				negative: initialState.negative,
+				horizontal: initialState.horizontal,
 				flatMax: initialState.flatMax,
 				timeSeriesMaxValue: initialState.timeSeriesMaxValue,
 			},
@@ -44,6 +45,7 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 	}, [
 		initialState.elements,
 		initialState.negative,
+		initialState.horizontal,
 		initialState.flatMax,
 		initialState.timeSeriesMaxValue,
 	]);
@@ -103,13 +105,14 @@ function chartReducer(
 			};
 		}
 		case "SYNC_PROPS": {
-			const { elements, negative, flatMax, timeSeriesMaxValue } =
+			const { elements, negative, horizontal, flatMax, timeSeriesMaxValue } =
 				action.payload;
 
 			return {
 				...chart,
 				elements,
 				negative,
+				horizontal,
 				flatMax,
 				timeSeriesMaxValue,
 			};

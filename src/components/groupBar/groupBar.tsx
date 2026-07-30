@@ -1,5 +1,7 @@
 /* Types Imports */
 
+/* React Imports */
+import { useMemo } from "react";
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 /* Core Imports */
@@ -7,7 +9,8 @@ import {
 	generateGroupDataPaths,
 	generateStackedGroupDataPaths,
 } from "../../lib/core";
-import type { ThemeState, TimeSerieEl } from "../../types";
+import defaultTheme from "../../lib/defaultTheme";
+import type { TimeSerieEl } from "../../types";
 
 export type GroupBarProps = {
 	name: string;
@@ -39,13 +42,9 @@ const GroupBar = (props: GroupBarProps) => {
 
 	const ctx = useCharts();
 
-	const theme = useChartsTheme() as ThemeState;
+	const theme = useChartsTheme();
 
-	if (!ctx || !theme) return null;
-
-	const { elements } = ctx;
-
-	const { padding } = theme;
+	const { padding = defaultTheme.padding } = theme ?? {};
 
 	const {
 		radius = 0,
@@ -60,37 +59,65 @@ const GroupBar = (props: GroupBarProps) => {
 		topLabelColor = "black",
 	} = config || {};
 
+	const elements = ctx?.elements;
+
 	const serieElement = elements?.find((el) => el.name === name);
 
 	const topLabelSerieElement = elements?.find(
 		(el) => el.name === topLabelSerie,
 	);
 
-	if (!serieElement) return null;
+	// Campi di ctx usati dal calcolo dei path: solo questi in dipendenza,
+	// non ctx intero (che cambia ad ogni mousemove, vanificando il memo).
+	const { chartXStart, chartXEnd, chartYEnd, chartYMiddle, globalConfig } =
+		ctx ?? {};
 
-	const { paths, dataPoints, topLabelsPoints } = stacked
-		? (generateStackedGroupDataPaths(serieElement, {
-				...ctx,
-				padding,
-				barWidth,
-				radius,
-				topLeftRadius,
-				topRightRadius,
-				bottomLeftRadius,
-				bottomRightRadius,
-			}) ?? {})
-		: (generateGroupDataPaths(serieElement, {
-				...ctx,
-				padding,
-				barWidth,
-				radius,
-				topLeftRadius,
-				topRightRadius,
-				bottomLeftRadius,
-				bottomRightRadius,
-			}) ?? {});
+	const result = useMemo(() => {
+		if (!theme || !serieElement) return null;
 
-	const serieIndex = elements?.findIndex((el) => el.name === serieElement.name);
+		const pathsConfig = {
+			elements,
+			chartXStart,
+			chartXEnd,
+			chartYEnd,
+			chartYMiddle,
+			globalConfig,
+			padding,
+			barWidth,
+			radius,
+			topLeftRadius,
+			topRightRadius,
+			bottomLeftRadius,
+			bottomRightRadius,
+		};
+
+		return stacked
+			? generateStackedGroupDataPaths(serieElement, pathsConfig)
+			: generateGroupDataPaths(serieElement, pathsConfig);
+	}, [
+		theme,
+		serieElement,
+		elements,
+		chartXStart,
+		chartXEnd,
+		chartYEnd,
+		chartYMiddle,
+		globalConfig,
+		padding,
+		barWidth,
+		radius,
+		topLeftRadius,
+		topRightRadius,
+		bottomLeftRadius,
+		bottomRightRadius,
+		stacked,
+	]);
+
+	if (!ctx || !theme || !elements || !serieElement || !result) return null;
+
+	const { paths, dataPoints, topLabelsPoints } = result;
+
+	const serieIndex = elements.findIndex((el) => el.name === serieElement.name);
 
 	const serieColor =
 		serieElement.color ??
