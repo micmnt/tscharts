@@ -1,7 +1,5 @@
 /* Types Imports */
 
-import { nanoid } from "nanoid";
-
 /* Context Imports */
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 /* Core Imports */
@@ -108,8 +106,12 @@ const GroupBar = (props: GroupBarProps) => {
 		<>
 			{paths
 				.filter((p) => p !== null && p !== undefined && !p.includes("NaN"))
-				.map((p) => (
-					<path key={`${p}-${nanoid()}`} d={p} fill={serieColor} />
+				.map((p, pathIndex) => (
+					<path
+						key={`${serieElement.name}-bar-${pathIndex}`}
+						d={p}
+						fill={serieColor}
+					/>
 				))}
 			{topLabelSerie &&
 				labelsPoints.map(
@@ -120,7 +122,7 @@ const GroupBar = (props: GroupBarProps) => {
 								fontSize={topLabelSize}
 								fontWeight="bold"
 								fill={topLabelColor}
-								key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
+								key={`${serieElement.name}-top-label-${dataPointIndex}`}
 								x={point[0]}
 								y={Number.isNaN(point[1]) ? 0 : point[1]}
 							>
@@ -145,7 +147,7 @@ const GroupBar = (props: GroupBarProps) => {
 								fontSize={labelSize}
 								fontWeight="bold"
 								fill={labelColor}
-								key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
+								key={`${serieElement.name}-label-${dataPointIndex}`}
 								x={point[0]}
 								y={Number.isNaN(point[1]) ? 0 : point[1]}
 							>

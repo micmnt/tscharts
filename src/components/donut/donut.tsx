@@ -1,5 +1,4 @@
 /* Contezt Imports */
-import { nanoid } from "nanoid";
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 import { generateDonutPaths } from "../../lib/core";
 import { isDefined } from "../../lib/utils";
@@ -65,18 +64,18 @@ const Donut = (props: DonutProps) => {
 		<path
 			d={path}
 			fill={slicesColors[pathIndex]}
-			key={`${path}-${nanoid()}`}
+			key={`${serieElement.name}-slice-${pathIndex}`}
 			shapeRendering="geometricPrecision"
 		/>
 	));
 
-	const labels = serieLabels.map((label) => (
+	const labels = serieLabels.map((label, labelIndex) => (
 		<text
 			textAnchor="middle"
 			fontSize={14}
 			fontWeight="bold"
 			fill={"white"}
-			key={`${label.name}-${nanoid()}`}
+			key={`${label.name}-${labelIndex}`}
 			x={dataPoints.get(label.name)?.x}
 			y={dataPoints.get(label.name)?.y}
 		>
@@ -87,7 +86,7 @@ const Donut = (props: DonutProps) => {
 	if (centerPoint && isDefined(centerElement?.value)) {
 		const centerTextValue = (
 			<text
-				key={`centerTextValue-${nanoid()}`}
+				key="donut-center-value"
 				textAnchor="middle"
 				fontSize={centerElement?.valueSize ?? 30}
 				fontWeight="bold"
@@ -107,7 +106,7 @@ const Donut = (props: DonutProps) => {
 		);
 		const centerTextLabel = (
 			<text
-				key={`centerTextLabel-${nanoid()}`}
+				key="donut-center-label"
 				dy={centerElement?.labelDy ?? 0}
 				textAnchor="middle"
 				fontSize={centerElement?.labelSize ?? 20}

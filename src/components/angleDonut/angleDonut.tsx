@@ -1,4 +1,3 @@
-import { nanoid } from "nanoid";
 import { Fragment, type ReactNode } from "react";
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 import { generateAngleDonutPaths } from "../../lib/core";
@@ -85,7 +84,7 @@ const AngleDonut = (props: AngleDonutProps) => {
 		<path
 			d={path}
 			fill={slicesColors[pathIndex]}
-			key={`${path}-${nanoid()}`}
+			key={`${serieElement.name}-slice-${pathIndex}`}
 			shapeRendering="geometricPrecision"
 		/>
 	));
@@ -95,7 +94,7 @@ const AngleDonut = (props: AngleDonutProps) => {
 			d={path}
 			fill={shadowSlicesColors[pathIndex]}
 			fillOpacity={0.2}
-			key={`${path}-${nanoid()}`}
+			key={`${serieElement.name}-shadow-${pathIndex}`}
 			shapeRendering="geometricPrecision"
 		/>
 	));
@@ -103,17 +102,17 @@ const AngleDonut = (props: AngleDonutProps) => {
 	const returnValues = [...shadowSlices, ...slices];
 
 	if (customLabel && isDefined(customLabel as string)) {
-		const labels = serieData.map((serieEl) => {
+		const labels = serieData.map((serieEl, serieElIndex) => {
 			if (typeof customLabel === "string") {
 				return (
-					<Fragment key={`customDonutLabel-${nanoid()}`}>
+					<Fragment key={`${serieElement.name}-custom-label-${serieElIndex}`}>
 						{customLabel}
 					</Fragment>
 				);
 			}
 
 			return (
-				<Fragment key={`customDonutLabel-${nanoid()}`}>
+				<Fragment key={`${serieElement.name}-custom-label-${serieElIndex}`}>
 					{customLabel?.(serieEl)}
 				</Fragment>
 			);
@@ -121,7 +120,7 @@ const AngleDonut = (props: AngleDonutProps) => {
 
 		const labelContainer = (
 			<foreignObject
-				key={`labelValue-${nanoid()}`}
+				key="angle-donut-label-container"
 				x={labelElement.x}
 				y={labelElement.y}
 				width={labelElement.width}
@@ -137,7 +136,7 @@ const AngleDonut = (props: AngleDonutProps) => {
 	if (centerPoint && isDefined(centerElement?.value)) {
 		const centerTextValue = (
 			<text
-				key={`centerTextValue-${nanoid()}`}
+				key="angle-donut-center-value"
 				textAnchor="middle"
 				fontSize={centerElement?.valueSize ?? 30}
 				fontWeight="bold"
@@ -158,7 +157,7 @@ const AngleDonut = (props: AngleDonutProps) => {
 
 		const centerTextLabel = (
 			<text
-				key={`centerTextLabel-${nanoid()}`}
+				key="angle-donut-center-label"
 				dy={centerElement?.labelDy ?? 0}
 				textAnchor="middle"
 				fontSize={centerElement?.labelSize ?? 20}

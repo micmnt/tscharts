@@ -1,5 +1,4 @@
 /* Context Imports */
-import { nanoid } from "nanoid";
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 
 /* Core Imports */
@@ -46,17 +45,17 @@ const Pie = (props: PieProps) => {
 		<path
 			d={path}
 			fill={slicesColors[pathIndex]}
-			key={`${path}-${nanoid()}`}
+			key={`${serieElement.name}-slice-${pathIndex}`}
 			shapeRendering="geometricPrecision"
 		/>
 	));
-	const labels = serieLabels.map((label) => (
+	const labels = serieLabels.map((label, labelIndex) => (
 		<text
 			textAnchor="middle"
 			fontSize={14}
 			fontWeight="bold"
 			fill={"white"}
-			key={`${label.name}-${nanoid()}`}
+			key={`${label.name}-${labelIndex}`}
 			x={dataPoints.get(label.name)?.x}
 			y={dataPoints.get(label.name)?.y}
 		>

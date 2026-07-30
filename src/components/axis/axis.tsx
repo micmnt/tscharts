@@ -1,4 +1,3 @@
-import { nanoid } from "nanoid";
 import { Fragment } from "react";
 /* Context Imports */
 import {
@@ -145,7 +144,7 @@ const Axis = (props: AxisProps) => {
 							: "transparent";
 
 				return (
-					<Fragment key={`${label.value}-${nanoid()}`}>
+					<Fragment key={`${label.value}-${labelIndex}`}>
 						<>
 							{showGrid ? (
 								<path
@@ -313,7 +312,7 @@ const Axis = (props: AxisProps) => {
 			const labelY = label.y - labelYOffset;
 
 			return (
-				<Fragment key={`${label.value}-${nanoid()}`}>
+				<Fragment key={`${label.value}-${labelIndex}`}>
 					<>
 						{showGrid ? (
 							<path
@@ -427,7 +426,7 @@ const Axis = (props: AxisProps) => {
 				</>
 			) : null}
 			{yAxis.valueLabels.map((label, labelIndex) => (
-				<Fragment key={`${yAxis.name}-${label.value}-${nanoid()}`}>
+				<Fragment key={`${yAxis.name}-${label.value}-${labelIndex}`}>
 					<text
 						textAnchor={yAxis.isOpposite ? "start" : "end"}
 						fontSize={labelFontSize}

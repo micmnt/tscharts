@@ -1,6 +1,5 @@
 /* Types Imports */
 
-import { nanoid } from "nanoid";
 import { useCharts, useChartsTheme } from "../../contexts/chartContext";
 /* Core Imports */
 import {
@@ -130,7 +129,7 @@ const Line = (props: LineProps) => {
 
 						return (
 							<text
-								key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
+								key={`${serieElement.name}-label-${dataPointIndex}`}
 								display={
 									(higlightLabels &&
 										hoveredElement?.elementIndex === dataPointIndex) ||
@@ -166,7 +165,7 @@ const Line = (props: LineProps) => {
 					.filter((el: [x: number, y: number]) => el.length > 0)
 					.map((point: [x: number, y: number], dataPointIndex: number) => (
 						<circle
-							key={`${serieElement.name}-${point[0]}-${point[1]}-${nanoid()}`}
+							key={`${serieElement.name}-dot-${dataPointIndex}`}
 							cx={point[0]}
 							cy={point[1]}
 							r={
