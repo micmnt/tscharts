@@ -12,6 +12,7 @@
 	],
 	"scripts": {
 		"lint": "npx biome check --write",
+		"lint:ci": "npx biome check",
 		"build": "tsc && vite build",
 		"test": "vitest run",
 		"test:watch": "vitest",
