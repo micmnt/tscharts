@@ -150,7 +150,7 @@ const Legend = (props: LegendProps) => {
 
 	const pieSerieElements = elements.find(isPieSerie)?.data ?? [];
 
-	const legendContainerSyle =
+	const legendContainerStyle =
 		legendType === "vertical" ? "legendVerticalContainer" : "legendContainer";
 
 	return (
@@ -160,7 +160,7 @@ const Legend = (props: LegendProps) => {
 			width={legendWidth > 0 ? legendWidth : 20}
 			height={height}
 		>
-			<div className={legendContainerSyle}>
+			<div className={legendContainerStyle}>
 				{timeSerieElements.length > 0
 					? generateXYChartLenged(
 							timeSerieElements,

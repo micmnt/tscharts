@@ -786,7 +786,7 @@ export const generateAngleDonutPaths = (
 	return { paths, labelElement };
 };
 
-// Funzioen che genera i path per una serie di un grafico a ciambella
+// Funzione che genera i path per una serie di un grafico a ciambella
 export const generateDonutPaths = (
 	serie: PieSerie,
 	ctx: ChartState & {

@@ -63,9 +63,9 @@ const computeConfigs = (children: JSX.Element[]) => {
 	return globalConfig;
 };
 
-// Funzione che calcola ricava l'altezza della legenda
+// Funzione che calcola l'altezza della legenda
 const getLegendHeight = (children: JSX.Element[]) => {
-	/* Verfico che esista un elemento Legend */
+	/* Verifico che esista un elemento Legend */
 	const legend = children.find(
 		(childEl) =>
 			childEl.props?.legendType !== null &&
@@ -108,7 +108,7 @@ const Svg = (props: SVGProps) => {
 	const globalConfig = useRef(computeConfigs(normalizedChildren.flat()));
 
 	// Funzione che inizializza le dimensioni del grafico svg
-	const intializeChart = useCallback(() => {
+	const initializeChart = useCallback(() => {
 		if (
 			dispatch &&
 			rootRef.current &&
@@ -150,10 +150,10 @@ const Svg = (props: SVGProps) => {
 	]);
 
 	useEffect(() => {
-		intializeChart();
-		window.addEventListener("resize", intializeChart);
-		return () => window.removeEventListener("resize", intializeChart);
-	}, [intializeChart]);
+		initializeChart();
+		window.addEventListener("resize", initializeChart);
+		return () => window.removeEventListener("resize", initializeChart);
+	}, [initializeChart]);
 
 	const { svgRef, chartXStart, chartXEnd, chartYEnd, width, height } =
 		ctx ?? {};

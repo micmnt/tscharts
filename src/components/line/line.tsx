@@ -24,7 +24,7 @@ export type LineProps = {
 	dashed?: boolean;
 	trimZeros?: boolean;
 	showLabels?: boolean;
-	higlightLabels?: boolean;
+	highlightLabels?: boolean;
 	horizontal?: boolean;
 	labelXOffset?: number;
 	lineOffset?: number;
@@ -41,7 +41,7 @@ const Line = (props: LineProps) => {
 		trimZeros = false,
 		showDots = false,
 		showLabels = false,
-		higlightLabels = false,
+		highlightLabels = false,
 		labelYOffset = 0,
 		hideLine = false,
 		labelSize = 12,
@@ -145,7 +145,7 @@ const Line = (props: LineProps) => {
 					fillOpacity={fillOpacity}
 				/>
 			)}
-			{(showLabels || higlightLabels) &&
+			{(showLabels || highlightLabels) &&
 				linePoints.map(
 					(point: [x: number, y: number], dataPointIndex: number) => {
 						// In un grafico horizontal i punti sono incollati a righe fisse
@@ -161,7 +161,7 @@ const Line = (props: LineProps) => {
 							<text
 								key={`${serieElement.name}-label-${dataPointIndex}`}
 								display={
-									(higlightLabels &&
+									(highlightLabels &&
 										hoveredElement?.elementIndex === dataPointIndex) ||
 									showLabels
 										? "block"

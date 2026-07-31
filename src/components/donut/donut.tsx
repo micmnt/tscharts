@@ -1,6 +1,6 @@
 /* React Imports */
 import { useMemo } from "react";
-/* Contezt Imports */
+/* Context Imports */
 import {
 	useChartsStructural,
 	useChartsTheme,

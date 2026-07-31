@@ -137,7 +137,7 @@ Barre raggruppate (più serie affiancate per ogni punto sull'asse X). Config sos
 | `hideLine` | `boolean` | `false` | Nasconde il tratto della linea (utile per mostrare solo punti/etichette) |
 | `showDots` | `boolean` | `false` | Mostra un pallino su ogni punto dato |
 | `showLabels` | `boolean` | `false` | Mostra il valore accanto a ogni punto |
-| `higlightLabels` | `boolean` | `false` | Mostra l'etichetta solo sul punto attualmente in hover |
+| `highlightLabels` | `boolean` | `false` | Mostra l'etichetta solo sul punto attualmente in hover |
 | `dashed` | `boolean` | `false` | Linea tratteggiata |
 | `trimZeros` | `boolean` | `false` | Interrompe la linea in corrispondenza di valori `0` (li tratta come assenti) |
 | `horizontal` | `boolean` | `false` | Disegna la linea in orientamento orizzontale |
