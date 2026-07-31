@@ -171,6 +171,42 @@ describe("generateStackedGroupDataPaths", () => {
 		// di generateStackedDataPaths ma applicata dentro lo slot del gruppo.
 		expect(r2?.paths[0]).toBe("M 5 64 V 10 H 15 V 64 Z");
 	});
+
+	it("un gruppo stacked con 2+ serie non fa slittare lo slot del gruppo successivo (regressione K1)", () => {
+		const a1 = {
+			name: "a1",
+			type: "group-bar",
+			stackedName: "group-a",
+			data: [{ date: "x", value: 10 }],
+		};
+		const a2 = {
+			name: "a2",
+			type: "group-bar",
+			stackedName: "group-a",
+			data: [{ date: "x", value: 20 }],
+		};
+		const b1 = {
+			name: "b1",
+			type: "group-bar",
+			stackedName: "group-b",
+			data: [{ date: "x", value: 15 }],
+		};
+		const ctx = { ...baseCtx, elements: [a1, a2, b1], chartXEnd: 90 };
+
+		const rA1 = generateStackedGroupDataPaths(a1, ctx);
+		const rB1 = generateStackedGroupDataPaths(b1, ctx);
+
+		// group-a e group-b sono solo 2 gruppi: b1 deve finire nel 2° slot
+		// (indice 1), non nel 3° (indice 2) come accadeva prima del fix,
+		// quando group-a "consumava" due slot invece di uno perche' aveva
+		// due serie. 37.5 e' lo stesso scarto misurato in uno scenario
+		// pulito a 2 gruppi da 1 serie ciascuno (nessun bug possibile li').
+		const a1X = Number(rA1?.paths[0]?.split(" ")[1]);
+		const b1X = Number(rB1?.paths[0]?.split(" ")[1]);
+		const groupSlotWidth = b1X - a1X;
+
+		expect(groupSlotWidth).toBeCloseTo(37.5, 5);
+	});
 });
 
 describe("generateHorizontalDataPaths", () => {
@@ -267,5 +303,34 @@ describe("generateYAxis", () => {
 		const barTopY = Number(bar?.paths[0]?.split(" ")[4]);
 
 		expect(gridlineY).toBe(barTopY);
+	});
+
+	it("l'alternanza sinistra/destra ignora gli elementi senza asse Y intercalati (K4, regressione)", () => {
+		const serieA = {
+			name: "serieA",
+			type: "line",
+			data: [{ date: "x", value: 10 }],
+		};
+		const thresholdX = { name: "thresholdX", type: "threshold", data: 5 };
+		const serieB = {
+			name: "serieB",
+			type: "line",
+			data: [{ date: "x", value: 20 }],
+		};
+
+		const ctx = {
+			...baseCtx,
+			elements: [serieA, thresholdX, serieB],
+			yInterval: 4,
+		};
+
+		const yAxisA = generateYAxis(serieA, ctx);
+		const yAxisB = generateYAxis(serieB, ctx);
+
+		// Senza il fix, la threshold intercalata tra le due serie fa contare
+		// serieB come "pari" invece di "dispari": entrambe finirebbero a
+		// sinistra invece che su lati opposti.
+		expect(yAxisA?.isOpposite).toBe(false);
+		expect(yAxisB?.isOpposite).toBe(true);
 	});
 });
