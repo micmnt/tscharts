@@ -19,7 +19,7 @@ import Svg from "../../components/svg/svg";
 import Bar from "../bar/bar";
 import Line from "../line/line";
 
-type ChartProps = {
+export type ChartProps = {
 	elements: Serie[];
 	width: number;
 	height: number;

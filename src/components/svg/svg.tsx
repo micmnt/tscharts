@@ -25,7 +25,7 @@ import { isDefined, isTimeSerie } from "../../lib/utils";
 import type { Serie } from "../../types";
 import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
 
-type SVGProps = {
+export type SVGProps = {
 	children: ReactNode;
 	containerRef: RefObject<HTMLDivElement | null>;
 	chartID: string | null;
