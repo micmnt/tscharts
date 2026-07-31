@@ -250,9 +250,18 @@ const Tooltip = (props: TooltipProps) => {
 
 	if (!elements) return null;
 
+	// Usato per il totale cumulato (cumulatedSeriesValue) e per decidere il
+	// ramo di rendering: le soglie restano escluse, sommarle in un totale
+	// "di tutte le serie" per default sarebbe un effetto collaterale non
+	// voluto.
 	const timeSeriesElements = elements.filter(
 		(el) => el.type !== "threshold" && !isPieSerie(el),
 	);
+
+	// Usato per le righe del tooltip mostrate all'utente: include anche le
+	// soglie (getElementValueByType le gestisce gia'), altrimenti il loro
+	// valore non compare mai nel tooltip.
+	const tooltipRowElements = elements.filter((el) => !isPieSerie(el));
 
 	const pieSeriesElements = elements.find(isPieSerie)?.data ?? [];
 
@@ -300,7 +309,7 @@ const Tooltip = (props: TooltipProps) => {
 					<span className="tooltipTitle">{tooltipTitle}</span>
 					{timeSeriesElements.length > 0
 						? generateTimeSerieContent(
-								timeSeriesElements,
+								tooltipRowElements,
 								elements,
 								theme,
 								hoveredElement,
