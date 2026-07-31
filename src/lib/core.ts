@@ -1111,7 +1111,6 @@ export const generateNegativeDataPaths = (
 	const {
 		chartXStart: _chartXStart,
 		chartXEnd: _chartXEnd,
-		chartYEnd: _chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
 		radius,
@@ -1124,7 +1123,6 @@ export const generateNegativeDataPaths = (
 
 	const chartXStart = _chartXStart as number;
 	const chartXEnd = _chartXEnd as number;
-	const chartYEnd = _chartYEnd as number;
 
 	// Calcolo l'intervallo tra un punto/barra e l'altro sull'asse X
 	const xAxisInterval = (chartXEnd - chartXStart) / timeSerieData?.length || 1;
@@ -1161,10 +1159,19 @@ export const generateNegativeDataPaths = (
 			const serieElX =
 				xAxisInterval * serieElIndex + (chartXStart + padding / 2);
 
+			// Punto medio della barra tra zeroY (la base, non chartYEnd come nel
+			// caso non-negativo) e serieY, con lo stesso nudge verso la base
+			// gia' usato in topLabelPoint (segno che si inverte in base alla
+			// direzione della barra).
 			const point =
 				value < MIN_BAR_HEIGHT_FOR_LABEL
 					? [-1, -1]
-					: [serieElX + barWidth / 2, chartYEnd - value / 2 + padding / 4];
+					: [
+							serieElX + barWidth / 2,
+							isNegative
+								? zeroY + value / 2 - padding / 4
+								: zeroY - value / 2 + padding / 4,
+						];
 
 			const allDataPoints = dataPoints.get(serie.name);
 

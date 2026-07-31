@@ -87,6 +87,33 @@ describe("generateNegativeDataPaths", () => {
 		// Punto 1 (30): la barra sale SOPRA lo zero (V 10 < zeroY 50)
 		expect(result?.paths[1]).toBe("M 35 50 V 10 H 45 V 50 Z");
 	});
+
+	it("la label interna sta sopra zeroY per valori positivi e sotto per negativi, non vicino a chartYEnd (K6, regressione)", () => {
+		const negSerie = {
+			name: "n1",
+			type: "bar",
+			data: [
+				{ date: "a", value: -25 },
+				{ date: "b", value: 20 },
+			],
+		};
+		const result = generateNegativeDataPaths(
+			negSerie,
+			{ ...baseCtx, elements: [negSerie], negative: true, chartXEnd: 60 },
+			"bar",
+		);
+
+		const zeroY = baseCtx.chartYMiddle;
+		const [pointA, pointB] = result?.dataPoints.get("n1") ?? [];
+
+		// Valore negativo (-25): label SOTTO zeroY.
+		expect(pointA?.[1]).toBeGreaterThan(zeroY);
+		// Valore positivo (20): label SOPRA zeroY.
+		expect(pointB?.[1]).toBeLessThan(zeroY);
+
+		expect(pointA).toEqual([10, 67.5]);
+		expect(pointB).toEqual([40, 36.5]);
+	});
 });
 
 describe("generateStackedDataPaths", () => {

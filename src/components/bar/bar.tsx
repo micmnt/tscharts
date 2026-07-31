@@ -18,7 +18,12 @@ import {
 	getTimeSerieMaxValue,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { calculateFlatValue, isFunction, isTimeSerie } from "../../lib/utils";
+import {
+	calculateFlatValue,
+	isFunction,
+	isTimeSerie,
+	warnDev,
+} from "../../lib/utils";
 
 export type BarDragPayload = {
 	value: number;
@@ -142,7 +147,19 @@ const Bar = (props: BarProps) => {
 		horizontal,
 	]);
 
-	if (!ctx || !theme || !serieElement || !result) return null;
+	if (!ctx || !theme) {
+		warnDev(`<Bar name="${name}" /> deve essere renderizzato dentro <Chart>.`);
+		return null;
+	}
+
+	if (!serieElement) {
+		warnDev(
+			`<Bar name="${name}" />: nessuna serie di tipo bar/line/bar-stacked/group-bar trovata con questo name.`,
+		);
+		return null;
+	}
+
+	if (!result) return null;
 
 	const { paths, dataPoints, topLabelsPoints } = result;
 
@@ -242,7 +259,13 @@ const Bar = (props: BarProps) => {
 								const deltaPixels = startClientY - clientY;
 								const rawDeltaValue =
 									(deltaPixels / chartHeight) * dragMaxValue;
-								const rawValue = Math.max(0, currentValue + rawDeltaValue);
+								// Il valore puo' scendere sotto zero solo se il grafico
+								// ammette valori negativi: altrimenti trascinare una barra
+								// gia' negativa la farebbe collassare a 0 al primo
+								// movimento invece di lasciarla scendere ulteriormente.
+								const rawValue = ctx.negative
+									? currentValue + rawDeltaValue
+									: Math.max(0, currentValue + rawDeltaValue);
 								const value =
 									Math.round(rawValue * decimalFactor) / decimalFactor;
 								const deltaValue = value - currentValue;
