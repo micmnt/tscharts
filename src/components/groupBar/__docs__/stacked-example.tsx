@@ -1,6 +1,8 @@
 import React, { type FC } from "react";
 import Axis from "../../axis/axis";
 import Chart from "../../chart/chart";
+import Legend from "../../legend/legend";
+import Tooltip from "../../tooltip/tooltip";
 import GroupBar, { type GroupBarProps } from "../groupBar";
 
 const elements = [
@@ -70,8 +72,15 @@ const StackedExample: FC<GroupBarProps> = ({
 					showLabels={showLabels}
 					config={config}
 				/>
-				<GroupBar name="prodotto C" showLabels={showLabels} config={config} />
+				<GroupBar
+					name="prodotto C"
+					stacked
+					showLabels={showLabels}
+					config={config}
+				/>
 				<Axis type="xAxis" dataPoints={dataPoints} showLine />
+				<Tooltip />
+				<Legend legendType="horizontal" height={60} showDots />
 			</Chart>
 		</div>
 	);
