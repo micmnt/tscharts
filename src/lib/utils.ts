@@ -9,6 +9,16 @@ import type {
 export const isDefined = (value: number | string | undefined | null) =>
 	value !== null && value !== undefined;
 
+// Unico punto da cui i componenti segnalano una configurazione probabilmente
+// sbagliata (serie non trovata, componente fuori da <Chart>...): solo in
+// sviluppo, cosi' i bundler dei consumer possono eliminarlo dal build di
+// produzione (dead-code elimination su process.env.NODE_ENV).
+export const warnDev = (message: string) => {
+	if (process.env.NODE_ENV !== "production") {
+		console.warn(`[tscharts] ${message}`);
+	}
+};
+
 export const isTimeSerie = (serie: Serie): serie is TimeSerie =>
 	serie.type === "line" ||
 	serie.type === "bar" ||

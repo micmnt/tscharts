@@ -13,7 +13,7 @@ import {
 	generateNegativeDataPaths,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isTimeSerie } from "../../lib/utils";
+import { isTimeSerie, warnDev } from "../../lib/utils";
 
 export type LineProps = {
 	name: string;
@@ -99,7 +99,19 @@ const Line = (props: LineProps) => {
 		);
 	}, [ctx, theme, serieElement, padding, trimZeros, horizontal, lineOffset]);
 
-	if (!ctx || !theme || !elements || !serieElement || !result) return null;
+	if (!ctx || !theme) {
+		warnDev(`<Line name="${name}" /> deve essere renderizzato dentro <Chart>.`);
+		return null;
+	}
+
+	if (!elements || !serieElement) {
+		warnDev(
+			`<Line name="${name}" />: nessuna serie di tipo bar/line/bar-stacked/group-bar trovata con questo name.`,
+		);
+		return null;
+	}
+
+	if (!result) return null;
 
 	const { paths, dataPoints } = result;
 

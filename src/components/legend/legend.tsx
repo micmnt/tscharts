@@ -5,7 +5,7 @@ import {
 	useChartsStructural,
 	useChartsTheme,
 } from "../../contexts/chartContext";
-import { isPieSerie } from "../../lib/utils";
+import { isPieSerie, warnDev } from "../../lib/utils";
 import type { ChartState, PieSerieEl, Serie, ThemeState } from "../../types";
 
 /* Styles Imports */
@@ -113,12 +113,18 @@ const Legend = (props: LegendProps) => {
 
 	const theme = useChartsTheme();
 
+	if (!ctx || !theme) {
+		warnDev("<Legend /> deve essere renderizzato dentro <Chart>.");
+		return null;
+	}
+
 	if (
-		!theme ||
 		!legendType ||
 		(legendType !== "horizontal" && legendType !== "vertical")
-	)
+	) {
+		warnDev('<Legend />: legendType deve essere "horizontal" o "vertical".');
 		return null;
+	}
 
 	const { padding } = theme;
 

@@ -5,7 +5,7 @@ import {
 } from "../../contexts/chartContext";
 import { generateAngleDonutPaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isAngleDonutSerie, isDefined } from "../../lib/utils";
+import { isAngleDonutSerie, isDefined, warnDev } from "../../lib/utils";
 import type { AngleDonutSerieEl } from "../../types";
 
 export type AngleDonutProps = {
@@ -80,7 +80,21 @@ const AngleDonut = (props: AngleDonutProps) => {
 		showTrack,
 	]);
 
-	if (!ctx || !theme || !serieElement || !result) return null;
+	if (!ctx || !theme) {
+		warnDev(
+			`<AngleDonut name="${name}" /> deve essere renderizzato dentro <Chart>.`,
+		);
+		return null;
+	}
+
+	if (!serieElement) {
+		warnDev(
+			`<AngleDonut name="${name}" />: nessuna serie di tipo angle-donut trovata con questo name.`,
+		);
+		return null;
+	}
+
+	if (!result) return null;
 
 	const { paths, centerPoint, labelElement } = result;
 	const serieData = serieElement.data;

@@ -18,6 +18,7 @@ import {
 	isPieSerie,
 	isThresholdSerie,
 	isTimeSerie,
+	warnDev,
 } from "../../lib/utils";
 
 type Position = {
@@ -228,7 +229,10 @@ const Tooltip = (props: TooltipProps) => {
 
 	const theme = useChartsTheme();
 
-	if (!ctx) return null;
+	if (!ctx) {
+		warnDev("<Tooltip /> deve essere renderizzato dentro <Chart>.");
+		return null;
+	}
 
 	const {
 		elements,

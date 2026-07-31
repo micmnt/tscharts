@@ -18,9 +18,10 @@ import {
 	isDefined,
 	isThresholdSerie,
 	isTimeSerie,
+	warnDev,
 } from "../../lib/utils";
 
-type ThresholdProps = {
+export type ThresholdProps = {
 	name: string;
 	axisName?: string;
 	dashed?: boolean;
@@ -61,7 +62,19 @@ const Threshold = (props: ThresholdProps) => {
 			? foundThresholdElement
 			: undefined;
 
-	if (!ctx || !theme || !thresholdElement) return null;
+	if (!ctx || !theme) {
+		warnDev(
+			`<Threshold name="${name}" /> deve essere renderizzato dentro <Chart>.`,
+		);
+		return null;
+	}
+
+	if (!thresholdElement) {
+		warnDev(
+			`<Threshold name="${name}" />: nessuna serie di tipo threshold trovata con questo name.`,
+		);
+		return null;
+	}
 
 	const thresholdValue = thresholdElement.data;
 

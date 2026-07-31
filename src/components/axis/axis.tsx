@@ -14,7 +14,7 @@ import {
 	NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER,
 } from "../../lib/core";
 /* Utils Imports */
-import { isFunction, isTimeSerie } from "../../lib/utils";
+import { isFunction, isTimeSerie, warnDev } from "../../lib/utils";
 /* Type Imports */
 import type { TimeSerieEl } from "../../types";
 
@@ -76,7 +76,10 @@ const Axis = (props: AxisProps) => {
 
 	const theme = useChartsTheme();
 
-	if (!ctx || !theme) return null;
+	if (!ctx || !theme) {
+		warnDev(`<Axis type="${type}" /> deve essere renderizzato dentro <Chart>.`);
+		return null;
+	}
 
 	const { padding, yInterval } = theme;
 
@@ -432,7 +435,12 @@ const Axis = (props: AxisProps) => {
 			? foundSerieElement
 			: undefined;
 
-	if (!serieElement) return null;
+	if (!serieElement) {
+		warnDev(
+			`<Axis type="yAxis" name="${name}" />: nessuna serie di tipo bar/line/bar-stacked/group-bar trovata con questo name.`,
+		);
+		return null;
+	}
 
 	// Creazione dell'asse Y
 	const yAxis = generateYAxis(serieElement, { ...ctx, padding, yInterval });

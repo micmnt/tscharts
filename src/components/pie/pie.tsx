@@ -9,7 +9,7 @@ import {
 /* Core Imports */
 import { generatePiePaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isPieSerie } from "../../lib/utils";
+import { isPieSerie, warnDev } from "../../lib/utils";
 
 export type PieProps = {
 	name: string;
@@ -40,7 +40,19 @@ const Pie = (props: PieProps) => {
 		return generatePiePaths(serieElement, { ...ctx, padding });
 	}, [ctx, theme, serieElement, padding]);
 
-	if (!ctx || !theme || !serieElement || !result) return null;
+	if (!ctx || !theme) {
+		warnDev(`<Pie name="${name}" /> deve essere renderizzato dentro <Chart>.`);
+		return null;
+	}
+
+	if (!serieElement) {
+		warnDev(
+			`<Pie name="${name}" />: nessuna serie di tipo pie trovata con questo name.`,
+		);
+		return null;
+	}
+
+	if (!result) return null;
 
 	const { paths, dataPoints } = result;
 

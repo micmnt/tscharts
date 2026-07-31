@@ -13,7 +13,7 @@ import {
 	generateStackedGroupDataPaths,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isTimeSerie } from "../../lib/utils";
+import { isTimeSerie, warnDev } from "../../lib/utils";
 
 export type GroupBarProps = {
 	name: string;
@@ -112,7 +112,21 @@ const GroupBar = (props: GroupBarProps) => {
 		stacked,
 	]);
 
-	if (!ctx || !theme || !elements || !serieElement || !result) return null;
+	if (!ctx || !theme) {
+		warnDev(
+			`<GroupBar name="${name}" /> deve essere renderizzato dentro <Chart>.`,
+		);
+		return null;
+	}
+
+	if (!elements || !serieElement) {
+		warnDev(
+			`<GroupBar name="${name}" />: nessuna serie di tipo bar/line/bar-stacked/group-bar trovata con questo name.`,
+		);
+		return null;
+	}
+
+	if (!result) return null;
 
 	const { paths, dataPoints, topLabelsPoints } = result;
 
