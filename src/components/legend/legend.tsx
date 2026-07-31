@@ -5,13 +5,8 @@ import {
 	useChartsStructural,
 	useChartsTheme,
 } from "../../contexts/chartContext";
-import type {
-	ChartState,
-	PieSerie,
-	PieSerieEl,
-	Serie,
-	ThemeState,
-} from "../../types";
+import { isPieSerie } from "../../lib/utils";
+import type { ChartState, PieSerieEl, Serie, ThemeState } from "../../types";
 
 /* Styles Imports */
 import "../../styles.css";
@@ -30,6 +25,7 @@ export const DEFAULT_LEGEND_HEIGHT = 60;
 // Funzione che genera la legenda per un grafico di tipo XY
 const generateXYChartLenged = (
 	timeSeriesElements: Serie[],
+	allElements: Serie[],
 	theme: ThemeState | null,
 	showDots: boolean,
 	customLabel: ((el: PieSerieEl | Serie) => ReactNode) | null,
@@ -41,24 +37,33 @@ const generateXYChartLenged = (
 			? timeSeriesElements.filter((serie) => !hideSeries?.includes(serie.name))
 			: timeSeriesElements;
 
-	return seriesToShow?.map((element, elementIndex) => (
-		<div className="legendItemContainer" key={`${element.name}-legend`}>
-			{showDots && (
-				<div
-					className="legendItemCircle"
-					style={{
-						backgroundColor:
-							element.color ?? theme?.seriesColors?.[elementIndex],
-					}}
-				/>
-			)}
-			{customLabel ? (
-				customLabel(element)
-			) : (
-				<span className="legendItemText">{element.name}</span>
-			)}
-		</div>
-	));
+	return seriesToShow?.map((element) => {
+		// Indice nell'intero ctx.elements (non nell'array gia' filtrato): deve
+		// combaciare con quello usato da Bar/Line/ecc. per scegliere il colore,
+		// altrimenti pie/donut intercalate sfasano la palette.
+		const elementIndex = allElements.findIndex(
+			(el) => el.name === element.name,
+		);
+
+		return (
+			<div className="legendItemContainer" key={`${element.name}-legend`}>
+				{showDots && (
+					<div
+						className="legendItemCircle"
+						style={{
+							backgroundColor:
+								element.color ?? theme?.seriesColors?.[elementIndex],
+						}}
+					/>
+				)}
+				{customLabel ? (
+					customLabel(element)
+				) : (
+					<span className="legendItemText">{element.name}</span>
+				)}
+			</div>
+		);
+	});
 };
 
 // Funzione che genera la legenda per un grafico a torta
@@ -135,12 +140,9 @@ const Legend = (props: LegendProps) => {
 
 	if (!elements) return null;
 
-	const timeSerieElements = elements.filter((el) => el.type !== "pie");
+	const timeSerieElements = elements.filter((el) => !isPieSerie(el));
 
-	// Solo "pie", non "donut": preservo lo scope esatto del filtro originale
-	// (isPieSerie da sola includerebbe anche "donut", cambiando comportamento).
-	const pieSerieElements =
-		elements.find((el): el is PieSerie => el.type === "pie")?.data ?? [];
+	const pieSerieElements = elements.find(isPieSerie)?.data ?? [];
 
 	const legendContainerSyle =
 		legendType === "vertical" ? "legendVerticalContainer" : "legendContainer";
@@ -156,6 +158,7 @@ const Legend = (props: LegendProps) => {
 				{timeSerieElements.length > 0
 					? generateXYChartLenged(
 							timeSerieElements,
+							elements,
 							theme,
 							showDots,
 							customLabel,

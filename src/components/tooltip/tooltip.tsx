@@ -7,19 +7,18 @@ import {
 	useChartsStructural,
 	useChartsTheme,
 } from "../../contexts/chartContext";
-import type {
-	PieSerie,
-	PieSerieEl,
-	Serie,
-	ThemeState,
-	TimeSerieEl,
-} from "../../types";
+import type { PieSerieEl, Serie, ThemeState, TimeSerieEl } from "../../types";
 
 /* Styles Imports */
 import "../../styles.css";
 
 /* Utils Imports */
-import { isDefined, isThresholdSerie, isTimeSerie } from "../../lib/utils";
+import {
+	isDefined,
+	isPieSerie,
+	isThresholdSerie,
+	isTimeSerie,
+} from "../../lib/utils";
 
 type Position = {
 	x: number;
@@ -68,6 +67,7 @@ const getElementValueByType = (element: Serie, dataIndex: number) => {
 // Funzione che genera i valori del tooltip per una timeSerie
 const generateTimeSerieContent = (
 	timeSeriesElements: Serie[],
+	allElements: Serie[],
 	theme: ThemeState | null,
 	hoveredElement: { elementIndex: number; label: string } | null,
 	reverseOrder: boolean,
@@ -89,7 +89,7 @@ const generateTimeSerieContent = (
 				)
 			: orderedTimeSeriesElements;
 
-	return seriesToShow.map((element, serieIndex) => {
+	return seriesToShow.map((element) => {
 		const hoveredElementIndex = hoveredElement?.elementIndex ?? -1;
 
 		const elementValue = getElementValueByType(element, hoveredElementIndex);
@@ -102,6 +102,11 @@ const generateTimeSerieContent = (
 					{}),
 			});
 		}
+
+		// Indice nell'intero ctx.elements (non nell'array gia' filtrato): deve
+		// combaciare con quello usato da Bar/Line/ecc. per scegliere il colore,
+		// altrimenti soglie/pie/donut intercalate sfasano la palette.
+		const serieIndex = allElements.findIndex((el) => el.name === element.name);
 
 		return (
 			<div className="tooltipSerieContainer" key={`tooltip-${element.name}`}>
@@ -242,13 +247,10 @@ const Tooltip = (props: TooltipProps) => {
 	if (!elements) return null;
 
 	const timeSeriesElements = elements.filter(
-		(el) => el.type !== "threshold" && el.type !== "pie",
+		(el) => el.type !== "threshold" && !isPieSerie(el),
 	);
 
-	// Solo "pie", non "donut": preservo lo scope esatto del filtro originale
-	// (isPieSerie da sola includerebbe anche "donut", cambiando comportamento).
-	const pieSeriesElements =
-		elements.find((el): el is PieSerie => el.type === "pie")?.data ?? [];
+	const pieSeriesElements = elements.find(isPieSerie)?.data ?? [];
 
 	const hoveredElement = _hoveredElement as {
 		elementIndex: number;
@@ -295,6 +297,7 @@ const Tooltip = (props: TooltipProps) => {
 					{timeSeriesElements.length > 0
 						? generateTimeSerieContent(
 								timeSeriesElements,
+								elements,
 								theme,
 								hoveredElement,
 								reverseOrder,

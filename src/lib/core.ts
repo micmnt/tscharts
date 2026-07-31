@@ -535,7 +535,14 @@ export const generateYAxis = (
 		]);
 	}
 
-	const serieIndex = ctx.elements.findIndex((el) => el.name === serie.name);
+	// Solo tra le serie che possono avere un proprio asse Y (le altre, come
+	// soglie/pie/donut/angle-donut, non ne hanno mai uno): usare la posizione
+	// grezza nell'intero ctx.elements sfaserebbe l'alternanza sinistra/destra
+	// ogni volta che un elemento senza asse e' intercalato tra due serie che
+	// invece ce l'hanno.
+	const serieIndex = ctx.elements
+		.filter(isTimeSerie)
+		.findIndex((el) => el.name === serie.name);
 
 	if (serieIndex < 0) return null;
 
@@ -844,7 +851,10 @@ export const generateDonutPaths = (
 
 		const sliceValue = valueAngle - startAngle;
 		const bisectorAngle = sliceValue / 2 + startAngle;
-		const labelRadius = radius / 2;
+		// Meta' dello spessore dell'anello (tra innerRadius e radius), non
+		// radius/2: per un donut con innerRadius grande, radius/2 cade vicino
+		// al bordo interno invece che al centro della fascia colorata.
+		const labelRadius = (radius + innerRadius) / 2;
 		const bisectorPoint = polarToCartesian(
 			centerX,
 			centerY,
@@ -1523,12 +1533,13 @@ export const generateStackedGroupDataPaths = (
 
 	const serieGroupIndex = ctx.elements
 		.reduce((acc, el) => {
-			if (
-				el.stackedName &&
-				uniqueStackedNames.includes(el.stackedName) &&
-				!Object.keys(acc).includes(el.stackedName)
-			) {
-				acc.push(el.stackedName);
+			if (el.stackedName && uniqueStackedNames.includes(el.stackedName)) {
+				// Una sola occorrenza per stackedName: le altre serie dello
+				// stesso gruppo condividono lo stesso slot, non ne aprono uno
+				// nuovo.
+				if (!acc.includes(el.stackedName)) {
+					acc.push(el.stackedName);
+				}
 			} else {
 				acc.push(el.name);
 			}

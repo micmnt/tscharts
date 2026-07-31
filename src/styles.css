@@ -3,6 +3,7 @@
 }
 
 .tooltipContainer {
+	box-sizing: border-box;
 	padding: 8px 16px;
 	background-color: rgba(0, 0, 0, 0.7);
 	display: block;
