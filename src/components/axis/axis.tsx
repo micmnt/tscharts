@@ -8,6 +8,7 @@ import {
 } from "../../contexts/chartContext";
 /* Core Imports */
 import {
+	DEFAULT_HORIZONTAL_BAR_OFFSET,
 	generateXAxis,
 	generateYAxis,
 	NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER,
@@ -112,20 +113,29 @@ const Axis = (props: AxisProps) => {
 			const selectionColor = globalConfig?.selectedColor as string;
 			const selectionValue = globalConfig?.selectedValue as string;
 
+			// Una serie "line" disegna un punto singolo (nessuna altezza da
+			// centrare); solo le serie bar-like occupano l'intera riga in
+			// altezza e richiedono lo spostamento di meta' altezza per
+			// centrare la label sulla barra.
+			const isBarLikeSerie =
+				("type" in serie ? serie.type : undefined) !== "line";
+
 			const labels = dataPoints.map((label, labelIndex) => {
 				const ySpacing = padding / 2;
 				const barOffset =
 					typeof globalConfig?.barOffset === "number"
 						? globalConfig.barOffset
-						: 0;
+						: DEFAULT_HORIZONTAL_BAR_OFFSET;
 				return {
 					value: label,
 					x: chartXStart + barOffset - 6 + labelXOffset,
 					y:
 						yAxisInterval * labelIndex +
 						ySpacing +
-						(ctx?.globalConfig?.barWidth
-							? Number(ctx.globalConfig.barWidth) / 2
+						(isBarLikeSerie
+							? (ctx?.globalConfig?.barWidth
+									? Number(ctx.globalConfig.barWidth)
+									: padding) / 2
 							: 0) +
 						labelYOffset,
 				};

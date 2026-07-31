@@ -31,19 +31,18 @@ const MIN_BAR_HEIGHT_FOR_LABEL = 16;
 // interviene su questa soglia in futuro.
 const MIN_STACKED_BAR_HEIGHT_FOR_LABEL = 14;
 
-// Moltiplicatore di `padding` per lo spazio extra riservato sotto lo zero
-// nei grafici con valori negativi (serve a fare posto alle label dell'asse X
-// sotto la linea centrale). Riusato anche in axis.tsx per coerenza visiva.
-// Nota: threshold.tsx usa un moltiplicatore simile ma diverso (3.1, vedi
-// NEGATIVE_THRESHOLD_Y_OFFSET_MULTIPLIER in quel file) per lo stesso concetto
-// applicato alle soglie: discrepanza preesistente, non uniformata qui per
-// non introdurre un cambio di comportamento non richiesto.
+// Moltiplicatore di `padding` per l'offset verticale (puramente estetico)
+// delle label dell'asse X nei grafici con valori negativi, sotto la linea
+// dello zero. Usato solo per il posizionamento del testo in axis.tsx: non
+// determina la scala dei valori (per quella vedi `halfHeight` in
+// generateNegativeDataPaths/generateYAxis e in threshold.tsx).
 export const NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER = 3.5;
 
-// Offset orizzontale di default (in px) per i grafici a barre orizzontali
-// quando `barOffset` non viene specificato via config: riserva spazio a
-// sinistra per le etichette dell'asse Y.
-const DEFAULT_HORIZONTAL_BAR_OFFSET = 40;
+// Offset orizzontale di default (in px) per i grafici a barre/linee
+// orizzontali quando `barOffset` non viene specificato via config: riserva
+// spazio a sinistra per le etichette di categoria. Riusato anche in
+// axis.tsx per posizionare quelle label in modo coerente con barre/linea.
+export const DEFAULT_HORIZONTAL_BAR_OFFSET = 40;
 
 // Funzione che prende in ingresso il valore massimo di una serie, il valore di un elemento della serie e la dimensione effettiva del grafico e ritorna la posizione sul grafico del valore
 export const getValuePosition = (
@@ -589,6 +588,17 @@ export const generateYAxis = (
 			negativeAndPositiveSerieMaxValue,
 		);
 
+		const zeroY = ctx.chartYMiddle ?? 0;
+
+		// Stessa definizione di halfHeight usata in generateNegativeDataPaths:
+		// spazio simmetrico sopra/sotto lo zero, cosi' le gridline restano
+		// sempre dentro il canvas e coincidono con la posizione reale di
+		// barre/linee/soglie per lo stesso valore.
+		const halfHeight = zeroY - padding;
+
+		const getAxisY = (axisValue: number) =>
+			zeroY - (axisValue / flatMaxValue) * halfHeight;
+
 		const firstValue = serie.format
 			? serie.format(flatMaxValue * -1)
 			: flatMaxValue * -1;
@@ -599,7 +609,7 @@ export const generateYAxis = (
 			{
 				value: firstValue,
 				x: axisLabelsX,
-				y: chartYEnd + yAxisInterval,
+				y: getAxisY(flatMaxValue * -1),
 			},
 		];
 
@@ -612,21 +622,14 @@ export const generateYAxis = (
 				? calculateFlatValue(flatMaxValue / Math.ceil(yInterval / 2))
 				: flatMaxValue / Math.ceil(yInterval / 2);
 
-			const axisIntervalIndex = Math.floor(yInterval / 2) - i;
-
 			const axisValue = flatInterval * i === 0 ? 0 : flatInterval * i * -1;
-
-			const axisY =
-				axisValue === 0
-					? (ctx.chartYMiddle ?? 0)
-					: chartYEnd - yAxisInterval * axisIntervalIndex;
 
 			const serieValue = serie.format ? serie.format(axisValue) : axisValue;
 
 			const element = {
 				value: serieValue,
 				x: axisLabelsX,
-				y: axisY,
+				y: getAxisY(axisValue),
 			};
 
 			yAxisLabels.push(element);
@@ -635,7 +638,7 @@ export const generateYAxis = (
 		yAxisLabels.push({
 			value: lastValue,
 			x: axisLabelsX,
-			y: chartYEnd - yAxisInterval * yInterval,
+			y: getAxisY(flatMaxValue),
 		});
 
 		return {
@@ -1122,19 +1125,20 @@ export const generateNegativeDataPaths = (
 	// Calcolo lo 0 per il grafico con valori negativi
 	const zeroY = ctx.chartYMiddle ?? 0;
 
+	// Spazio simmetrico (in px) disponibile sopra E sotto lo zero: e' lo
+	// spazio minimo dei due (quello sopra, tra zeroY e il margine superiore
+	// del canvas), cosi' che sia le barre/linee positive che quelle negative
+	// restino sempre dentro il canvas. Stesso valore riusato in generateYAxis
+	// (gridline) e in threshold.tsx, per coerenza tra tutti gli elementi.
+	const halfHeight = zeroY - padding;
+
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
 		const absValue = Math.abs(serieEl.value ?? 0);
 		const isNegative =
 			(serieEl.value ?? 0) < 0 ||
 			(serieEl.value === 0 &&
 				timeSerieData?.some((serieEl) => (serieEl.value ?? 0) < 0));
-		const value = getValuePosition(
-			flatMaxValue,
-			absValue,
-			chartYEnd -
-				NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER * padding -
-				((ctx?.globalConfig?.legendHeight as number) ?? 0),
-		);
+		const value = getValuePosition(flatMaxValue, absValue, halfHeight);
 
 		const serieY = isDefined(serieEl.value)
 			? isNegative

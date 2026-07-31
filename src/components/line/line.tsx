@@ -136,8 +136,14 @@ const Line = (props: LineProps) => {
 			{(showLabels || higlightLabels) &&
 				linePoints.map(
 					(point: [x: number, y: number], dataPointIndex: number) => {
-						const labelX = point[0] - labelXSpacing;
-						const labelY = point[1] - labelYSpacing;
+						// In un grafico horizontal i punti sono incollati a righe fisse
+						// vicine al bordo superiore del canvas: spostare la label sopra
+						// il punto (come nel caso verticale) la farebbe uscire dal
+						// canvas per la prima riga. La spostiamo di lato, verso destra.
+						const labelX = horizontal
+							? point[0] + labelXSpacing
+							: point[0] - labelXSpacing;
+						const labelY = horizontal ? point[1] : point[1] - labelYSpacing;
 
 						return (
 							<text
@@ -154,9 +160,9 @@ const Line = (props: LineProps) => {
 								fill={serieColor}
 								x={labelX}
 								y={labelY}
-								textAnchor={tiltLabels ? "start" : "middle"}
+								textAnchor={horizontal || tiltLabels ? "start" : "middle"}
 								transform={
-									tiltLabels
+									!horizontal && tiltLabels
 										? `rotate(${tiltLabelsAngle}, ${labelX}, ${labelY})`
 										: undefined
 								}

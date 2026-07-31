@@ -82,10 +82,10 @@ describe("generateNegativeDataPaths", () => {
 			{ ...baseCtx, elements: [negSerie], negative: true, chartXEnd: 60 },
 			"bar",
 		);
-		// Punto 0 (-10): la barra scende SOTTO lo zero (V 71.66... > zeroY 50)
-		expect(result?.paths[0]).toBe("M 5 50 V 71.66666666666667 H 15 V 50 Z");
-		// Punto 1 (30): la barra sale SOPRA lo zero (V -15 < zeroY 50)
-		expect(result?.paths[1]).toBe("M 35 50 V -15 H 45 V 50 Z");
+		// Punto 0 (-10): la barra scende SOTTO lo zero (V 63.33... > zeroY 50)
+		expect(result?.paths[0]).toBe("M 5 50 V 63.333333333333336 H 15 V 50 Z");
+		// Punto 1 (30): la barra sale SOPRA lo zero (V 10 < zeroY 50)
+		expect(result?.paths[1]).toBe("M 35 50 V 10 H 45 V 50 Z");
 	});
 });
 
@@ -221,5 +221,51 @@ describe("generateYAxis", () => {
 		expect(result?.valueLabels.map((l) => l.value)).toEqual([
 			-40, 40, 20, 0, -20, 40,
 		]);
+	});
+
+	it("caso negativo: la posizione Y di ogni gridline e' proporzionale e simmetrica attorno a chartYMiddle (D6)", () => {
+		const ctx = {
+			...baseCtx,
+			elements: [barSerie],
+			yInterval: 4,
+			negative: true,
+		};
+		const result = generateYAxis(barSerie, ctx);
+
+		// zeroY (chartYMiddle=50) e halfHeight (zeroY-padding=40): stesso valore
+		// -> stessa distanza da zeroY su entrambi i lati (40 e' sia il +max che
+		// un -max coerente), 20/-20 simmetrici, 0 esattamente su zeroY.
+		expect(result?.valueLabels).toEqual([
+			{ value: -40, x: 0, y: 90 },
+			{ value: 40, x: 0, y: 10 },
+			{ value: 20, x: 0, y: 30 },
+			{ value: 0, x: 0, y: 50 },
+			{ value: -20, x: 0, y: 70 },
+			{ value: 40, x: 0, y: 10 },
+		]);
+	});
+
+	it("caso negativo: la gridline dell'asse Y coincide con la punta della barra dello stesso valore (D6, regressione)", () => {
+		const negSerie = {
+			name: "n1",
+			type: "bar",
+			data: [{ date: "a", value: 40 }],
+		};
+		const ctx = {
+			...baseCtx,
+			elements: [negSerie],
+			yInterval: 4,
+			negative: true,
+		};
+
+		const yAxis = generateYAxis(negSerie, ctx);
+		const bar = generateNegativeDataPaths(negSerie, ctx, "bar");
+
+		const gridlineY = yAxis?.valueLabels.find((l) => l.value === 40)?.y;
+
+		// Il path e' "M x zeroY V topY H ... Z": topY e' dopo il comando "V".
+		const barTopY = Number(bar?.paths[0]?.split(" ")[4]);
+
+		expect(gridlineY).toBe(barTopY);
 	});
 });
