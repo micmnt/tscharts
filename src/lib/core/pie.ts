@@ -47,6 +47,11 @@ export const generateAngleDonutPaths = (
 	const centerY = (height as number) / 2 - padding;
 	const radius = ((height as number) - 2 * padding) / 2;
 
+	const ringThickness = ctx.innerRadius ?? radius / 2;
+
+	const labelWidth = radius * 0.6;
+	const labelGap = padding / 2;
+
 	const paths = serieData.map((serieEl, serieElIndex) => {
 		const maxValue = isDefined(serieEl.maxValue)
 			? serieEl.maxValue
@@ -58,9 +63,8 @@ export const generateAngleDonutPaths = (
 
 		const normalizedValueAngle = valueAngle >= 360 ? 359.9 : valueAngle;
 
-		const newRadius =
-			radius - ((ctx.innerRadius ?? radius / 2) + padding / 8) * serieElIndex;
-		const newInnerRadius = newRadius - (ctx.innerRadius ?? radius / 2);
+		const newRadius = radius - (ringThickness + padding / 8) * serieElIndex;
+		const newInnerRadius = newRadius - ringThickness;
 
 		let shadowPath = "";
 
@@ -84,22 +88,31 @@ export const generateAngleDonutPaths = (
 			normalizedValueAngle,
 		);
 
-		return { shadowPath, path };
-	});
+		// X quasi costante per tutti gli anelli (poco a sinistra del centro,
+		// non del bordo esterno del singolo ring - altrimenti si crea una
+		// scaletta): la label si sovrappone leggermente all'inizio
+		// dell'arco. Y ancorata a dove il ring "inizia" (ore 12, angolo 0)
+		// al proprio raggio medio, cosi' ogni label resta all'altezza del
+		// proprio anello.
+		const ringMidRadius = (newRadius + newInnerRadius) / 2;
+		const ringStartY = polarToCartesian(centerX, centerY, ringMidRadius, 0).y;
 
-	const labelElement = {
-		x: centerX - radius - padding / 4,
-		y: 0,
-		width: radius,
-		height: ((ctx.innerRadius ?? radius / 2) + padding / 8) * serieData.length,
-	};
+		const labelElement = {
+			x: centerX - labelGap - labelWidth,
+			y: ringStartY - ringThickness / 2,
+			width: labelWidth,
+			height: ringThickness,
+		};
+
+		return { shadowPath, path, labelElement };
+	});
 
 	if (isDefined(centerValue)) {
 		const centerPoint = { x: centerX, y: centerY };
 
-		return { paths, labelElement, centerPoint };
+		return { paths, centerPoint };
 	}
-	return { paths, labelElement };
+	return { paths };
 };
 
 // Funzione che genera i path per una serie di un grafico a ciambella

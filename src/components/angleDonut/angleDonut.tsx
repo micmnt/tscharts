@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode, useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import {
 	useChartsStructural,
 	useChartsTheme,
@@ -96,7 +96,7 @@ const AngleDonut = (props: AngleDonutProps) => {
 
 	if (!result) return null;
 
-	const { paths, centerPoint, labelElement } = result;
+	const { paths, centerPoint } = result;
 	const serieData = serieElement.data;
 
 	const slicesColors = serieData.map(
@@ -134,35 +134,32 @@ const AngleDonut = (props: AngleDonutProps) => {
 	const returnValues = [...shadowSlices, ...slices];
 
 	if (customLabel && isDefined(customLabel as string)) {
+		// Un foreignObject per anello, ancorato alla geometria reale di
+		// QUEL ring (paths[i].labelElement) - non un container unico
+		// condiviso da tutti gli anelli, che per anelli sottili finirebbe
+		// scollegato dal ring che dovrebbe descrivere.
 		const labels = serieData.map((serieEl, serieElIndex) => {
-			if (typeof customLabel === "string") {
-				return (
-					<Fragment key={`${serieElement.name}-custom-label-${serieElIndex}`}>
-						{customLabel}
-					</Fragment>
-				);
-			}
+			const ringLabelElement = paths[serieElIndex]?.labelElement;
+
+			if (!ringLabelElement) return null;
+
+			const content =
+				typeof customLabel === "string" ? customLabel : customLabel?.(serieEl);
 
 			return (
-				<Fragment key={`${serieElement.name}-custom-label-${serieElIndex}`}>
-					{customLabel?.(serieEl)}
-				</Fragment>
+				<foreignObject
+					key={`${serieElement.name}-custom-label-${serieElIndex}`}
+					x={ringLabelElement.x}
+					y={ringLabelElement.y}
+					width={ringLabelElement.width}
+					height={ringLabelElement.height}
+				>
+					{content}
+				</foreignObject>
 			);
 		});
 
-		const labelContainer = (
-			<foreignObject
-				key="angle-donut-label-container"
-				x={labelElement.x}
-				y={labelElement.y}
-				width={labelElement.width}
-				height={labelElement.height}
-			>
-				{labels}
-			</foreignObject>
-		);
-
-		returnValues.push(labelContainer);
+		returnValues.push(...labels.filter((label) => label !== null));
 	}
 
 	if (centerPoint && isDefined(centerElement?.value)) {
