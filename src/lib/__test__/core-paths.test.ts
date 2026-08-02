@@ -169,7 +169,9 @@ describe("generateGroupDataPaths", () => {
 		const x2 = r2?.dataPoints.get("g2")?.[0]?.[0];
 
 		expect(x1).toBeCloseTo(7.5);
-		expect(x2).toBeCloseTo(35.83333333333333);
+		// 20 (non piu' 35.83...): dopo K8 l'incremento tra barre dello stesso
+		// gruppo e' barWidth+gap diretto, non piu' derivato da xAxisInterval.
+		expect(x2).toBeCloseTo(20);
 		expect(x1).not.toBe(x2);
 	});
 });
@@ -226,13 +228,14 @@ describe("generateStackedGroupDataPaths", () => {
 		// group-a e group-b sono solo 2 gruppi: b1 deve finire nel 2° slot
 		// (indice 1), non nel 3° (indice 2) come accadeva prima del fix,
 		// quando group-a "consumava" due slot invece di uno perche' aveva
-		// due serie. 37.5 e' lo stesso scarto misurato in uno scenario
-		// pulito a 2 gruppi da 1 serie ciascuno (nessun bug possibile li').
+		// due serie. 12.5 (dopo K8, incremento diretto barWidth+gap) e' lo
+		// stesso scarto misurato in uno scenario pulito a 2 gruppi da 1
+		// serie ciascuno (nessun bug possibile li').
 		const a1X = Number(rA1?.paths[0]?.split(" ")[1]);
 		const b1X = Number(rB1?.paths[0]?.split(" ")[1]);
 		const groupSlotWidth = b1X - a1X;
 
-		expect(groupSlotWidth).toBeCloseTo(37.5, 5);
+		expect(groupSlotWidth).toBeCloseTo(12.5, 5);
 	});
 });
 

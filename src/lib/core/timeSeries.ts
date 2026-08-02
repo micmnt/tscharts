@@ -465,6 +465,7 @@ export const generateGroupDataPaths = (
 	ctx: ChartState & {
 		padding: number;
 		barWidth?: number;
+		barGroupGap?: number;
 		radius?: number;
 		topLeftRadius?: number;
 		topRightRadius?: number;
@@ -495,6 +496,7 @@ export const generateGroupDataPaths = (
 		chartYEnd: _chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
+		barGroupGap: ctxBarGroupGap,
 		radius,
 		topLeftRadius,
 		topRightRadius,
@@ -509,8 +511,6 @@ export const generateGroupDataPaths = (
 	const xAxisGroupInterval =
 		(chartXEnd - chartXStart) / timeSerieData?.length || 1;
 
-	const xAxisInterval = xAxisGroupInterval / barSeries?.length;
-
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, serieMaxValue);
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
@@ -523,9 +523,14 @@ export const generateGroupDataPaths = (
 		const serieY = isDefined(serieEl.value) ? chartYEnd - value : null;
 
 		const barWidth = ctxBarWidth ?? padding;
+		// Incremento diretto barWidth+gap invece che derivato da
+		// xAxisInterval: cosi' le barre dello stesso gruppo restano vicine
+		// indipendentemente da quanto spazio la categoria ha a disposizione
+		// (K8).
+		const barGap = ctxBarGroupGap ?? padding / 4;
 		const serieElX =
 			serieElIndex * xAxisGroupInterval +
-			(xAxisInterval - padding / 6) * serieIndex +
+			(barWidth + barGap) * serieIndex +
 			(chartXStart + padding / 4);
 
 		const point =
@@ -568,6 +573,7 @@ export const generateStackedGroupDataPaths = (
 	ctx: ChartState & {
 		padding: number;
 		barWidth?: number;
+		barGroupGap?: number;
 		radius?: number;
 		topLeftRadius?: number;
 		topRightRadius?: number;
@@ -615,9 +621,6 @@ export const generateStackedGroupDataPaths = (
 		getTimeSerieMaxValue(serie.data),
 	);
 
-	// Numero di barre del gruppo
-	const groupBarNumber = nonStackedSeries.length + uniqueStackedNames.length;
-
 	const stackedMaxValue = Math.max(
 		...stackedSeriesMaxArray,
 		...nonStackedSeriesMaxArray,
@@ -651,6 +654,7 @@ export const generateStackedGroupDataPaths = (
 		chartYEnd: _chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
+		barGroupGap: ctxBarGroupGap,
 		radius,
 		topLeftRadius,
 		topRightRadius,
@@ -664,9 +668,6 @@ export const generateStackedGroupDataPaths = (
 
 	const xAxisGroupInterval =
 		(chartXEnd - chartXStart) / timeSerieData?.length || 1;
-
-	const xAxisInterval =
-		groupBarNumber > 0 ? xAxisGroupInterval / groupBarNumber : 0;
 
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, stackedMaxValue);
 
@@ -691,10 +692,14 @@ export const generateStackedGroupDataPaths = (
 
 		const barWidth = ctxBarWidth ?? padding;
 
+		// Incremento diretto barWidth+gap invece che derivato da
+		// xAxisInterval/groupBarNumber: cosi' le barre dello stesso gruppo
+		// restano vicine indipendentemente da quanto spazio la categoria ha
+		// a disposizione (K8).
+		const barGap = ctxBarGroupGap ?? padding / 4;
 		const serieElX =
 			serieElIndex * xAxisGroupInterval +
-			(xAxisInterval - barWidth + padding / 2 / groupBarNumber) *
-				serieGroupIndex +
+			(barWidth + barGap) * serieGroupIndex +
 			(chartXStart + padding / 2);
 
 		const point =

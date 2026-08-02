@@ -27,6 +27,7 @@ export type GroupBarProps = {
 		bottomRightRadius?: number;
 		bottomLeftRadius?: number;
 		barWidth?: number;
+		barGroupGap?: number;
 		labelSize?: number;
 		topLabelSize?: number;
 		labelColor?: string;
@@ -56,6 +57,7 @@ const GroupBar = (props: GroupBarProps) => {
 		bottomRightRadius = 0,
 		bottomLeftRadius = 0,
 		barWidth = padding,
+		barGroupGap = padding / 4,
 		labelSize = 12,
 		topLabelSize = 12,
 		labelColor = "white",
@@ -88,6 +90,7 @@ const GroupBar = (props: GroupBarProps) => {
 			...ctx,
 			padding,
 			barWidth,
+			barGroupGap,
 			radius,
 			topLeftRadius,
 			topRightRadius,
@@ -104,6 +107,7 @@ const GroupBar = (props: GroupBarProps) => {
 		serieElement,
 		padding,
 		barWidth,
+		barGroupGap,
 		radius,
 		topLeftRadius,
 		topRightRadius,
