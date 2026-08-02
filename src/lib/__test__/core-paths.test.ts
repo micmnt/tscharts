@@ -9,6 +9,7 @@ import {
 	generateXAxis,
 	generateYAxis,
 	getGroupBarSlotCount,
+	getGroupBarSlotIndex,
 } from "../core";
 
 const barSerie = {
@@ -169,10 +170,12 @@ describe("generateGroupDataPaths", () => {
 		const x1 = r1?.dataPoints.get("g1")?.[0]?.[0];
 		const x2 = r2?.dataPoints.get("g2")?.[0]?.[0];
 
-		expect(x1).toBeCloseTo(7.5);
-		// 20 (non piu' 35.83...): dopo K8 l'incremento tra barre dello stesso
-		// gruppo e' barWidth+gap diretto, non piu' derivato da xAxisInterval.
-		expect(x2).toBeCloseTo(20);
+		// 10 (non piu' 7.5): dopo K10 la base e' chartXStart+padding/2, non
+		// +padding/4, allineata alle altre funzioni generate*DataPaths.
+		expect(x1).toBeCloseTo(10);
+		// 22.5 (non piu' 35.83... pre-K8, ne' 20 pre-K10): incremento diretto
+		// barWidth+gap (K8) su base padding/2 (K10).
+		expect(x2).toBeCloseTo(22.5);
 		expect(x1).not.toBe(x2);
 	});
 });
@@ -400,5 +403,126 @@ describe("generateYAxis", () => {
 		// sinistra invece che su lati opposti.
 		expect(yAxisA?.isOpposite).toBe(false);
 		expect(yAxisB?.isOpposite).toBe(true);
+	});
+});
+
+describe("getGroupBarSlotIndex", () => {
+	it("le serie con lo stesso stackedName condividono lo stesso indice di slot (K9/K10)", () => {
+		const a1 = {
+			name: "a1",
+			type: "group-bar",
+			stackedName: "group-a",
+			data: [{ date: "x", value: 10 }],
+		};
+		const a2 = {
+			name: "a2",
+			type: "group-bar",
+			stackedName: "group-a",
+			data: [{ date: "x", value: 20 }],
+		};
+		const b1 = {
+			name: "b1",
+			type: "group-bar",
+			data: [{ date: "x", value: 15 }],
+		};
+		const elements = [a1, a2, b1];
+
+		expect(getGroupBarSlotIndex(elements, a1)).toBe(0);
+		expect(getGroupBarSlotIndex(elements, a2)).toBe(0);
+		expect(getGroupBarSlotIndex(elements, b1)).toBe(1);
+	});
+
+	it("gli elementi non group-bar intercalati non consumano uno slot (regressione K10)", () => {
+		const a1 = {
+			name: "a1",
+			type: "group-bar",
+			data: [{ date: "x", value: 10 }],
+		};
+		const line = { name: "l1", type: "line", data: [{ date: "x", value: 5 }] };
+		const b1 = {
+			name: "b1",
+			type: "group-bar",
+			stackedName: "group-b",
+			data: [{ date: "x", value: 15 }],
+		};
+
+		// Senza il fix, "l1" (non group-bar) veniva contata come proprio slot
+		// dentro serieGroupIndex, spostando b1 dallo slot 1 allo slot 2.
+		expect(getGroupBarSlotIndex([a1, line, b1], b1)).toBe(1);
+	});
+});
+
+describe("generateGroupDataPaths / generateStackedGroupDataPaths: coerenza tra stacked e non-stacked (regressione K10)", () => {
+	it("una serie non-stacked dopo un gruppo stacked da 2 serie occupa lo slot successivo, non uno vuoto", () => {
+		const a = {
+			name: "a",
+			type: "group-bar",
+			data: [{ date: "x", value: 10 }],
+		};
+		const b = {
+			name: "b",
+			type: "group-bar",
+			stackedName: "s1",
+			data: [{ date: "x", value: 10 }],
+		};
+		const c = {
+			name: "c",
+			type: "group-bar",
+			stackedName: "s1",
+			data: [{ date: "x", value: 10 }],
+		};
+		const d = {
+			name: "d",
+			type: "group-bar",
+			data: [{ date: "x", value: 10 }],
+		};
+		const ctx = { ...baseCtx, elements: [a, b, c, d], chartXEnd: 90 };
+
+		const rA = generateGroupDataPaths(a, ctx);
+		const rB = generateStackedGroupDataPaths(b, ctx);
+		const rD = generateGroupDataPaths(d, ctx);
+
+		const xA = rA?.dataPoints.get("a")?.[0]?.[0] as number;
+		const xB = Number(rB?.paths[0]?.split(" ")[1]) + 5; // barWidth/2 = 5
+		const xD = rD?.dataPoints.get("d")?.[0]?.[0] as number;
+
+		// 3 slot totali (a, stack(b+c), d): lo scarto tra slot consecutivi deve
+		// essere costante. Prima del fix xD saltava di uno slot in piu' perche'
+		// generateGroupDataPaths contava c come proprio slot.
+		expect(xB - xA).toBeCloseTo(xD - xB, 5);
+	});
+
+	it("una serie non group-bar (es. line) intercalata non sposta il gruppo stacked (regressione K10)", () => {
+		const a = {
+			name: "a",
+			type: "group-bar",
+			data: [{ date: "x", value: 10 }],
+		};
+		const line = { name: "l", type: "line", data: [{ date: "x", value: 5 }] };
+		const b = {
+			name: "b",
+			type: "group-bar",
+			stackedName: "s1",
+			data: [{ date: "x", value: 10 }],
+		};
+		const c = {
+			name: "c",
+			type: "group-bar",
+			stackedName: "s1",
+			data: [{ date: "x", value: 10 }],
+		};
+
+		const ctxWithLine = {
+			...baseCtx,
+			elements: [a, line, b, c],
+			chartXEnd: 90,
+		};
+		const ctxWithoutLine = { ...baseCtx, elements: [a, b, c], chartXEnd: 90 };
+
+		const xBWithLine = generateStackedGroupDataPaths(b, ctxWithLine)?.paths[0];
+		const xBWithoutLine = generateStackedGroupDataPaths(b, ctxWithoutLine)
+			?.paths[0];
+
+		expect(xBWithLine).toBe(xBWithoutLine);
 	});
 });

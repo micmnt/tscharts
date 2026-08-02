@@ -459,19 +459,36 @@ export const generateDataPaths = (
 	return { paths: normalizedPaths, dataPoints, topLabelsPoints };
 };
 
-// Funzione che genera i dataPaths per le barre raggruppate
-// Quanti "slot" occupa un gruppo di barre per una categoria: le serie con lo
-// stesso stackedName condividono un solo slot, non ne aprono uno ciascuna
-// (K9, usato da axis.tsx per centrare la label di categoria sul gruppo
-// invece che su una singola barra).
-export const getGroupBarSlotCount = (elements: Serie[]) => {
+// Unica fonte di verita' per lo "slot" di ciascuna serie group-bar in una
+// categoria: le serie con lo stesso stackedName condividono un solo slot
+// (chiave = stackedName), le altre ne aprono uno proprio (chiave = name).
+// Solo le serie type==="group-bar" contano: altri tipi nello stesso chart
+// (Line, Bar, ...) non occupano uno slot (K10, prima generateGroupDataPaths
+// e generateStackedGroupDataPaths avevano ciascuna una propria logica di
+// indicizzazione leggermente diversa, causa di disallineamenti quando
+// stacked e non-stacked erano mescolati nello stesso chart).
+const getGroupBarSlotKeys = (elements: Serie[]) => {
 	const groupBarSeries = elements.filter((el) => el.type === "group-bar");
-	const nonStackedCount = groupBarSeries.filter((el) => !el.stackedName).length;
-	const uniqueStackedNames = new Set(
-		groupBarSeries.filter((el) => el.stackedName).map((el) => el.stackedName),
-	);
-	return nonStackedCount + uniqueStackedNames.size;
+	return groupBarSeries.reduce<string[]>((acc, el) => {
+		const key = el.stackedName ?? el.name;
+		if (!acc.includes(key)) acc.push(key);
+		return acc;
+	}, []);
 };
+
+// Quanti slot occupa un gruppo di barre per una categoria (K9, usato da
+// axis.tsx per centrare la label di categoria sul gruppo invece che su una
+// singola barra).
+export const getGroupBarSlotCount = (elements: Serie[]) =>
+	getGroupBarSlotKeys(elements).length;
+
+// In quale slot cade una specifica serie group-bar, usato da
+// generateGroupDataPaths e generateStackedGroupDataPaths per posizionarla
+// orizzontalmente.
+export const getGroupBarSlotIndex = (elements: Serie[], serie: TimeSerie) =>
+	getGroupBarSlotKeys(elements).indexOf(serie.stackedName ?? serie.name);
+
+// Funzione che genera i dataPaths per le barre raggruppate
 
 export const generateGroupDataPaths = (
 	serie: TimeSerie,
@@ -499,7 +516,7 @@ export const generateGroupDataPaths = (
 
 	const serieMaxValue = getTimeSerieMaxValue(flatSeries);
 
-	const serieIndex = barSeries.findIndex((el) => el.name === serie.name);
+	const serieIndex = getGroupBarSlotIndex(ctx.elements, serie);
 
 	if (serieIndex < 0) return null;
 
@@ -541,10 +558,14 @@ export const generateGroupDataPaths = (
 		// indipendentemente da quanto spazio la categoria ha a disposizione
 		// (K8).
 		const barGap = ctxBarGroupGap ?? padding / 4;
+		// Base chartXStart+padding/2, non padding/4: allineata alle altre
+		// funzioni generate*DataPaths e a generateStackedGroupDataPaths, cosi'
+		// serie stacked e non-stacked nello stesso chart partono dallo stesso
+		// punto (K10).
 		const serieElX =
 			serieElIndex * xAxisGroupInterval +
 			(barWidth + barGap) * serieIndex +
-			(chartXStart + padding / 4);
+			(chartXStart + padding / 2);
 
 		const point =
 			value < MIN_BAR_HEIGHT_FOR_LABEL
@@ -643,21 +664,7 @@ export const generateStackedGroupDataPaths = (
 		(el) => el.name === serie.name,
 	);
 
-	const serieGroupIndex = ctx.elements
-		.reduce((acc, el) => {
-			if (el.stackedName && uniqueStackedNames.includes(el.stackedName)) {
-				// Una sola occorrenza per stackedName: le altre serie dello
-				// stesso gruppo condividono lo stesso slot, non ne aprono uno
-				// nuovo.
-				if (!acc.includes(el.stackedName)) {
-					acc.push(el.stackedName);
-				}
-			} else {
-				acc.push(el.name);
-			}
-			return acc;
-		}, [] as string[])
-		.findIndex((el) => el === serie.stackedName || el === serie.name);
+	const serieGroupIndex = getGroupBarSlotIndex(ctx.elements, serie);
 
 	if (serieGroupIndex < 0) return null;
 

@@ -272,30 +272,29 @@ const Axis = (props: AxisProps) => {
 
 		const xAxisInterval = (chartXEnd - chartXStart) / (serieData?.length || 1);
 
-		const groupBarElements =
-			elements?.filter((el) => el.type === "group-bar") ?? [];
+		const hasGroupBar =
+			elements?.some((el) => el.type === "group-bar") ?? false;
 
 		// Per GroupBar la label di categoria va centrata sulla larghezza totale
 		// del gruppo (stessa formula barWidth+barGroupGap di K8), non su una
-		// singola barra (K9).
-		const xSpacing =
-			groupBarElements.length > 0
-				? (() => {
-						const slotCount = getGroupBarSlotCount(elements ?? []);
-						const barWidth = globalConfig?.barWidth
-							? Number(globalConfig.barWidth)
-							: padding;
-						const barGroupGap = globalConfig?.barGroupGap
-							? Number(globalConfig.barGroupGap)
-							: padding / 4;
-						const groupWidth =
-							slotCount * barWidth + Math.max(0, slotCount - 1) * barGroupGap;
-						const isStacked = groupBarElements.some((el) => el.stackedName);
-						return (isStacked ? padding / 2 : padding / 4) + groupWidth / 2;
-					})()
-				: globalConfig?.barWidth
-					? (Number(globalConfig?.barWidth) + padding) / 2
-					: padding;
+		// singola barra (K9). Base padding/2 sempre: stacked e non-stacked
+		// partono dallo stesso offset (K10).
+		const xSpacing = hasGroupBar
+			? (() => {
+					const slotCount = getGroupBarSlotCount(elements ?? []);
+					const barWidth = globalConfig?.barWidth
+						? Number(globalConfig.barWidth)
+						: padding;
+					const barGroupGap = globalConfig?.barGroupGap
+						? Number(globalConfig.barGroupGap)
+						: padding / 4;
+					const groupWidth =
+						slotCount * barWidth + Math.max(0, slotCount - 1) * barGroupGap;
+					return padding / 2 + groupWidth / 2;
+				})()
+			: globalConfig?.barWidth
+				? (Number(globalConfig?.barWidth) + padding) / 2
+				: padding;
 
 		const selectionColor = globalConfig?.selectedColor as string;
 		const selectionValue = globalConfig?.selectedValue as string;
