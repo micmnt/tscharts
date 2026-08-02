@@ -7,6 +7,5 @@ export * from "./groupBar";
 export * from "./legend";
 export * from "./line";
 export * from "./pie";
-export * from "./svg";
 export * from "./threshold";
 export * from "./tooltip";
