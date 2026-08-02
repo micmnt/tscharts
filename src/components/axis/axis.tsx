@@ -11,6 +11,7 @@ import {
 	DEFAULT_HORIZONTAL_BAR_OFFSET,
 	generateXAxis,
 	generateYAxis,
+	getGroupBarSlotCount,
 	NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER,
 } from "../../lib/core";
 /* Utils Imports */
@@ -271,9 +272,30 @@ const Axis = (props: AxisProps) => {
 
 		const xAxisInterval = (chartXEnd - chartXStart) / (serieData?.length || 1);
 
-		const xSpacing = globalConfig?.barWidth
-			? (Number(globalConfig?.barWidth) + padding) / 2
-			: padding;
+		const groupBarElements =
+			elements?.filter((el) => el.type === "group-bar") ?? [];
+
+		// Per GroupBar la label di categoria va centrata sulla larghezza totale
+		// del gruppo (stessa formula barWidth+barGroupGap di K8), non su una
+		// singola barra (K9).
+		const xSpacing =
+			groupBarElements.length > 0
+				? (() => {
+						const slotCount = getGroupBarSlotCount(elements ?? []);
+						const barWidth = globalConfig?.barWidth
+							? Number(globalConfig.barWidth)
+							: padding;
+						const barGroupGap = globalConfig?.barGroupGap
+							? Number(globalConfig.barGroupGap)
+							: padding / 4;
+						const groupWidth =
+							slotCount * barWidth + Math.max(0, slotCount - 1) * barGroupGap;
+						const isStacked = groupBarElements.some((el) => el.stackedName);
+						return (isStacked ? padding / 2 : padding / 4) + groupWidth / 2;
+					})()
+				: globalConfig?.barWidth
+					? (Number(globalConfig?.barWidth) + padding) / 2
+					: padding;
 
 		const selectionColor = globalConfig?.selectedColor as string;
 		const selectionValue = globalConfig?.selectedValue as string;

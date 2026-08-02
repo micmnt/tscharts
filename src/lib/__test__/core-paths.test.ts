@@ -8,6 +8,7 @@ import {
 	generateStackedGroupDataPaths,
 	generateXAxis,
 	generateYAxis,
+	getGroupBarSlotCount,
 } from "../core";
 
 const barSerie = {
@@ -236,6 +237,43 @@ describe("generateStackedGroupDataPaths", () => {
 		const groupSlotWidth = b1X - a1X;
 
 		expect(groupSlotWidth).toBeCloseTo(12.5, 5);
+	});
+});
+
+describe("getGroupBarSlotCount", () => {
+	it("le serie con lo stesso stackedName condividono un solo slot (K9)", () => {
+		const a1 = {
+			name: "a1",
+			type: "group-bar",
+			stackedName: "group-a",
+			data: [{ date: "x", value: 10 }],
+		};
+		const a2 = {
+			name: "a2",
+			type: "group-bar",
+			stackedName: "group-a",
+			data: [{ date: "x", value: 20 }],
+		};
+		const b1 = {
+			name: "b1",
+			type: "group-bar",
+			stackedName: "group-b",
+			data: [{ date: "x", value: 15 }],
+		};
+		const c1 = {
+			name: "c1",
+			type: "group-bar",
+			data: [{ date: "x", value: 5 }],
+		};
+
+		// group-a (2 serie) + group-b (1 serie) + c1 (non-stacked) = 3 slot,
+		// non 4.
+		expect(getGroupBarSlotCount([a1, a2, b1, c1])).toBe(3);
+	});
+
+	it("nessuna serie group-bar => 0 slot", () => {
+		const pie = { name: "p1", type: "pie", data: [] };
+		expect(getGroupBarSlotCount([pie])).toBe(0);
 	});
 });
 

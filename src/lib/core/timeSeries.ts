@@ -1,4 +1,4 @@
-import type { ChartState, TimeSerie } from "../../types";
+import type { ChartState, Serie, TimeSerie } from "../../types";
 import {
 	getFirstValorizedElementIndex,
 	isDefined,
@@ -460,6 +460,19 @@ export const generateDataPaths = (
 };
 
 // Funzione che genera i dataPaths per le barre raggruppate
+// Quanti "slot" occupa un gruppo di barre per una categoria: le serie con lo
+// stesso stackedName condividono un solo slot, non ne aprono uno ciascuna
+// (K9, usato da axis.tsx per centrare la label di categoria sul gruppo
+// invece che su una singola barra).
+export const getGroupBarSlotCount = (elements: Serie[]) => {
+	const groupBarSeries = elements.filter((el) => el.type === "group-bar");
+	const nonStackedCount = groupBarSeries.filter((el) => !el.stackedName).length;
+	const uniqueStackedNames = new Set(
+		groupBarSeries.filter((el) => el.stackedName).map((el) => el.stackedName),
+	);
+	return nonStackedCount + uniqueStackedNames.size;
+};
+
 export const generateGroupDataPaths = (
 	serie: TimeSerie,
 	ctx: ChartState & {
