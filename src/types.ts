@@ -1,3 +1,5 @@
+import type { GlobalConfig } from "./lib/globalConfig";
+
 export type TimeSerieEl = {
 	value: number;
 	date: string;
@@ -72,9 +74,7 @@ export type ChartState = {
 	flatMax?: boolean;
 	timeSeriesMaxValue?: number;
 	chartID?: string | null;
-	globalConfig?: {
-		[key: string]: number | string | ((v: unknown) => void);
-	};
+	globalConfig?: GlobalConfig;
 };
 
 // Slice "strutturale" del ChartState: dati che cambiano raramente (elementi,

@@ -142,7 +142,6 @@ function chartReducer(
 				chartYEnd,
 				chartYMiddle,
 				chartID,
-				globalConfig,
 			} = action.payload;
 			return {
 				...chart,
@@ -153,8 +152,13 @@ function chartReducer(
 				chartYMiddle,
 				chartYEnd,
 				chartID,
-				globalConfig,
 			};
+		}
+		case "UPDATE_GLOBAL_CONFIG": {
+			const { globalConfig } = action.payload;
+			// no-op se la reference non e' cambiata: evita re-render inutili.
+			if (chart.globalConfig === globalConfig) return chart;
+			return { ...chart, globalConfig };
 		}
 		case "SET_HOVER_ELEMENT": {
 			const { hoveredElement } = action.payload ?? {};

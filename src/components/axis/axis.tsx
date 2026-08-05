@@ -296,8 +296,8 @@ const Axis = (props: AxisProps) => {
 				? (Number(globalConfig?.barWidth) + padding) / 2
 				: padding;
 
-		const selectionColor = globalConfig?.selectedColor as string;
-		const selectionValue = globalConfig?.selectedValue as string;
+		const selectionColor = globalConfig?.selectedColor;
+		const selectionValue = globalConfig?.selectedValue;
 
 		const labels = dataPoints.map((label, labelIndex) => {
 			return {
@@ -340,7 +340,7 @@ const Axis = (props: AxisProps) => {
 
 		const xPoints = labels.map((label, labelIndex) => {
 			const hoverRectWidth =
-				(ctx?.globalConfig?.barWidth as number) ?? xAxisInterval - padding;
+				ctx?.globalConfig?.barWidth ?? xAxisInterval - padding;
 
 			const hoverRectX = label.x - hoverRectWidth / 2;
 

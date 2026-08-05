@@ -21,6 +21,7 @@ import {
 	convertToSVGPoint,
 	getChartDimensions,
 } from "../../lib/core";
+import { computeGlobalConfig } from "../../lib/globalConfig";
 import { isDefined, isTimeSerie } from "../../lib/utils";
 import type { Serie } from "../../types";
 import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
@@ -40,27 +41,6 @@ const getDefaultAriaLabel = (elements?: Serie[]) => {
 
 	const seriesNames = elements.map((el) => el.name).join(", ");
 	return `Grafico con ${elements.length} serie: ${seriesNames}`;
-};
-
-// Funzione che prende tutte le props di config degli elementi grafici e le setta nel context globale
-const computeConfigs = (children: JSX.Element[]) => {
-	const elementsWithConfig = children.filter(
-		(childEl) => childEl.props?.config,
-	);
-
-	if (elementsWithConfig.length <= 0) return {};
-
-	const globalConfig = elementsWithConfig.reduce((acc, el) => {
-		const elConfig = el.props.config;
-		const newAcc = {
-			...acc,
-			...elConfig,
-		};
-
-		return newAcc;
-	}, {});
-
-	return globalConfig;
 };
 
 // Funzione che calcola l'altezza della legenda
@@ -105,7 +85,32 @@ const Svg = (props: SVGProps) => {
 
 	const legendHeight = getLegendHeight(normalizedChildren);
 
-	const globalConfig = useRef(computeConfigs(normalizedChildren.flat()));
+	// globalConfig reattivo ai cambi runtime dei config (R13): ricalcolato ad
+	// ogni render (cheap) ma stabilizzato su una dep-key. La key considera solo
+	// i valori primitivi + la PRESENZA delle funzioni, non la loro identita'
+	// (decisione A di R3): cambia solo quando cambia qualcosa che conta, evitando
+	// dispatch inutili da callback inline. La memoization e' manuale (durante il
+	// render, pattern React) per non ricreare la reference ad ogni render.
+	const rawGlobalConfig = computeGlobalConfig(normalizedChildren.flat());
+	const globalConfigKey = JSON.stringify({
+		barWidth: rawGlobalConfig.barWidth,
+		barGroupGap: rawGlobalConfig.barGroupGap,
+		barOffset: rawGlobalConfig.barOffset,
+		selectedColor: rawGlobalConfig.selectedColor,
+		selectedValue: rawGlobalConfig.selectedValue,
+		hasBarClickAction: typeof rawGlobalConfig.barClickAction === "function",
+	});
+	const globalConfigStore = useRef({
+		key: globalConfigKey,
+		value: rawGlobalConfig,
+	});
+	if (globalConfigStore.current.key !== globalConfigKey) {
+		globalConfigStore.current = {
+			key: globalConfigKey,
+			value: rawGlobalConfig,
+		};
+	}
+	const globalConfig = globalConfigStore.current.value;
 
 	// Funzione che inizializza le dimensioni del grafico svg
 	const initializeChart = useCallback(() => {
@@ -135,7 +140,6 @@ const Svg = (props: SVGProps) => {
 					chartYEnd,
 					chartYMiddle: (chartYEnd + 2 * padding) / 2,
 					chartID,
-					globalConfig: globalConfig.current,
 				},
 			});
 		}
@@ -154,6 +158,18 @@ const Svg = (props: SVGProps) => {
 		window.addEventListener("resize", initializeChart);
 		return () => window.removeEventListener("resize", initializeChart);
 	}, [initializeChart]);
+
+	// Propaga globalConfig al context quando cambia (R13): separato da
+	// INITIALIZE (che gestisce solo le dimensioni) cosi' i cambi runtime dei
+	// config si riflettono su Axis/hover senza aspettare un mount/resize.
+	useEffect(() => {
+		if (dispatch) {
+			dispatch({
+				type: "UPDATE_GLOBAL_CONFIG",
+				payload: { globalConfig },
+			});
+		}
+	}, [dispatch, globalConfig]);
 
 	const { svgRef, chartXStart, chartXEnd, chartYEnd, width, height } =
 		ctx ?? {};
