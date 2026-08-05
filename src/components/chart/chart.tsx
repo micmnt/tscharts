@@ -1,7 +1,7 @@
 /* Types Imports */
 
 /* React Imports */
-import { type JSX, useEffect, useMemo, useRef, useState } from "react";
+import { type JSX, useId, useMemo, useRef } from "react";
 /* Context Imports */
 import { ChartProvider } from "../../contexts/chartContext";
 
@@ -14,7 +14,6 @@ import type { Serie, ThemeState, TimeSerie } from "../../types";
 import "../../styles.css";
 
 /* Utils Imports */
-import { nanoid } from "nanoid";
 import Svg from "../../components/svg/svg";
 /* Components Imports */
 import Bar from "../bar/bar";
@@ -55,7 +54,13 @@ const Chart = (props: ChartProps) => {
 
 	const chartContainerRef = useRef<HTMLDivElement>(null);
 
-	const [chartID, setChartID] = useState<string | null>(null);
+	// Id univoco e stabile per grafico, sincrono e SSR-safe (useId). Il suffisso
+	// `-${name}` e' solo cosmetico (id leggibile nel DOM inspector); l'unicita'
+	// tra istanze e' garantita da useId. Finisce negli id DOM tipo
+	// `cts-tooltip-${chartID}`, letti solo via getElementById (mai querySelector),
+	// quindi i caratteri speciali di useId non danno problemi.
+	const reactId = useId();
+	const chartID = `${reactId}-${name}`;
 
 	const normalizedChildren = Array.isArray(children) ? children : [children];
 	// Conto il numero di assi in base ai componenti all'interno di Chart che rappresentano un asse Y
@@ -95,10 +100,6 @@ const Chart = (props: ChartProps) => {
 
 	const { leftAxisCount, rightAxisCount } = getAxisCount(yAxisCount);
 
-	useEffect(() => {
-		setChartID(`${nanoid()}-${name}`);
-	}, [name]);
-
 	const initialState = useMemo(
 		() => ({
 			elements,
@@ -128,8 +129,6 @@ const Chart = (props: ChartProps) => {
 			flatMax,
 		],
 	);
-
-	if (!chartID) return null;
 
 	return (
 		<ChartProvider initialState={initialState} theme={mergedTheme}>

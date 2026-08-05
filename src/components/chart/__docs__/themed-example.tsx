@@ -22,6 +22,10 @@ const elements = [
 	{
 		name: "obiettivo",
 		type: "line",
+		// Condivide l'asse Y "vendite": senza axisName la line userebbe una
+		// scala isolata (il proprio max) e finirebbe disallineata rispetto alle
+		// tacche dell'asse vendite.
+		axisName: "vendite",
 		uom: "€",
 		data: [
 			{ date: "2024-03-13T14:33:16.796Z", value: 150 },
