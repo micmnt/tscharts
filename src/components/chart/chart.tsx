@@ -7,7 +7,8 @@ import { ChartProvider } from "../../contexts/chartContext";
 
 /* Core Imports */
 import { getAxisCount, getTimeSerieMaxValue } from "../../lib/core";
-import type { Serie, TimeSerie } from "../../types";
+import defaultTheme, { mergeTheme } from "../../lib/defaultTheme";
+import type { Serie, ThemeState, TimeSerie } from "../../types";
 
 /* Styles Imports */
 import "../../styles.css";
@@ -28,6 +29,10 @@ export type ChartProps = {
 	name?: string;
 	flatMax?: boolean;
 	ariaLabel?: string;
+	// Override parziale del tema: viene fuso (deep-merge per-chiave) sopra il
+	// defaultTheme, quindi si puo' specificare solo cio' che cambia (es. solo
+	// `seriesColors` o solo `axis.color`) senza perdere gli altri valori.
+	theme?: Partial<ThemeState>;
 };
 
 const Chart = (props: ChartProps) => {
@@ -40,7 +45,13 @@ const Chart = (props: ChartProps) => {
 		name = "chart",
 		flatMax = true,
 		ariaLabel,
+		theme,
 	} = props;
+
+	// Il tema effettivo passato al provider: default + eventuale override
+	// parziale del consumer. Memoizzato per non ricreare la reference (e quindi
+	// non far ri-renderizzare tutti i consumer del ThemeContext) ad ogni render.
+	const mergedTheme = useMemo(() => mergeTheme(defaultTheme, theme), [theme]);
 
 	const chartContainerRef = useRef<HTMLDivElement>(null);
 
@@ -121,7 +132,7 @@ const Chart = (props: ChartProps) => {
 	if (!chartID) return null;
 
 	return (
-		<ChartProvider initialState={initialState}>
+		<ChartProvider initialState={initialState} theme={mergedTheme}>
 			<div ref={chartContainerRef} className="rootContainer">
 				<Svg
 					style={style}

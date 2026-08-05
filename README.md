@@ -71,6 +71,39 @@ Componente radice: fornisce il contesto condiviso (dimensioni, dati, tema) a tut
 | `name` | `string` | `"chart"` | Nome usato per generare l'id univoco del grafico |
 | `flatMax` | `boolean` | `true` | Arrotonda per eccesso il valore massimo degli assi all'ordine di grandezza superiore (es. 1234 → 2000) invece di usarlo esatto |
 | `style` | `any` | — | Stile CSS applicato all'elemento `<svg>` |
+| `theme` | `Partial<ThemeState>` | `defaultTheme` | Override parziale del tema (colori serie, padding, font, assi, griglia...). Vedi [Tema](#tema) |
+
+#### Tema
+
+`theme` accetta un **override parziale**: viene fuso (deep-merge per-chiave) sopra il tema di default, quindi basta specificare solo ciò che cambia — tutto il resto resta invariato.
+
+```tsx
+// Solo i colori delle serie: padding, assi, griglia, font... restano dal default
+<Chart width={600} height={400} elements={elements}
+  theme={{ seriesColors: ["#6366f1", "#ec4899", "#14b8a6"] }}
+>
+  ...
+</Chart>
+
+// Override annidato parziale: cambia solo il colore della linea asse,
+// gli altri campi di `axis` (labelColor, size...) restano dal default
+<Chart ... theme={{ axis: { color: "#e63946" } }}>...</Chart>
+```
+
+Il tema di default è esportato come **riferimento in sola lettura** (`defaultTheme`), utile per leggerne/derivarne i valori — ad esempio per usare gli stessi colori serie altrove nella tua UI. Non serve per l'override (che si fa con la prop `theme` parziale) ed è congelato: non è mutabile.
+
+```tsx
+import { defaultTheme, type ThemeState } from "tscharts";
+
+// riuso di un colore del grafico nel resto dell'interfaccia
+<span style={{ color: defaultTheme.seriesColors[0] }}>Vendite</span>
+
+// tema derivato costruito programmaticamente
+const darkChartTheme: Partial<ThemeState> = {
+  grid: { ...defaultTheme.grid, color: "#2a3540" },
+  axis: { ...defaultTheme.axis, labelColor: "#8fa0b0" },
+};
+```
 
 ### `<Axis>`
 
