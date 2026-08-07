@@ -1,11 +1,8 @@
 import { type ReactNode, useMemo } from "react";
-import {
-	useChartsStructural,
-	useChartsTheme,
-} from "../../contexts/chartContext";
+import { useSerie } from "../../hooks/useSerie";
 import { generateAngleDonutPaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isAngleDonutSerie, isDefined, warnDev } from "../../lib/utils";
+import { isAngleDonutSerie, isDefined } from "../../lib/utils";
 import type { AngleDonutSerieEl } from "../../types";
 
 export type AngleDonutProps = {
@@ -42,19 +39,16 @@ const AngleDonut = (props: AngleDonutProps) => {
 		customLabel = undefined,
 	} = config ?? {};
 
-	const ctx = useChartsStructural();
-
-	const theme = useChartsTheme();
+	const {
+		ctx,
+		theme,
+		serie: serieElement,
+	} = useSerie(name, isAngleDonutSerie, {
+		component: "AngleDonut",
+		serieTypeLabel: "angle-donut",
+	});
 
 	const { padding = defaultTheme.padding } = theme ?? {};
-
-	const elements = ctx?.elements;
-
-	const foundSerieElement = elements?.find((el) => el.name === name);
-	const serieElement =
-		foundSerieElement && isAngleDonutSerie(foundSerieElement)
-			? foundSerieElement
-			: undefined;
 
 	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
 	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
@@ -80,19 +74,7 @@ const AngleDonut = (props: AngleDonutProps) => {
 		showTrack,
 	]);
 
-	if (!ctx || !theme) {
-		warnDev(
-			`<AngleDonut name="${name}" /> deve essere renderizzato dentro <Chart>.`,
-		);
-		return null;
-	}
-
-	if (!serieElement) {
-		warnDev(
-			`<AngleDonut name="${name}" />: nessuna serie di tipo angle-donut trovata con questo name.`,
-		);
-		return null;
-	}
+	if (!ctx || !theme || !serieElement) return null;
 
 	if (!result) return null;
 

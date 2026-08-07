@@ -2,18 +2,15 @@
 
 /* React Imports */
 import { useMemo } from "react";
-/* Context Imports */
-import {
-	useChartsStructural,
-	useChartsTheme,
-} from "../../contexts/chartContext";
+/* Hooks Imports */
+import { useSerie } from "../../hooks/useSerie";
 /* Core Imports */
 import {
 	generateGroupDataPaths,
 	generateStackedGroupDataPaths,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isTimeSerie, warnDev } from "../../lib/utils";
+import { isTimeSerie } from "../../lib/utils";
 
 export type GroupBarProps = {
 	name: string;
@@ -44,9 +41,14 @@ const GroupBar = (props: GroupBarProps) => {
 		stacked = false,
 	} = props;
 
-	const ctx = useChartsStructural();
-
-	const theme = useChartsTheme();
+	const {
+		ctx,
+		theme,
+		serie: serieElement,
+	} = useSerie(name, isTimeSerie, {
+		component: "GroupBar",
+		serieTypeLabel: "bar/line/bar-stacked/group-bar",
+	});
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
@@ -65,12 +67,6 @@ const GroupBar = (props: GroupBarProps) => {
 	} = config || {};
 
 	const elements = ctx?.elements;
-
-	const foundSerieElement = elements?.find((el) => el.name === name);
-	const serieElement =
-		foundSerieElement && isTimeSerie(foundSerieElement)
-			? foundSerieElement
-			: undefined;
 
 	const foundTopLabelSerieElement = elements?.find(
 		(el) => el.name === topLabelSerie,
@@ -116,19 +112,7 @@ const GroupBar = (props: GroupBarProps) => {
 		stacked,
 	]);
 
-	if (!ctx || !theme) {
-		warnDev(
-			`<GroupBar name="${name}" /> deve essere renderizzato dentro <Chart>.`,
-		);
-		return null;
-	}
-
-	if (!elements || !serieElement) {
-		warnDev(
-			`<GroupBar name="${name}" />: nessuna serie di tipo bar/line/bar-stacked/group-bar trovata con questo name.`,
-		);
-		return null;
-	}
+	if (!ctx || !theme || !elements || !serieElement) return null;
 
 	if (!result) return null;
 

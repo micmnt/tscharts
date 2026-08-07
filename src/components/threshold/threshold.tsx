@@ -1,10 +1,7 @@
 /* Types Imports */
 
-/* Context Imports */
-import {
-	useChartsStructural,
-	useChartsTheme,
-} from "../../contexts/chartContext";
+/* Hooks Imports */
+import { useSerie } from "../../hooks/useSerie";
 
 /* Core Imports */
 import {
@@ -18,7 +15,6 @@ import {
 	isDefined,
 	isThresholdSerie,
 	isTimeSerie,
-	warnDev,
 } from "../../lib/utils";
 
 export type ThresholdProps = {
@@ -32,21 +28,28 @@ export type ThresholdProps = {
 	dy?: number;
 };
 const Threshold = (props: ThresholdProps) => {
-	const theme = useChartsTheme();
-	const ctx = useChartsStructural();
-
-	const { padding = defaultTheme.padding } = theme ?? {};
-
 	const {
 		dashed = false,
 		type = "horizontal",
 		name,
 		showLabel = false,
-		size = theme?.threshold?.size,
 		axisName = "",
 		dx = 0,
 		dy = 0,
 	} = props;
+
+	const {
+		ctx,
+		theme,
+		serie: thresholdElement,
+	} = useSerie(name, isThresholdSerie, {
+		component: "Threshold",
+		serieTypeLabel: "threshold",
+	});
+
+	const { padding = defaultTheme.padding } = theme ?? {};
+
+	const size = props.size ?? theme?.threshold?.size;
 
 	const {
 		chartXStart: _chartXStart,
@@ -56,25 +59,7 @@ const Threshold = (props: ThresholdProps) => {
 		elements,
 	} = ctx ?? {};
 
-	const foundThresholdElement = elements?.find((el) => el.name === name);
-	const thresholdElement =
-		foundThresholdElement && isThresholdSerie(foundThresholdElement)
-			? foundThresholdElement
-			: undefined;
-
-	if (!ctx || !theme) {
-		warnDev(
-			`<Threshold name="${name}" /> deve essere renderizzato dentro <Chart>.`,
-		);
-		return null;
-	}
-
-	if (!thresholdElement) {
-		warnDev(
-			`<Threshold name="${name}" />: nessuna serie di tipo threshold trovata con questo name.`,
-		);
-		return null;
-	}
+	if (!ctx || !theme || !thresholdElement) return null;
 
 	const thresholdValue = thresholdElement.data;
 

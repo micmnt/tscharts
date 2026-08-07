@@ -1,13 +1,9 @@
 /* React Imports */
 import { useMemo } from "react";
-/* Context Imports */
-import {
-	useChartsStructural,
-	useChartsTheme,
-} from "../../contexts/chartContext";
+import { useSerie } from "../../hooks/useSerie";
 import { generateDonutPaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isDefined, isPieSerie, warnDev } from "../../lib/utils";
+import { isDefined, isPieSerie } from "../../lib/utils";
 
 export type DonutProps = {
 	name: string;
@@ -34,19 +30,16 @@ const Donut = (props: DonutProps) => {
 
 	const { innerRadius, centerElement } = config ?? {};
 
-	const ctx = useChartsStructural();
-
-	const theme = useChartsTheme();
+	const {
+		ctx,
+		theme,
+		serie: serieElement,
+	} = useSerie(name, isPieSerie, {
+		component: "Donut",
+		serieTypeLabel: "pie/donut",
+	});
 
 	const { padding = defaultTheme.padding } = theme ?? {};
-
-	const elements = ctx?.elements;
-
-	const foundSerieElement = elements?.find((el) => el.name === name);
-	const serieElement =
-		foundSerieElement && isPieSerie(foundSerieElement)
-			? foundSerieElement
-			: undefined;
 
 	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
 	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
@@ -61,19 +54,7 @@ const Donut = (props: DonutProps) => {
 		});
 	}, [ctx, theme, serieElement, padding, innerRadius, centerElement]);
 
-	if (!ctx || !theme) {
-		warnDev(
-			`<Donut name="${name}" /> deve essere renderizzato dentro <Chart>.`,
-		);
-		return null;
-	}
-
-	if (!serieElement) {
-		warnDev(
-			`<Donut name="${name}" />: nessuna serie di tipo pie/donut trovata con questo name.`,
-		);
-		return null;
-	}
+	if (!ctx || !theme || !serieElement) return null;
 
 	if (!result) return null;
 

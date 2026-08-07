@@ -1,11 +1,8 @@
 /* Types Imports */
 
 import { useMemo } from "react";
-import {
-	useChartsInteractive,
-	useChartsStructural,
-	useChartsTheme,
-} from "../../contexts/chartContext";
+import { useChartsInteractive } from "../../contexts/chartContext";
+import { useSerie } from "../../hooks/useSerie";
 /* Core Imports */
 import {
 	generateDataPaths,
@@ -13,7 +10,7 @@ import {
 	generateNegativeDataPaths,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isTimeSerie, warnDev } from "../../lib/utils";
+import { isTimeSerie } from "../../lib/utils";
 
 export type LineProps = {
 	name: string;
@@ -54,21 +51,21 @@ const Line = (props: LineProps) => {
 		fillOpacity = 0,
 	} = props;
 
-	const ctx = useChartsStructural();
 	const interactive = useChartsInteractive();
 
-	const theme = useChartsTheme();
+	const {
+		ctx,
+		theme,
+		serie: serieElement,
+	} = useSerie(name, isTimeSerie, {
+		component: "Line",
+		serieTypeLabel: "bar/line/bar-stacked/group-bar",
+	});
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
 	const hoveredElement = interactive?.hoveredElement;
 	const elements = ctx?.elements;
-
-	const foundSerieElement = elements?.find((el) => el.name === name);
-	const serieElement =
-		foundSerieElement && isTimeSerie(foundSerieElement)
-			? foundSerieElement
-			: undefined;
 
 	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
 	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
@@ -99,17 +96,7 @@ const Line = (props: LineProps) => {
 		);
 	}, [ctx, theme, serieElement, padding, trimZeros, horizontal, lineOffset]);
 
-	if (!ctx || !theme) {
-		warnDev(`<Line name="${name}" /> deve essere renderizzato dentro <Chart>.`);
-		return null;
-	}
-
-	if (!elements || !serieElement) {
-		warnDev(
-			`<Line name="${name}" />: nessuna serie di tipo bar/line/bar-stacked/group-bar trovata con questo name.`,
-		);
-		return null;
-	}
+	if (!ctx || !theme || !elements || !serieElement) return null;
 
 	if (!result) return null;
 

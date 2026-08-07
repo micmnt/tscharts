@@ -1,15 +1,10 @@
 /* React Imports */
 import { useMemo } from "react";
-/* Context Imports */
-import {
-	useChartsStructural,
-	useChartsTheme,
-} from "../../contexts/chartContext";
-
+import { useSerie } from "../../hooks/useSerie";
 /* Core Imports */
 import { generatePiePaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isPieSerie, warnDev } from "../../lib/utils";
+import { isPieSerie } from "../../lib/utils";
 
 export type PieProps = {
 	name: string;
@@ -18,19 +13,16 @@ export type PieProps = {
 const Pie = (props: PieProps) => {
 	const { name } = props;
 
-	const ctx = useChartsStructural();
-
-	const theme = useChartsTheme();
+	const {
+		ctx,
+		theme,
+		serie: serieElement,
+	} = useSerie(name, isPieSerie, {
+		component: "Pie",
+		serieTypeLabel: "pie",
+	});
 
 	const { padding = defaultTheme.padding } = theme ?? {};
-
-	const elements = ctx?.elements;
-
-	const foundSerieElement = elements?.find((el) => el.name === name);
-	const serieElement =
-		foundSerieElement && isPieSerie(foundSerieElement)
-			? foundSerieElement
-			: undefined;
 
 	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
 	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
@@ -40,17 +32,7 @@ const Pie = (props: PieProps) => {
 		return generatePiePaths(serieElement, { ...ctx, padding });
 	}, [ctx, theme, serieElement, padding]);
 
-	if (!ctx || !theme) {
-		warnDev(`<Pie name="${name}" /> deve essere renderizzato dentro <Chart>.`);
-		return null;
-	}
-
-	if (!serieElement) {
-		warnDev(
-			`<Pie name="${name}" />: nessuna serie di tipo pie trovata con questo name.`,
-		);
-		return null;
-	}
+	if (!ctx || !theme || !serieElement) return null;
 
 	if (!result) return null;
 

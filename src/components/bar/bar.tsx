@@ -2,11 +2,8 @@
 
 /* React Imports */
 import { useMemo } from "react";
-/* Context Imports */
-import {
-	useChartsStructural,
-	useChartsTheme,
-} from "../../contexts/chartContext";
+/* Hooks Imports */
+import { useSerie } from "../../hooks/useSerie";
 /* Core Imports */
 import {
 	generateDataPaths,
@@ -18,12 +15,7 @@ import {
 	getTimeSerieMaxValue,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import {
-	calculateFlatValue,
-	isFunction,
-	isTimeSerie,
-	warnDev,
-} from "../../lib/utils";
+import { calculateFlatValue, isFunction, isTimeSerie } from "../../lib/utils";
 
 export type BarDragPayload = {
 	value: number;
@@ -70,9 +62,14 @@ const Bar = (props: BarProps) => {
 		horizontal = false,
 	} = props;
 
-	const ctx = useChartsStructural();
-
-	const theme = useChartsTheme();
+	const {
+		ctx,
+		theme,
+		serie: serieElement,
+	} = useSerie(name, isTimeSerie, {
+		component: "Bar",
+		serieTypeLabel: "bar/line/bar-stacked/group-bar",
+	});
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
@@ -92,12 +89,6 @@ const Bar = (props: BarProps) => {
 	} = config || {};
 
 	const elements = ctx?.elements;
-
-	const foundSerieElement = elements?.find((el) => el.name === name);
-	const serieElement =
-		foundSerieElement && isTimeSerie(foundSerieElement)
-			? foundSerieElement
-			: undefined;
 
 	const foundTopLabelSerieElement = elements?.find(
 		(el) => el.name === topLabelSerie,
@@ -147,17 +138,7 @@ const Bar = (props: BarProps) => {
 		horizontal,
 	]);
 
-	if (!ctx || !theme) {
-		warnDev(`<Bar name="${name}" /> deve essere renderizzato dentro <Chart>.`);
-		return null;
-	}
-
-	if (!serieElement) {
-		warnDev(
-			`<Bar name="${name}" />: nessuna serie di tipo bar/line/bar-stacked/group-bar trovata con questo name.`,
-		);
-		return null;
-	}
+	if (!ctx || !theme || !serieElement) return null;
 
 	if (!result) return null;
 
