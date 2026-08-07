@@ -1,11 +1,12 @@
 /* Types Imports */
 
 /* React Imports */
-import { type JSX, useId, useMemo, useRef } from "react";
+import { useId, useMemo, useRef } from "react";
 /* Context Imports */
 import { ChartProvider } from "../../contexts/chartContext";
 
 /* Core Imports */
+import { flattenChildren } from "../../lib/children";
 import { getAxisCount, getTimeSerieMaxValue } from "../../lib/core";
 import defaultTheme, { mergeTheme } from "../../lib/defaultTheme";
 import type { Serie, ThemeState, TimeSerie } from "../../types";
@@ -62,9 +63,12 @@ const Chart = (props: ChartProps) => {
 	const reactId = useId();
 	const chartID = `${reactId}-${name}`;
 
-	const normalizedChildren = Array.isArray(children) ? children : [children];
+	// Appiattisco i children (scende in Fragment e .map) prima di ispezionarli,
+	// cosi' assi generati dinamicamente vengono contati correttamente (R6).
+	const flatChildren = flattenChildren(children);
+
 	// Conto il numero di assi in base ai componenti all'interno di Chart che rappresentano un asse Y
-	const yAxisCount = (normalizedChildren as JSX.Element[]).filter(
+	const yAxisCount = flatChildren.filter(
 		(childEl) => childEl.props?.type === "yAxis",
 	)?.length;
 
@@ -75,7 +79,7 @@ const Chart = (props: ChartProps) => {
 	// minificazione aggressiva nel bundle del consumer. Un Chart e' o
 	// orizzontale o verticale nel suo insieme: tutte le serie condividono lo
 	// stesso sistema di coordinate, quindi non ha senso mescolare orientamenti.
-	const horizontal = (normalizedChildren as JSX.Element[]).some(
+	const horizontal = flatChildren.some(
 		(childEl) =>
 			(childEl.type === Bar || childEl.type === Line) &&
 			childEl.props?.horizontal === true,

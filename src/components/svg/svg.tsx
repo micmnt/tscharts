@@ -15,6 +15,7 @@ import {
 	useChartsStructural,
 	useChartsTheme,
 } from "../../contexts/chartContext";
+import { flattenChildren } from "../../lib/children";
 /* Core Imports */
 import {
 	calculateTooltipPosition,
@@ -82,9 +83,11 @@ const Svg = (props: SVGProps) => {
 
 	const { padding } = theme ?? {};
 
-	const normalizedChildren = Array.isArray(children) ? children : [children];
+	// Appiattito (scende in Fragment e .map) prima dell'ispezione: legenda e
+	// config generati dinamicamente vengono comunque trovati (R6).
+	const flatChildren = flattenChildren(children);
 
-	const legendHeight = getLegendHeight(normalizedChildren);
+	const legendHeight = getLegendHeight(flatChildren);
 
 	// globalConfig reattivo ai cambi runtime dei config (R13): ricalcolato ad
 	// ogni render (cheap) ma stabilizzato su una dep-key. La key considera solo
@@ -92,7 +95,7 @@ const Svg = (props: SVGProps) => {
 	// (decisione A di R3): cambia solo quando cambia qualcosa che conta, evitando
 	// dispatch inutili da callback inline. La memoization e' manuale (durante il
 	// render, pattern React) per non ricreare la reference ad ogni render.
-	const rawGlobalConfig = computeGlobalConfig(normalizedChildren.flat());
+	const rawGlobalConfig = computeGlobalConfig(flatChildren);
 	const globalConfigKey = JSON.stringify({
 		barWidth: rawGlobalConfig.barWidth,
 		barGroupGap: rawGlobalConfig.barGroupGap,
