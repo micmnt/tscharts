@@ -19,6 +19,7 @@ import {
 import {
 	calculateTooltipPosition,
 	convertToSVGPoint,
+	getCategorySpacing,
 	getChartDimensions,
 } from "../../lib/core";
 import { computeGlobalConfig } from "../../lib/globalConfig";
@@ -155,9 +156,21 @@ const Svg = (props: SVGProps) => {
 
 	useEffect(() => {
 		initializeChart();
-		window.addEventListener("resize", initializeChart);
-		return () => window.removeEventListener("resize", initializeChart);
-	}, [initializeChart]);
+
+		// ResizeObserver sul container: reagisce anche ai cambi di layout (es.
+		// una sidebar che collassa), non solo al resize della finestra (R5).
+		// Fallback a window.resize dove ResizeObserver non e' disponibile
+		// (SSR / jsdom).
+		const container = containerRef.current;
+		if (!container || typeof ResizeObserver === "undefined") {
+			window.addEventListener("resize", initializeChart);
+			return () => window.removeEventListener("resize", initializeChart);
+		}
+
+		const observer = new ResizeObserver(() => initializeChart());
+		observer.observe(container);
+		return () => observer.disconnect();
+	}, [initializeChart, containerRef]);
 
 	// Propaga globalConfig al context quando cambia (R13): separato da
 	// INITIALIZE (che gestisce solo le dimensioni) cosi' i cambi runtime dei
@@ -235,9 +248,14 @@ const Svg = (props: SVGProps) => {
 				if (!ctxHorizontal && hoverableSerie) {
 					const serieData = hoverableSerie.data;
 					const xInterval = (chartXEnd - chartXStart) / (serieData.length || 1);
-					const xSpace = ctxGlobalConfig?.barWidth
-						? (Number(ctxGlobalConfig.barWidth) + (padding ?? 0)) / 2
-						: (padding ?? 0);
+					// Stessa fonte di verita' della centratura label (axis.tsx): per
+					// i GroupBar l'aggancio dell'hover tiene conto della larghezza
+					// dell'intero gruppo, non di una singola barra (R5).
+					const xSpace = getCategorySpacing(
+						ctxElements ?? [],
+						ctxGlobalConfig,
+						padding ?? 0,
+					);
 					const hoveredIndex = Math.round(
 						(svgPoint.x - chartXStart - xSpace) / xInterval,
 					);
@@ -267,6 +285,7 @@ const Svg = (props: SVGProps) => {
 			chartID,
 			ctxHorizontal,
 			hoverableSerie,
+			ctxElements,
 			ctxGlobalConfig,
 			padding,
 		],

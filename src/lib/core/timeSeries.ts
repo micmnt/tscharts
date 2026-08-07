@@ -1,4 +1,5 @@
 import type { ChartState, Serie, TimeSerie } from "../../types";
+import type { GlobalConfig } from "../globalConfig";
 import {
 	getFirstValorizedElementIndex,
 	isDefined,
@@ -487,6 +488,36 @@ export const getGroupBarSlotCount = (elements: Serie[]) =>
 // orizzontalmente.
 export const getGroupBarSlotIndex = (elements: Serie[], serie: TimeSerie) =>
 	getGroupBarSlotKeys(elements).indexOf(serie.stackedName ?? serie.name);
+
+// Offset orizzontale dal quale parte la prima categoria: la distanza tra
+// chartXStart e il centro della prima barra/gruppo. Fonte di verita' UNICA per
+// due usi che devono coincidere: la centratura delle label dell'asse X
+// (axis.tsx) e l'aggancio dell'hover al mouse (svg.tsx). Per i GroupBar tiene
+// conto della larghezza dell'intero gruppo (K9/K10), non di una singola barra.
+export const getCategorySpacing = (
+	elements: Serie[],
+	globalConfig: GlobalConfig | undefined,
+	padding: number,
+): number => {
+	const hasGroupBar = elements.some((el) => el.type === "group-bar");
+
+	if (hasGroupBar) {
+		const slotCount = getGroupBarSlotCount(elements);
+		const barWidth = globalConfig?.barWidth
+			? Number(globalConfig.barWidth)
+			: padding;
+		const barGroupGap = globalConfig?.barGroupGap
+			? Number(globalConfig.barGroupGap)
+			: padding / 4;
+		const groupWidth =
+			slotCount * barWidth + Math.max(0, slotCount - 1) * barGroupGap;
+		return padding / 2 + groupWidth / 2;
+	}
+
+	return globalConfig?.barWidth
+		? (Number(globalConfig.barWidth) + padding) / 2
+		: padding;
+};
 
 // Funzione che genera i dataPaths per le barre raggruppate
 
