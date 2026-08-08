@@ -89,8 +89,8 @@ const Axis = (props: AxisProps) => {
 		chartXStart: _chartXStart,
 		chartYEnd: _chartYEnd,
 		elements,
-		chartID,
 		globalConfig,
+		hasTooltip,
 	} = ctx;
 
 	const hoveredElement = interactive?.hoveredElement;
@@ -98,8 +98,6 @@ const Axis = (props: AxisProps) => {
 	const chartXEnd = _chartXEnd as number;
 	const chartXStart = _chartXStart as number;
 	const chartYEnd = _chartYEnd as number;
-
-	const tooltipElement = document?.getElementById(`cts-tooltip-${chartID}`);
 
 	const labelFontSize = labelSize ?? theme?.axis?.labelSize;
 
@@ -199,7 +197,7 @@ const Axis = (props: AxisProps) => {
 									stroke={gridColor ?? theme?.grid?.color}
 								/>
 							) : null}
-							{tooltipElement ? (
+							{hasTooltip ? (
 								<rect
 									tabIndex={globalConfig?.barClickAction ? 0 : undefined}
 									role={globalConfig?.barClickAction ? "button" : undefined}
@@ -360,7 +358,7 @@ const Axis = (props: AxisProps) => {
 								stroke={gridColor ?? theme?.grid?.color}
 							/>
 						) : null}
-						{tooltipElement ? (
+						{hasTooltip ? (
 							<rect
 								x={hoverRectX > 0 ? hoverRectX : 0}
 								y={0}

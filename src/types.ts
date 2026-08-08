@@ -60,8 +60,10 @@ export type Serie = TimeSerie | PieSerie | AngleDonutSerie | ThresholdSerie;
 export type ChartState = {
 	elements?: Serie[];
 	svgRef?: SVGSVGElement | null;
-	mousePosition?: { x: number; y: number };
-	tooltipPosition?: { x: number; y: number };
+	// NB: mousePosition e tooltipVisible NON stanno piu' qui (R17): sono uno
+	// stato locale di <Svg>, esposto ai children via ChartMouseContext, cosi' il
+	// reducer/ChartProvider non gira a ogni movimento del mouse. Vedi
+	// ChartMouseState.
 	hoveredElement?: { elementIndex: number; label: string } | null;
 	width?: number;
 	height?: number;
@@ -75,6 +77,9 @@ export type ChartState = {
 	timeSeriesMaxValue?: number;
 	chartID?: string | null;
 	globalConfig?: GlobalConfig;
+	// Se nel chart e' presente un <Tooltip>: axis.tsx lo usa per decidere se
+	// renderizzare gli hover-rect, senza piu' interrogare il DOM (R7).
+	hasTooltip?: boolean;
 };
 
 // Slice "strutturale" del ChartState: dati che cambiano raramente (elementi,
@@ -96,15 +101,23 @@ export type ChartStructuralState = Pick<
 	| "timeSeriesMaxValue"
 	| "chartID"
 	| "globalConfig"
+	| "hasTooltip"
 >;
 
-// Slice "interattiva" del ChartState: dati che cambiano ad ogni movimento del
-// mouse. Usata solo dai componenti che devono reagire all'hover (Tooltip,
-// evidenziazione di punti/etichette).
-export type ChartInteractiveState = Pick<
-	ChartState,
-	"mousePosition" | "tooltipPosition" | "hoveredElement"
->;
+// Slice "interattiva" del ChartState: l'elemento in hover, che cambia solo al
+// cambio di categoria (non a ogni pixel). Consumata da Tooltip, Line, Axis per
+// l'evidenziazione.
+export type ChartInteractiveState = Pick<ChartState, "hoveredElement">;
+
+// Stato del mouse (R17): vive LOCALE in <Svg> (useState), non nel reducer, ed
+// e' esposto ai children via ChartMouseContext. Cambia a ogni movimento del
+// mouse, quindi tenerlo fuori dal reducer evita di far girare ChartProvider e
+// i consumatori che non ne hanno bisogno (Line/Axis). Lo consuma solo il
+// Tooltip (posizione + righe guida + visibilita').
+export type ChartMouseState = {
+	mousePosition: { x: number; y: number } | null;
+	tooltipVisible: boolean;
+};
 
 export type ThemeState = {
 	padding: number;

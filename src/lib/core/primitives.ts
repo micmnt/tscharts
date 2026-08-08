@@ -215,24 +215,27 @@ export const polarToCartesian = (
 };
 
 // Funzione che calcola la posizione del tooltip nell'svg partendo dalla posizione del mouse
+// Funzione pura (R7): riceve le dimensioni del tooltip come numeri invece di
+// leggerle dal DOM. Il foreignObject del tooltip ha width/height fissi (i suoi
+// props), quindi coincidono con le clientWidth/clientHeight che prima venivano
+// misurate. Il tooltip la chiama da solo con le proprie dimensioni note.
 export const calculateTooltipPosition = (
-	tooltipElement: HTMLElement | null,
 	svgPoint: { x: number; y: number },
 	chartXStart: number,
 	chartXEnd: number,
 	chartYEnd: number,
+	tooltipWidth: number,
+	tooltipHeight: number,
 ) => {
-	if (tooltipElement === null) return undefined;
-
 	const tooltipX =
 		svgPoint.x < (chartXEnd - chartXStart) / 2
 			? svgPoint.x + 50
-			: svgPoint.x - tooltipElement.clientWidth - 50;
+			: svgPoint.x - tooltipWidth - 50;
 
 	const tooltipY =
 		svgPoint.y < (chartYEnd - 10) / 2
 			? svgPoint.y + 10
-			: svgPoint.y - 20 - tooltipElement.clientHeight / 2;
+			: svgPoint.y - 20 - tooltipHeight / 2;
 
 	return { x: tooltipX < 0 ? 0 : tooltipX, y: tooltipY };
 };

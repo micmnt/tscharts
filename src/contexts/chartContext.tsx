@@ -14,6 +14,7 @@ import {
 import defaultTheme from "../lib/defaultTheme";
 import type {
 	ChartInteractiveState,
+	ChartMouseState,
 	ChartState,
 	ChartStructuralState,
 	ThemeState,
@@ -26,16 +27,18 @@ type ChartProviderProps = {
 };
 
 export const ChartThemeContext = createContext<ThemeState | null>(null);
-// Due context separati al posto di un unico ChartContext: i componenti che
-// consumano solo ChartStructuralContext non si ri-renderizzano quando cambia
-// solo lo stato interattivo (mousePosition/tooltipPosition/hoveredElement),
-// che oggi cambia ad ogni mousemove. Il dispatch resta condiviso: e' gia'
-// stabile per riferimento (garanzia di useReducer), non ha mai causato
-// re-render di suo, quindi non serve splittarlo.
+// Context separati per non ri-renderizzare chi non serve:
+// - ChartStructuralContext: dati che cambiano di rado (dimensioni, elementi...).
+// - ChartInteractiveContext: hoveredElement, cambia solo al cambio categoria.
+// - ChartMouseContext (R17): posizione del mouse + visibilita' tooltip, cambia
+//   a ogni pixel. Fornito da <Svg> con state LOCALE (non dal reducer), cosi'
+//   ChartProvider non gira a ogni movimento; lo consuma solo il Tooltip.
+// Il dispatch resta condiviso: e' gia' stabile per riferimento (useReducer).
 export const ChartStructuralContext =
 	createContext<ChartStructuralState | null>(null);
 export const ChartInteractiveContext =
 	createContext<ChartInteractiveState | null>(null);
+export const ChartMouseContext = createContext<ChartMouseState | null>(null);
 export const ChartDispatchContext = createContext<Dispatch<{
 	type: string;
 	payload: ChartState;
@@ -85,6 +88,7 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 			timeSeriesMaxValue: chart.timeSeriesMaxValue,
 			chartID: chart.chartID,
 			globalConfig: chart.globalConfig,
+			hasTooltip: chart.hasTooltip,
 		}),
 		[
 			chart.elements,
@@ -101,16 +105,15 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 			chart.timeSeriesMaxValue,
 			chart.chartID,
 			chart.globalConfig,
+			chart.hasTooltip,
 		],
 	);
 
 	const interactive: ChartInteractiveState = useMemo(
 		() => ({
-			mousePosition: chart.mousePosition,
-			tooltipPosition: chart.tooltipPosition,
 			hoveredElement: chart.hoveredElement,
 		}),
-		[chart.mousePosition, chart.tooltipPosition, chart.hoveredElement],
+		[chart.hoveredElement],
 	);
 
 	if (!(chart && dispatch)) return null;
@@ -162,18 +165,25 @@ function chartReducer(
 		}
 		case "SET_HOVER_ELEMENT": {
 			const { hoveredElement } = action.payload ?? {};
+			// Guard (R17): il mousemove dispatcha questa azione a ogni pixel, ma la
+			// categoria in hover cambia di rado. Se e' la stessa, ritorno lo stesso
+			// stato -> useReducer fa bail-out (nessun re-render di ChartProvider ne'
+			// dei consumatori di hoveredElement, cioe' Line/Axis).
+			if (
+				chart.hoveredElement?.elementIndex === hoveredElement?.elementIndex &&
+				chart.hoveredElement?.label === hoveredElement?.label
+			) {
+				return chart;
+			}
 			return {
 				...chart,
 				hoveredElement,
 			};
 		}
-		case "SET_TOOLTIP_POSITION": {
-			const { mousePosition, tooltipPosition } = action.payload ?? {};
-			return {
-				...chart,
-				tooltipPosition,
-				mousePosition,
-			};
+		case "SET_HAS_TOOLTIP": {
+			const { hasTooltip } = action.payload ?? {};
+			if (chart.hasTooltip === hasTooltip) return chart;
+			return { ...chart, hasTooltip };
 		}
 		case "SYNC_PROPS": {
 			const { elements, negative, horizontal, flatMax, timeSeriesMaxValue } =
@@ -200,6 +210,10 @@ export function useChartsStructural() {
 
 export function useChartsInteractive() {
 	return useContext(ChartInteractiveContext);
+}
+
+export function useChartsMouse() {
+	return useContext(ChartMouseContext);
 }
 
 export function useChartsDispatch() {

@@ -4,9 +4,11 @@ import type { ReactNode } from "react";
 /* Context Imports */
 import {
 	useChartsInteractive,
+	useChartsMouse,
 	useChartsStructural,
 	useChartsTheme,
 } from "../../contexts/chartContext";
+import { calculateTooltipPosition } from "../../lib/core";
 import type { PieSerieEl, Serie, ThemeState, TimeSerieEl } from "../../types";
 
 /* Styles Imports */
@@ -226,6 +228,7 @@ const Tooltip = (props: TooltipProps) => {
 
 	const ctx = useChartsStructural();
 	const interactive = useChartsInteractive();
+	const mouse = useChartsMouse();
 
 	const theme = useChartsTheme();
 
@@ -242,11 +245,11 @@ const Tooltip = (props: TooltipProps) => {
 		chartID,
 	} = ctx;
 
-	const {
-		tooltipPosition: _tooltipPosition,
-		mousePosition: _mousePosition,
-		hoveredElement: _hoveredElement,
-	} = interactive ?? {};
+	const { hoveredElement: _hoveredElement } = interactive ?? {};
+
+	// mousePosition e visibilita' arrivano dal ChartMouseContext locale (R17),
+	// non piu' dallo slice interattivo del reducer.
+	const { mousePosition: _mousePosition, tooltipVisible } = mouse ?? {};
 
 	if (!elements) return null;
 
@@ -269,8 +272,6 @@ const Tooltip = (props: TooltipProps) => {
 		elementIndex: number;
 		label: string;
 	};
-
-	const tooltipPosition = _tooltipPosition as Position;
 
 	const mousePosition = _mousePosition as Position;
 
@@ -295,6 +296,21 @@ const Tooltip = (props: TooltipProps) => {
 		cumulatedSeriesValue !== null &&
 		Object.keys(cumulatedSeriesValue)?.length > 0;
 
+	// Altezza effettiva del foreignObject (fissa): usata sia per il render sia
+	// per calcolare la posizione, cosi' i due valori coincidono sempre.
+	const tooltipHeight = height ? height : showTotal ? 200 : 160;
+
+	// La posizione la calcola il Tooltip stesso (R7) da mousePosition e dalle
+	// proprie dimensioni note, senza misurare il DOM.
+	const tooltipPosition = calculateTooltipPosition(
+		mousePosition ?? { x: 0, y: 0 },
+		chartXStart,
+		chartXEnd,
+		chartYEnd,
+		width,
+		tooltipHeight,
+	);
+
 	return (
 		<>
 			<foreignObject
@@ -302,8 +318,11 @@ const Tooltip = (props: TooltipProps) => {
 				x={tooltipPosition.x}
 				y={tooltipPosition.y}
 				width={width}
-				height={height ? height : showTotal ? 200 : 160}
-				style={{ display: "none", pointerEvents: "none" }}
+				height={tooltipHeight}
+				style={{
+					display: tooltipVisible ? "block" : "none",
+					pointerEvents: "none",
+				}}
 			>
 				<div className="tooltipContainer">
 					<span className="tooltipTitle">{tooltipTitle}</span>

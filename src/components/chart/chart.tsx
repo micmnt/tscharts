@@ -109,8 +109,6 @@ const Chart = (props: ChartProps) => {
 			elements,
 			chartID: null,
 			svgRef: null,
-			mousePosition: { x: 0, y: 0 },
-			tooltipPosition: { x: 0, y: 0 },
 			hoveredElement: null,
 			width,
 			height,

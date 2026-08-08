@@ -7,10 +7,13 @@ import {
 	type RefObject,
 	useCallback,
 	useEffect,
+	useMemo,
 	useRef,
+	useState,
 } from "react";
 /* Context Imports */
 import {
+	ChartMouseContext,
 	useChartsDispatch,
 	useChartsStructural,
 	useChartsTheme,
@@ -18,7 +21,6 @@ import {
 import { flattenChildren } from "../../lib/children";
 /* Core Imports */
 import {
-	calculateTooltipPosition,
 	convertToSVGPoint,
 	getCategorySpacing,
 	getChartDimensions,
@@ -27,6 +29,7 @@ import { computeGlobalConfig } from "../../lib/globalConfig";
 import { isDefined, isTimeSerie } from "../../lib/utils";
 import type { Serie } from "../../types";
 import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
+import Tooltip from "../tooltip/tooltip";
 
 export type SVGProps = {
 	children: ReactNode;
@@ -83,19 +86,42 @@ const Svg = (props: SVGProps) => {
 
 	const { padding } = theme ?? {};
 
+	// Posizione del mouse e visibilita' del tooltip: state LOCALE (R17), non nel
+	// reducer -> a ogni pixel si ri-renderizza solo questo Svg (cheap, calcoli
+	// memoizzati sotto) e il Tooltip che consuma ChartMouseContext, non
+	// ChartProvider ne' Line/Axis.
+	const [mousePosition, setMousePosition] = useState<{
+		x: number;
+		y: number;
+	} | null>(null);
+	const [tooltipVisible, setTooltipVisible] = useState(false);
+
+	// Value del ChartMouseContext: reference stabile finche' mouse/visibilita'
+	// non cambiano, cosi' un re-render di Svg per altri motivi non ri-renderizza
+	// il Tooltip inutilmente.
+	const mouseValue = useMemo(
+		() => ({ mousePosition, tooltipVisible }),
+		[mousePosition, tooltipVisible],
+	);
+
 	// Appiattito (scende in Fragment e .map) prima dell'ispezione: legenda e
-	// config generati dinamicamente vengono comunque trovati (R6).
-	const flatChildren = flattenChildren(children);
+	// config generati dinamicamente vengono comunque trovati (R6). Memoizzati su
+	// children: Svg si ri-renderizza a ogni movimento del mouse (R17) ma questi
+	// calcoli non rigirano se i children non cambiano.
+	const flatChildren = useMemo(() => flattenChildren(children), [children]);
 
-	const legendHeight = getLegendHeight(flatChildren);
+	const legendHeight = useMemo(
+		() => getLegendHeight(flatChildren),
+		[flatChildren],
+	);
 
-	// globalConfig reattivo ai cambi runtime dei config (R13): ricalcolato ad
-	// ogni render (cheap) ma stabilizzato su una dep-key. La key considera solo
-	// i valori primitivi + la PRESENZA delle funzioni, non la loro identita'
-	// (decisione A di R3): cambia solo quando cambia qualcosa che conta, evitando
-	// dispatch inutili da callback inline. La memoization e' manuale (durante il
-	// render, pattern React) per non ricreare la reference ad ogni render.
-	const rawGlobalConfig = computeGlobalConfig(flatChildren);
+	// globalConfig reattivo ai cambi runtime dei config (R13): stabilizzato su
+	// una dep-key che considera solo i valori primitivi + la PRESENZA delle
+	// funzioni, non la loro identita' (decisione A di R3).
+	const rawGlobalConfig = useMemo(
+		() => computeGlobalConfig(flatChildren),
+		[flatChildren],
+	);
 	const globalConfigKey = JSON.stringify({
 		barWidth: rawGlobalConfig.barWidth,
 		barGroupGap: rawGlobalConfig.barGroupGap,
@@ -187,6 +213,18 @@ const Svg = (props: SVGProps) => {
 		}
 	}, [dispatch, globalConfig]);
 
+	// Presenza di un <Tooltip> tra i children (R7): axis.tsx la legge dal context
+	// per decidere se renderizzare gli hover-rect, senza interrogare il DOM.
+	const hasTooltip = useMemo(
+		() => flatChildren.some((child) => child.type === Tooltip),
+		[flatChildren],
+	);
+	useEffect(() => {
+		if (dispatch) {
+			dispatch({ type: "SET_HAS_TOOLTIP", payload: { hasTooltip } });
+		}
+	}, [dispatch, hasTooltip]);
+
 	const { svgRef, chartXStart, chartXEnd, chartYEnd, width, height } =
 		ctx ?? {};
 
@@ -202,22 +240,15 @@ const Svg = (props: SVGProps) => {
 	const hoverableSerie = ctxElements?.find(isTimeSerie);
 
 	const handleMouseLeave = () => {
-		const tooltipElement = document.getElementById(`cts-tooltip-${chartID}`);
-		if (tooltipElement) {
-			tooltipElement.style.display = "none";
-		}
+		// Nasconde il tooltip (R17): state locale, nessun dispatch al reducer.
+		setTooltipVisible(false);
 	};
 
 	const handleMouseMove: MouseEventHandler<SVGSVGElement> = useCallback(
 		(event: MouseEvent) => {
-			const tooltipElement = document.getElementById(`cts-tooltip-${chartID}`);
-			if (tooltipElement?.style.display === "none") {
-				tooltipElement.style.display = "block";
-			}
 			const { clientX, clientY } = event;
 			if (
 				svgRef &&
-				tooltipElement &&
 				dispatch &&
 				chartXStart !== undefined &&
 				chartXEnd !== undefined &&
@@ -228,18 +259,11 @@ const Svg = (props: SVGProps) => {
 					y: 0,
 				};
 
-				const tooltipPosition = calculateTooltipPosition(
-					tooltipElement,
-					svgPoint,
-					chartXStart,
-					chartXEnd,
-					chartYEnd,
-				);
-
-				dispatch({
-					type: "SET_TOOLTIP_POSITION",
-					payload: { mousePosition: svgPoint, tooltipPosition },
-				});
+				// Posizione del mouse: state LOCALE (R17), non nel reducer. Il
+				// Tooltip la consuma via ChartMouseContext e calcola la propria
+				// posizione. Un solo convertToSVGPoint per movimento.
+				setMousePosition(svgPoint);
+				setTooltipVisible(true);
 
 				// Calcolo l'elemento in hover dalla posizione X del mouse. Solo per
 				// grafici NON orizzontali: nei grafici horizontal e' Axis (nel suo
@@ -285,7 +309,6 @@ const Svg = (props: SVGProps) => {
 			chartXStart,
 			chartXEnd,
 			chartYEnd,
-			chartID,
 			ctxHorizontal,
 			hoverableSerie,
 			ctxElements,
@@ -310,7 +333,11 @@ const Svg = (props: SVGProps) => {
 			role="img"
 			aria-label={ariaLabel ?? getDefaultAriaLabel(ctxElements)}
 		>
-			{children}
+			{/* Lo stato del mouse e' fornito ai children via context locale (R17):
+			    quando cambia, si ri-renderizza solo chi lo consuma (il Tooltip). */}
+			<ChartMouseContext.Provider value={mouseValue}>
+				{children}
+			</ChartMouseContext.Provider>
 		</svg>
 	);
 };
