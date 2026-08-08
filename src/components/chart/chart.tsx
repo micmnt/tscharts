@@ -7,8 +7,13 @@ import { ChartProvider } from "../../contexts/chartContext";
 
 /* Core Imports */
 import { flattenChildren } from "../../lib/children";
-import { getAxisCount, getTimeSerieMaxValue } from "../../lib/core";
+import {
+	getAxisCount,
+	getSeriesMissingYAxis,
+	getTimeSerieMaxValue,
+} from "../../lib/core";
 import defaultTheme, { mergeTheme } from "../../lib/defaultTheme";
+import { warnDev } from "../../lib/utils";
 import type { Serie, ThemeState, TimeSerie } from "../../types";
 
 /* Styles Imports */
@@ -67,10 +72,24 @@ const Chart = (props: ChartProps) => {
 	// cosi' assi generati dinamicamente vengono contati correttamente (R6).
 	const flatChildren = flattenChildren(children);
 
-	// Conto il numero di assi in base ai componenti all'interno di Chart che rappresentano un asse Y
-	const yAxisCount = flatChildren.filter(
+	// Assi Y renderizzati (per conteggio e per il controllo R12 sotto).
+	const yAxisElements = flatChildren.filter(
 		(childEl) => childEl.props?.type === "yAxis",
-	)?.length;
+	);
+	const yAxisCount = yAxisElements.length;
+
+	// Avviso in dev (R12): una serie bar/line la cui chiave d'asse
+	// (axisName ?? name) non corrisponde a nessun <Axis type="yAxis"> viene
+	// disegnata su una scala isolata non mostrata da alcun asse -> grafico
+	// fuorviante (era il caso della line "obiettivo" a 225 invece di 150).
+	const yAxisNames = yAxisElements
+		.map((childEl) => childEl.props?.name)
+		.filter((name): name is string => Boolean(name));
+	for (const serie of getSeriesMissingYAxis(elements, yAxisNames)) {
+		warnDev(
+			`La serie "${serie.name}" usa l'asse "${serie.axisName ?? serie.name}" che non corrisponde a nessun <Axis type="yAxis" />: verra' disegnata su una scala isolata non mostrata da alcun asse. Aggiungi axisName con il nome di un asse Y esistente.`,
+		);
+	}
 
 	// Deduco l'orientamento del grafico dai componenti Bar/Line che disegnano
 	// dati (non da Axis, la cui prop `horizontal` e' solo di rendering e non

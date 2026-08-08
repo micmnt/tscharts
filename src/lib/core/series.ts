@@ -6,6 +6,22 @@ import type {
 } from "../../types";
 import { calculateFlatValue, isThresholdSerie, isTimeSerie } from "../utils";
 
+// Serie time-serie (bar/line/bar-stacked/group-bar) la cui chiave d'asse
+// (axisName ?? name) non corrisponde ad alcun asse Y renderizzato: verrebbero
+// disegnate su una scala isolata, basata sul proprio max, che nessun asse
+// mostra -> grafico fuorviante (R12). Se non ci sono assi Y non si segnala
+// nulla: un grafico volutamente senza assi non e' un errore.
+export const getSeriesMissingYAxis = (
+	elements: Serie[],
+	yAxisNames: string[],
+): TimeSerie[] => {
+	if (yAxisNames.length === 0) return [];
+	return elements.filter(
+		(el): el is TimeSerie =>
+			isTimeSerie(el) && !yAxisNames.includes(el.axisName ?? el.name),
+	);
+};
+
 // Funzione che calcola il valore massimo di una serie
 export const getTimeSerieMaxValue = (serie: TimeSerieEl[] = []) => {
 	if (serie?.length > 0) {
