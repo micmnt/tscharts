@@ -13,7 +13,7 @@ npm install tscharts
 Il pacchetto include un foglio di stile separato, necessario per la Legend e il Tooltip: va importato una volta, ad esempio nell'entry point dell'app.
 
 ```ts
-import "tscharts/dist/style.css";
+import "tscharts/style.css";
 ```
 
 ## Quick start

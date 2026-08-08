@@ -1,12 +1,21 @@
 {
 	"name": "tscharts",
 	"version": "0.17.6",
-	"description": "",
+	"description": "Libreria di componenti React per grafici SVG, senza dipendenze runtime",
 	"type": "module",
-	"sideEffects": false,
+	"sideEffects": [
+		"**/*.css"
+	],
 	"main": "dist/index.es.js",
 	"module": "dist/index.es.js",
 	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.es.js"
+		},
+		"./style.css": "./dist/style.css"
+	},
 	"files": [
 		"/dist"
 	],
@@ -26,8 +35,16 @@
 			"npm run lint"
 		]
 	},
-	"keywords": [],
-	"author": "",
+	"keywords": [
+		"react",
+		"charts",
+		"chart",
+		"svg",
+		"graph",
+		"data-visualization",
+		"typescript"
+	],
+	"author": "Michele Landolfi",
 	"license": "ISC",
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.13",
