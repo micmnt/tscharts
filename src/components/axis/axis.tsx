@@ -311,7 +311,7 @@ const Axis = (props: AxisProps) => {
 					x={areaX}
 					y={areaY}
 					width={areaWidth}
-					height={areaHeight}
+					height={areaHeight > 0 ? areaHeight : 0}
 					fill={selectedAreaColor ?? "red"}
 					opacity={selectedAreaOpacity ?? 0.2}
 				/>
@@ -363,7 +363,7 @@ const Axis = (props: AxisProps) => {
 								x={hoverRectX > 0 ? hoverRectX : 0}
 								y={0}
 								width={hoverRectWidth > 0 ? hoverRectWidth : 1}
-								height={height}
+								height={height > 0 ? height : 0}
 								fill={fill}
 								style={{ pointerEvents: "none" }}
 							/>

@@ -160,6 +160,12 @@ const Svg = (props: SVGProps) => {
 				rightAxisCount as number,
 				legendHeight,
 			);
+			// Con un container non ancora misurato (clientHeight 0) chartYEnd
+			// sarebbe negativo (R18): non propago dimensioni invalide al context,
+			// altrimenti gli elementi verrebbero disegnati con height negativa. Il
+			// ResizeObserver richiama initializeChart quando il container ha
+			// dimensioni reali.
+			if (chartYEnd <= 0 || chartXEnd <= 0) return;
 			dispatch({
 				type: "INITIALIZE",
 				payload: {
@@ -317,6 +323,12 @@ const Svg = (props: SVGProps) => {
 		],
 	);
 
+	// NB: NON si puo' gatare su chartYEnd > 0 qui: il container prende la sua
+	// altezza dall'<svg> che sta dentro, quindi se Svg ritornasse null il
+	// container collasserebbe a clientHeight 0 e chartYEnd resterebbe negativo
+	// per sempre (deadlock). Le dimensioni negative sono evitate alla radice:
+	// initializeChart non propaga chartYEnd <= 0 al context (R18), quindi qui
+	// chartYEnd e' 0 (stato iniziale) finche' il container non e' misurato.
 	if (!height) return null;
 
 	const viewBox = `0 0 ${width} ${height + legendHeight}`;

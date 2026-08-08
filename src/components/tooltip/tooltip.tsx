@@ -273,7 +273,9 @@ const Tooltip = (props: TooltipProps) => {
 		label: string;
 	};
 
-	const mousePosition = _mousePosition as Position;
+	// Puo' essere null prima del primo movimento del mouse (R17): niente cast
+	// che lo nasconda, cosi' il type-checker obbliga a guardarlo dove serve.
+	const mousePosition: Position | null = _mousePosition ?? null;
 
 	const chartYEnd = _chartYEnd as number;
 	const chartXEnd = _chartXEnd as number;
@@ -352,6 +354,7 @@ const Tooltip = (props: TooltipProps) => {
 				</div>
 			</foreignObject>
 			{showGrid &&
+			mousePosition &&
 			mousePosition.x > chartXStart &&
 			mousePosition.x < chartXEnd ? (
 				<path
@@ -362,7 +365,10 @@ const Tooltip = (props: TooltipProps) => {
 					style={{ pointerEvents: "none" }}
 				/>
 			) : null}
-			{showGrid && mousePosition.y > 0 && mousePosition.y < chartYEnd ? (
+			{showGrid &&
+			mousePosition &&
+			mousePosition.y > 0 &&
+			mousePosition.y < chartYEnd ? (
 				<path
 					d={`M ${chartXStart} ${mousePosition.y} H ${chartXEnd}`}
 					strokeWidth={theme?.tooltip?.grid?.size}
