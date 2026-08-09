@@ -31,20 +31,18 @@ const HorizontalExample: FC = () => {
 			}}
 		>
 			<Chart width={500} height={300} elements={elements}>
-				<Bar
-					name="richieste"
-					horizontal
-					config={{
-						barClickAction: (value: unknown) =>
-							console.log("[F2 proof] barClickAction", value),
-					}}
-				/>
+				<Bar name="richieste" horizontal />
 				<Axis
 					type="xAxis"
 					horizontal
 					dataPoints={dataPoints}
 					showLine
 					showLabels
+					// Click sulla label di proprieta' dell'asse (M2): riceve (label,
+					// index), non piu' via config.barClickAction su Bar.
+					onLabelClick={(label, index) =>
+						console.log("[onLabelClick]", label, index)
+					}
 				/>
 				<Tooltip />
 			</Chart>

@@ -42,6 +42,14 @@ export type AxisProps = {
 	selectedArea?: string[];
 	selectedAreaColor?: string;
 	selectedAreaOpacity?: number;
+	// Evidenzia una singola categoria dell'asse (era config.selectedValue/Color
+	// su Bar, ora di proprieta' dell'asse — M2). Le vecchie chiavi restano
+	// accettate ma deprecate (fallback via globalConfig).
+	selectedValue?: string;
+	selectedColor?: string;
+	// Click su una label dell'asse (era il lato-asse di config.barClickAction).
+	// Ha precedenza sul barClickAction deprecato del canale globalConfig.
+	onLabelClick?: (label: string, index: number) => void;
 };
 
 const Axis = (props: AxisProps) => {
@@ -67,6 +75,9 @@ const Axis = (props: AxisProps) => {
 		selectedArea,
 		selectedAreaColor,
 		selectedAreaOpacity,
+		selectedValue,
+		selectedColor,
+		onLabelClick,
 		showLabels = true,
 	} = props;
 
@@ -99,6 +110,30 @@ const Axis = (props: AxisProps) => {
 
 	const labelTextColor = labelColor ?? theme.axis?.labelColor;
 
+	// Selezione di proprieta' dell'asse (M2): la prop vince, il canale
+	// globalConfig (config.selectedValue/Color su Bar) resta fallback deprecato.
+	const selectionValue = selectedValue ?? globalConfig?.selectedValue;
+	const selectionColor = selectedColor ?? globalConfig?.selectedColor;
+
+	// Una label e' interattiva se c'e' onLabelClick (API nuova, ha precedenza)
+	// oppure il barClickAction del canale globalConfig (deprecato, dual-use ->
+	// deprecation rimandata a M4). Chiama la prop se presente, altrimenti il
+	// callback deprecato con il dato della serie (comportamento invariato).
+	const hasLabelClick =
+		Boolean(onLabelClick) || isFunction(globalConfig?.barClickAction);
+
+	const triggerLabelClick = (
+		label: string,
+		index: number,
+		serieEl: unknown,
+	) => {
+		if (onLabelClick) {
+			onLabelClick(label, index);
+		} else if (isFunction(globalConfig?.barClickAction)) {
+			globalConfig.barClickAction(serieEl);
+		}
+	};
+
 	// Creazione dell'asse X
 	if (type === "xAxis") {
 		// Nuova gestione per grafici orizzontali
@@ -107,9 +142,6 @@ const Axis = (props: AxisProps) => {
 			const serieData = serie.data as TimeSerieEl[];
 
 			const yAxisInterval = (chartYEnd - padding) / (serieData?.length || 1);
-
-			const selectionColor = globalConfig?.selectedColor as string;
-			const selectionValue = globalConfig?.selectedValue as string;
 
 			// Una serie "line" disegna un punto singolo (nessuna altezza da
 			// centrare); solo le serie bar-like occupano l'intera riga in
@@ -151,21 +183,14 @@ const Axis = (props: AxisProps) => {
 				const labelFontWeight = label.value === selectionValue ? 700 : 400;
 
 				const fill: string =
-					hoveredElement?.elementIndex === labelIndex &&
-					globalConfig?.barClickAction
+					hoveredElement?.elementIndex === labelIndex && hasLabelClick
 						? "rgb(148,163,184,0.1)"
 						: selectionFill
 							? selectionFill
 							: "transparent";
 
 				const handleLabelClick = () => {
-					if (
-						globalConfig?.barClickAction &&
-						isFunction(globalConfig.barClickAction)
-					) {
-						const serieEl = serieData[labelIndex];
-						globalConfig.barClickAction(serieEl);
-					}
+					triggerLabelClick(label.value, labelIndex, serieData[labelIndex]);
 				};
 
 				const handleLabelHover = () => {
@@ -195,11 +220,9 @@ const Axis = (props: AxisProps) => {
 							) : null}
 							{hasTooltip ? (
 								<rect
-									tabIndex={globalConfig?.barClickAction ? 0 : undefined}
-									role={globalConfig?.barClickAction ? "button" : undefined}
-									aria-label={
-										globalConfig?.barClickAction ? label.value : undefined
-									}
+									tabIndex={hasLabelClick ? 0 : undefined}
+									role={hasLabelClick ? "button" : undefined}
+									aria-label={hasLabelClick ? label.value : undefined}
 									onClick={handleLabelClick}
 									onKeyDown={(event) => {
 										if (event.key === "Enter" || event.key === " ") {
@@ -272,9 +295,6 @@ const Axis = (props: AxisProps) => {
 		// dell'intero gruppo (K9/K10), non di una singola barra.
 		const xSpacing = getCategorySpacing(elements ?? [], globalConfig, padding);
 
-		const selectionColor = globalConfig?.selectedColor;
-		const selectionValue = globalConfig?.selectedValue;
-
 		const labels = dataPoints.map((label, labelIndex) => {
 			return {
 				value: label,
@@ -333,8 +353,7 @@ const Axis = (props: AxisProps) => {
 			const labelFontWeight = label.value === selectionValue ? 700 : 400;
 
 			const fill: string =
-				hoveredElement?.elementIndex === labelIndex &&
-				globalConfig?.barClickAction
+				hoveredElement?.elementIndex === labelIndex && hasLabelClick
 					? "rgb(148,163,184,0.1)"
 					: selectionFill
 						? selectionFill

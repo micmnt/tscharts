@@ -47,6 +47,18 @@ const LAYOUT_KEYS = [
 	"barOffset",
 ] as const satisfies readonly (keyof ChartLayoutConfig)[];
 
+// Chiavi del config della serie promosse a props di un altro componente (v1.0):
+// restano accettate qui per retrocompatibilita' ma avvisano (rimozione in 2.0).
+// M1 -> props di <Chart>; M2 -> props di <Axis>. barClickAction NON e' qui: e'
+// dual-use (click barra + click label), la sua deprecation e' rimandata a M4.
+const DEPRECATED_CONFIG_KEYS: Partial<Record<keyof GlobalConfig, string>> = {
+	barWidth: "prop di <Chart> (es. <Chart barWidth={...} />)",
+	barGroupGap: "prop di <Chart> (es. <Chart barGroupGap={...} />)",
+	barOffset: "prop di <Chart> (es. <Chart barOffset={...} />)",
+	selectedValue: "prop di <Axis> (es. <Axis selectedValue={...} />)",
+	selectedColor: "prop di <Axis> (es. <Axis selectedColor={...} />)",
+};
+
 // Estrae dai config dei children le 6 chiavi del canale trasversale, fondendole
 // in un unico GlobalConfig. Avvisa in dev (warnDev) se due componenti impostano
 // la stessa chiave primitiva con valori diversi: prima vinceva silenziosamente
@@ -69,11 +81,12 @@ export const computeGlobalConfig = (
 			const value = config[key];
 			if (value === undefined) continue;
 
-			// M1: le chiavi di layout su Bar/GroupBar sono deprecate (promosse a
-			// props di <Chart>). Restano funzionanti (estratte qui) ma avvisano.
-			if ((LAYOUT_KEYS as readonly string[]).includes(key)) {
+			// Chiave promossa a prop di un altro componente (M1/M2): resta
+			// funzionante (estratta qui) ma avvisa.
+			const deprecationTarget = DEPRECATED_CONFIG_KEYS[key];
+			if (deprecationTarget) {
 				warnDev(
-					`config.${key} su Bar/GroupBar e' deprecato: passalo come prop di <Chart> (es. <Chart ${key}={...} />). Il supporto sul config verra' rimosso nella 2.0.`,
+					`config.${key} su Bar/GroupBar e' deprecato: passalo come ${deprecationTarget}. Il supporto sul config verra' rimosso nella 2.0.`,
 				);
 			}
 

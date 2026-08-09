@@ -58,11 +58,15 @@ describe("computeGlobalConfig", () => {
 		expect(computeGlobalConfig([{} as JSX.Element])).toEqual({});
 	});
 
+	// tutte le chiavi primitive sono ormai deprecate (M1/M2): il config emette
+	// anche il warn di deprecation, quindi verifico il messaggio di COLLISIONE
+	// per contenuto ("sovrascritto") invece di contare le chiamate.
+	const collisionWarns = (warn: ReturnType<typeof vi.spyOn>) =>
+		warn.mock.calls.filter((c) => String(c[0]).includes("sovrascritto"));
+
 	it("avvisa (warnDev) quando due componenti impostano la stessa chiave PRIMITIVA con valori diversi", () => {
 		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-		// uso selectedColor (primitiva NON di layout) per isolare la collisione dal
-		// warn di deprecation delle chiavi di layout (M1).
 		const result = computeGlobalConfig([
 			child({ selectedColor: "#f00" }),
 			child({ selectedColor: "#00f" }),
@@ -70,12 +74,13 @@ describe("computeGlobalConfig", () => {
 
 		// vince l'ultimo (comportamento invariato)...
 		expect(result.selectedColor).toBe("#00f");
-		// ...ma ora c'e' un avviso in dev
-		expect(warn).toHaveBeenCalledTimes(1);
-		expect(warn.mock.calls[0]?.[0]).toContain("selectedColor");
+		// ...ed esiste esattamente un avviso di collisione, che cita la chiave
+		const collisions = collisionWarns(warn);
+		expect(collisions).toHaveLength(1);
+		expect(collisions[0]?.[0]).toContain("selectedColor");
 	});
 
-	it("NON avvisa se la stessa chiave e' impostata con lo stesso valore", () => {
+	it("NON avvisa di COLLISIONE se la stessa chiave e' impostata con lo stesso valore", () => {
 		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
 		computeGlobalConfig([
@@ -83,7 +88,7 @@ describe("computeGlobalConfig", () => {
 			child({ selectedColor: "#f00" }),
 		]);
 
-		expect(warn).not.toHaveBeenCalled();
+		expect(collisionWarns(warn)).toHaveLength(0);
 	});
 
 	// --- M1: layout config promossa a props di <Chart> ---
@@ -131,6 +136,34 @@ describe("computeGlobalConfig", () => {
 		});
 
 		expect(result).toEqual({});
+	});
+
+	// --- M2: selezione promossa a props di <Axis> ---
+
+	it("avvisa (deprecation -> <Axis>) per selectedValue/selectedColor dal config", () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+		const result = computeGlobalConfig([
+			child({ selectedValue: "14/03", selectedColor: "#f00" }),
+		]);
+
+		// restano funzionanti (fallback deprecato)...
+		expect(result).toEqual({ selectedValue: "14/03", selectedColor: "#f00" });
+		// ...e ognuna avvisa indicando <Axis>
+		const deprecations = warn.mock.calls.filter((c) =>
+			String(c[0]).includes("<Axis>"),
+		);
+		expect(deprecations).toHaveLength(2);
+	});
+
+	it("NON avvisa (deprecation) per barClickAction: dual-use, rimandato a M4", () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+		computeGlobalConfig([child({ barClickAction: () => {} })]);
+
+		expect(
+			warn.mock.calls.some((c) => String(c[0]).includes("deprecato")),
+		).toBe(false);
 	});
 
 	it("NON avvisa sulle collisioni di barClickAction (le funzioni collidono per reference, non per intento)", () => {
