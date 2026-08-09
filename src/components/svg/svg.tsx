@@ -219,12 +219,15 @@ const Svg = (props: SVGProps) => {
 		}
 	}, [dispatch, globalConfig]);
 
-	// Presenza di un <Tooltip> tra i children (R7): axis.tsx la legge dal context
-	// per decidere se renderizzare gli hover-rect, senza interrogare il DOM.
-	const hasTooltip = useMemo(
-		() => flatChildren.some((child) => child.type === Tooltip),
+	// Il <Tooltip> tra i children (R7): axis.tsx usa la sua presenza per gli
+	// hover-rect; qui ne leggiamo anche la prop `intersect` (R15) per decidere
+	// come agganciare l'hover.
+	const tooltipChild = useMemo(
+		() => flatChildren.find((child) => child.type === Tooltip),
 		[flatChildren],
 	);
+	const hasTooltip = !!tooltipChild;
+	const intersect = tooltipChild?.props?.intersect === true;
 	useEffect(() => {
 		if (dispatch) {
 			dispatch({ type: "SET_HAS_TOOLTIP", payload: { hasTooltip } });
@@ -269,7 +272,6 @@ const Svg = (props: SVGProps) => {
 				// Tooltip la consuma via ChartMouseContext e calcola la propria
 				// posizione. Un solo convertToSVGPoint per movimento.
 				setMousePosition(svgPoint);
-				setTooltipVisible(true);
 
 				// Calcolo l'elemento in hover dalla posizione X del mouse. Solo per
 				// grafici NON orizzontali: nei grafici horizontal e' Axis (nel suo
@@ -292,7 +294,23 @@ const Svg = (props: SVGProps) => {
 					const hoveredIndex = Math.round(
 						(svgPoint.x - chartXStart - xSpace) / xInterval,
 					);
-					if (hoveredIndex >= 0 && hoveredIndex < serieData.length) {
+					// intersect=true (R15): l'hover si attiva solo se il mouse e'
+					// dentro i bounds dell'elemento. La mezza-larghezza dell'elemento
+					// (barra o gruppo) e' xSpace - padding/2 (deriva da
+					// getCategorySpacing). Con intersect=false e' sempre attivo
+					// (prossimita', comportamento storico).
+					const center = chartXStart + xSpace + hoveredIndex * xInterval;
+					const halfWidth = xSpace - (padding ?? 0) / 2;
+					const isOverElement =
+						!intersect || Math.abs(svgPoint.x - center) <= halfWidth;
+
+					setTooltipVisible(isOverElement);
+
+					if (
+						isOverElement &&
+						hoveredIndex >= 0 &&
+						hoveredIndex < serieData.length
+					) {
 						const el = serieData[hoveredIndex];
 						if (el) {
 							dispatch({
@@ -306,6 +324,10 @@ const Svg = (props: SVGProps) => {
 							});
 						}
 					}
+				} else {
+					// Grafici horizontal / senza serie hoverabile: intersect non si
+					// applica, il tooltip resta visibile durante l'hover come prima.
+					setTooltipVisible(true);
 				}
 			}
 		},
@@ -320,6 +342,7 @@ const Svg = (props: SVGProps) => {
 			ctxElements,
 			ctxGlobalConfig,
 			padding,
+			intersect,
 		],
 	);
 

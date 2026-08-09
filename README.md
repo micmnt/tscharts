@@ -247,6 +247,7 @@ Linea di soglia orizzontale o verticale sovrapposta al grafico.
 | `title` | `(label: string) => string` | — | Formatta il titolo del tooltip (di default l'etichetta del punto in hover) |
 | `reverseOrder` | `boolean` | `false` | Inverte l'ordine delle serie elencate nel tooltip |
 | `showGrid` | `boolean` | `false` | Mostra le linee guida (verticale/orizzontale) sul punto in hover |
+| `intersect` | `boolean` | `false` | `false`: il tooltip segue la colonna più vicina (prossimità). `true`: compare solo quando il mouse è sopra la barra/gruppo. Non si applica ai grafici orizzontali |
 | `hideSeries` | `string[]` | `[]` | Nomi delle serie da escludere dal tooltip |
 | `width` / `height` | `number` | `150` / auto (`160`–`200`) | Dimensioni del riquadro tooltip |
 | `footer` | `(series: Serie[], hoveredElementIndex: number) => ReactNode` | — | Contenuto custom in fondo al tooltip, al posto del totale calcolato |

@@ -32,6 +32,10 @@ export type TooltipProps = {
 	title?: (val: string) => string;
 	reverseOrder?: boolean;
 	showGrid?: boolean;
+	// false (default): il tooltip segue la colonna piu' vicina (prossimita').
+	// true: appare solo quando il mouse e' effettivamente sopra la barra/gruppo.
+	// Non si applica ai grafici horizontal (l'hover li' e' gestito da Axis).
+	intersect?: boolean;
 	hideSeries?: string[];
 	footer?: (series: Serie[], hoveredElementIndex: number) => ReactNode;
 	cumulatedSeriesValue?: {
@@ -344,6 +348,7 @@ const Tooltip = (props: TooltipProps) => {
 				</div>
 			</foreignObject>
 			{showGrid &&
+			tooltipVisible &&
 			mousePosition &&
 			mousePosition.x > chartXStart &&
 			mousePosition.x < chartXEnd ? (
@@ -356,6 +361,7 @@ const Tooltip = (props: TooltipProps) => {
 				/>
 			) : null}
 			{showGrid &&
+			tooltipVisible &&
 			mousePosition &&
 			mousePosition.y > 0 &&
 			mousePosition.y < chartYEnd ? (
