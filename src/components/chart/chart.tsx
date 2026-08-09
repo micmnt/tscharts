@@ -34,6 +34,13 @@ export type ChartProps = {
 	name?: string;
 	flatMax?: boolean;
 	ariaLabel?: string;
+	// Config di layout delle barre, condivisa da tutte le serie (M1). Vive qui,
+	// non sul config della singola Bar/GroupBar: e' il grafico a decidere la
+	// larghezza/spaziatura/offset comune. Le stesse chiavi sul config della serie
+	// restano accettate ma deprecate (warnDev), con precedenza a queste props.
+	barWidth?: number;
+	barGroupGap?: number;
+	barOffset?: number;
 	// Override parziale del tema: viene fuso (deep-merge per-chiave) sopra il
 	// defaultTheme, quindi si puo' specificare solo cio' che cambia (es. solo
 	// `seriesColors` o solo `axis.color`) senza perdere gli altri valori.
@@ -50,8 +57,19 @@ const Chart = (props: ChartProps) => {
 		name = "chart",
 		flatMax = true,
 		ariaLabel,
+		barWidth,
+		barGroupGap,
+		barOffset,
 		theme,
 	} = props;
+
+	// Config di layout condivisa, inoltrata a Svg -> computeGlobalConfig (M1).
+	// Memoizzata per stabilizzare la reference (evita di rieseguire il calcolo
+	// del globalConfig quando nessuna di queste props cambia).
+	const layoutConfig = useMemo(
+		() => ({ barWidth, barGroupGap, barOffset }),
+		[barWidth, barGroupGap, barOffset],
+	);
 
 	// Il tema effettivo passato al provider: default + eventuale override
 	// parziale del consumer. Memoizzato per non ricreare la reference (e quindi
@@ -161,6 +179,7 @@ const Chart = (props: ChartProps) => {
 					rightAxisCount={rightAxisCount}
 					chartID={chartID}
 					ariaLabel={ariaLabel}
+					layoutConfig={layoutConfig}
 				>
 					{children}
 				</Svg>

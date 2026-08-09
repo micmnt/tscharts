@@ -37,9 +37,9 @@ const IntersectExample: FC<IntersectExampleProps> = ({ intersect = false }) => {
 				height: "100%",
 			}}
 		>
-			<Chart width={480} height={400} elements={elements}>
+			<Chart width={480} height={400} elements={elements} barWidth={22}>
 				<Axis type="yAxis" name="vendite" showLine showName />
-				<Bar name="vendite" config={{ barWidth: 22 }} />
+				<Bar name="vendite" />
 				<Axis
 					type="xAxis"
 					name="giorno"

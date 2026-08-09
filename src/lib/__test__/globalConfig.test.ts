@@ -13,6 +13,8 @@ afterEach(() => {
 
 describe("computeGlobalConfig", () => {
 	it("estrae solo le 6 chiavi del canale trasversale, ignorando le altre", () => {
+		// le chiavi di layout sul config sono deprecate (M1): silenzio il warnDev.
+		vi.spyOn(console, "warn").mockImplementation(() => {});
 		const fn = () => {};
 		const result = computeGlobalConfig([
 			child({
@@ -40,6 +42,7 @@ describe("computeGlobalConfig", () => {
 	});
 
 	it("fonde le chiavi provenienti da piu' children", () => {
+		vi.spyOn(console, "warn").mockImplementation(() => {});
 		const result = computeGlobalConfig([
 			child({ barWidth: 12 }),
 			child({ barGroupGap: 4 }),
@@ -58,24 +61,76 @@ describe("computeGlobalConfig", () => {
 	it("avvisa (warnDev) quando due componenti impostano la stessa chiave PRIMITIVA con valori diversi", () => {
 		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
+		// uso selectedColor (primitiva NON di layout) per isolare la collisione dal
+		// warn di deprecation delle chiavi di layout (M1).
 		const result = computeGlobalConfig([
-			child({ barWidth: 10 }),
-			child({ barWidth: 30 }),
+			child({ selectedColor: "#f00" }),
+			child({ selectedColor: "#00f" }),
 		]);
 
 		// vince l'ultimo (comportamento invariato)...
-		expect(result.barWidth).toBe(30);
+		expect(result.selectedColor).toBe("#00f");
 		// ...ma ora c'e' un avviso in dev
 		expect(warn).toHaveBeenCalledTimes(1);
-		expect(warn.mock.calls[0]?.[0]).toContain("barWidth");
+		expect(warn.mock.calls[0]?.[0]).toContain("selectedColor");
 	});
 
 	it("NON avvisa se la stessa chiave e' impostata con lo stesso valore", () => {
 		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-		computeGlobalConfig([child({ barWidth: 20 }), child({ barWidth: 20 })]);
+		computeGlobalConfig([
+			child({ selectedColor: "#f00" }),
+			child({ selectedColor: "#f00" }),
+		]);
 
 		expect(warn).not.toHaveBeenCalled();
+	});
+
+	// --- M1: layout config promossa a props di <Chart> ---
+
+	it("avvisa (deprecation) quando una chiave di layout arriva dal config della serie", () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+		const result = computeGlobalConfig([child({ barWidth: 20 })]);
+
+		// resta funzionante (retrocompat)...
+		expect(result.barWidth).toBe(20);
+		// ...ma avvisa che e' deprecato
+		expect(warn).toHaveBeenCalledTimes(1);
+		expect(warn.mock.calls[0]?.[0]).toContain("deprecato");
+	});
+
+	it("le props di layout di <Chart> hanno precedenza sul config deprecato dei children", () => {
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+
+		const result = computeGlobalConfig([child({ barWidth: 20 })], {
+			barWidth: 40,
+		});
+
+		expect(result.barWidth).toBe(40);
+	});
+
+	it("layoutConfig da solo (API nuova) non genera warn di deprecation", () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+		const result = computeGlobalConfig([child(undefined)], {
+			barWidth: 40,
+			barGroupGap: 8,
+			barOffset: 2,
+		});
+
+		expect(result).toEqual({ barWidth: 40, barGroupGap: 8, barOffset: 2 });
+		expect(warn).not.toHaveBeenCalled();
+	});
+
+	it("layoutConfig ignora le chiavi undefined (non sovrascrive con undefined)", () => {
+		const result = computeGlobalConfig([], {
+			barWidth: undefined,
+			barGroupGap: undefined,
+			barOffset: undefined,
+		});
+
+		expect(result).toEqual({});
 	});
 
 	it("NON avvisa sulle collisioni di barClickAction (le funzioni collidono per reference, non per intento)", () => {

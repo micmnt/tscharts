@@ -22,9 +22,9 @@ const elements = [
 const dataPoints = ["13/03", "14/03", "15/03", "16/03"];
 
 // `barWidth` e' un control: cambiandolo a runtime le barre si allargano E le
-// label dell'asse X restano centrate sotto le barre. La larghezza delle barre
-// e' un valore del "canale trasversale" (globalConfig) letto anche dall'asse,
-// e viene propagato in modo reattivo (R13) — non solo al mount.
+// label dell'asse X restano centrate sotto le barre. Dalla v1.0 la larghezza
+// delle barre e' una prop di <Chart> (M1) — config di layout condivisa, letta
+// anche dall'asse — propagata in modo reattivo (R13), non solo al mount.
 type DynamicBarWidthProps = {
 	barWidth?: number;
 };
@@ -41,9 +41,9 @@ const DynamicBarWidthExample: FC<DynamicBarWidthProps> = ({
 				height: "100%",
 			}}
 		>
-			<Chart width={480} height={400} elements={elements}>
+			<Chart width={480} height={400} elements={elements} barWidth={barWidth}>
 				<Axis type="yAxis" name="vendite" showLine showName />
-				<Bar name="vendite" config={{ barWidth }} />
+				<Bar name="vendite" />
 				<Axis
 					type="xAxis"
 					name="giorno"

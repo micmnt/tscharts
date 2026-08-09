@@ -85,10 +85,11 @@ const dataPoints = [
 	"26/03",
 ];
 
-const Example: FC<BarProps> = ({
+const Example: FC<BarProps & { barWidth?: number }> = ({
 	name = "tempi migliori",
 	stacked = false,
 	showLabels = false,
+	barWidth,
 	config = {},
 }) => {
 	return (
@@ -100,7 +101,7 @@ const Example: FC<BarProps> = ({
 				height: "100%",
 			}}
 		>
-			<Chart width={400} height={400} elements={[elements]}>
+			<Chart width={400} height={400} elements={[elements]} barWidth={barWidth}>
 				<Axis type="yAxis" name="tempi migliori" showLine showName />
 				<Bar
 					name={name}

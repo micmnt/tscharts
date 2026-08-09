@@ -87,13 +87,12 @@ const DragExample: FC<DragExampleProps> = ({
 					? `dragging index ${dragInfo.index}: ${dragInfo.value.toFixed(dragValueDecimals)} ${serie.uom}`
 					: "Drag a bar to update its value in real time"}
 			</div>
-			<Chart width={460} height={360} elements={elements}>
+			<Chart width={460} height={360} elements={elements} barWidth={barWidth}>
 				<Axis type="yAxis" name="tempi migliori" showLine showName />
 				<Bar
 					name={name}
 					showLabels={showLabels}
 					config={{
-						barWidth,
 						dragValueDecimals,
 						barDragAction: handleDrag,
 					}}

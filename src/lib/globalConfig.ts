@@ -32,11 +32,33 @@ const GLOBAL_CONFIG_KEYS = [
 	"barClickAction",
 ] as const satisfies readonly (keyof GlobalConfig)[];
 
+// Config di layout condivisa da tutte le serie: dalla v1.0 vive come props di
+// <Chart> (M1), non piu' sul config della singola serie. E' il sottoinsieme del
+// canale trasversale che non ha senso per-serie (una barra sola non decide la
+// larghezza di tutte le barre del grafico).
+export type ChartLayoutConfig = Pick<
+	GlobalConfig,
+	"barWidth" | "barGroupGap" | "barOffset"
+>;
+
+const LAYOUT_KEYS = [
+	"barWidth",
+	"barGroupGap",
+	"barOffset",
+] as const satisfies readonly (keyof ChartLayoutConfig)[];
+
 // Estrae dai config dei children le 6 chiavi del canale trasversale, fondendole
 // in un unico GlobalConfig. Avvisa in dev (warnDev) se due componenti impostano
 // la stessa chiave primitiva con valori diversi: prima vinceva silenziosamente
 // l'ultimo.
-export const computeGlobalConfig = (children: JSX.Element[]): GlobalConfig => {
+//
+// `layoutConfig` sono le props di layout di <Chart> (M1): hanno la PRECEDENZA
+// sul config dei children, che resta accettato per retrocompatibilita' ma e'
+// deprecato (warnDev) e verra' rimosso nella 2.0.
+export const computeGlobalConfig = (
+	children: JSX.Element[],
+	layoutConfig?: ChartLayoutConfig,
+): GlobalConfig => {
 	const result: GlobalConfig = {};
 
 	for (const child of children) {
@@ -46,6 +68,14 @@ export const computeGlobalConfig = (children: JSX.Element[]): GlobalConfig => {
 		for (const key of GLOBAL_CONFIG_KEYS) {
 			const value = config[key];
 			if (value === undefined) continue;
+
+			// M1: le chiavi di layout su Bar/GroupBar sono deprecate (promosse a
+			// props di <Chart>). Restano funzionanti (estratte qui) ma avvisano.
+			if ((LAYOUT_KEYS as readonly string[]).includes(key)) {
+				warnDev(
+					`config.${key} su Bar/GroupBar e' deprecato: passalo come prop di <Chart> (es. <Chart ${key}={...} />). Il supporto sul config verra' rimosso nella 2.0.`,
+				);
+			}
 
 			const existing = result[key];
 			if (
@@ -61,6 +91,14 @@ export const computeGlobalConfig = (children: JSX.Element[]): GlobalConfig => {
 			// key e' una chiave nota di GlobalConfig; value proviene da props
 			// (any), quindi l'assegnazione e' sicura per costruzione.
 			(result as Record<string, unknown>)[key] = value;
+		}
+	}
+
+	// Le props di layout di <Chart> vincono sul config deprecato dei children.
+	if (layoutConfig) {
+		for (const key of LAYOUT_KEYS) {
+			const value = layoutConfig[key];
+			if (value !== undefined) result[key] = value;
 		}
 	}
 

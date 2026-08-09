@@ -25,7 +25,10 @@ import {
 	getCategorySpacing,
 	getChartDimensions,
 } from "../../lib/core";
-import { computeGlobalConfig } from "../../lib/globalConfig";
+import {
+	type ChartLayoutConfig,
+	computeGlobalConfig,
+} from "../../lib/globalConfig";
 import { isDefined, isTimeSerie } from "../../lib/utils";
 import type { Serie } from "../../types";
 import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
@@ -39,6 +42,9 @@ export type SVGProps = {
 	leftAxisCount?: number;
 	rightAxisCount?: number;
 	ariaLabel?: string;
+	// Config di layout delle barre passata da <Chart> (M1): ha precedenza sul
+	// config (deprecato) dei children in computeGlobalConfig.
+	layoutConfig?: ChartLayoutConfig;
 };
 
 const getDefaultAriaLabel = (elements?: Serie[]) => {
@@ -76,6 +82,7 @@ const Svg = (props: SVGProps) => {
 		chartID,
 		style,
 		ariaLabel,
+		layoutConfig,
 	} = props;
 
 	const rootRef = useRef<SVGSVGElement>(null);
@@ -119,8 +126,8 @@ const Svg = (props: SVGProps) => {
 	// una dep-key che considera solo i valori primitivi + la PRESENZA delle
 	// funzioni, non la loro identita' (decisione A di R3).
 	const rawGlobalConfig = useMemo(
-		() => computeGlobalConfig(flatChildren),
-		[flatChildren],
+		() => computeGlobalConfig(flatChildren, layoutConfig),
+		[flatChildren, layoutConfig],
 	);
 	const globalConfigKey = JSON.stringify({
 		barWidth: rawGlobalConfig.barWidth,

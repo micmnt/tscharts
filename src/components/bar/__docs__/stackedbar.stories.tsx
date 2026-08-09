@@ -15,8 +15,6 @@ export const Stacked: Story = {
 		name: "tempi migliori",
 		stacked: true,
 		showLabels: false,
-		config: {
-			barWidth: 40,
-		},
+		barWidth: 40,
 	},
 };

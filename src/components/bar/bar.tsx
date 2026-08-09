@@ -81,13 +81,17 @@ const Bar = (props: BarProps) => {
 		topRightRadius = 0,
 		bottomRightRadius = 0,
 		bottomLeftRadius = 0,
-		barWidth = padding,
 		labelSize = 12,
 		topLabelSize = 12,
 		labelColor = "white",
 		topLabelColor = "black",
-		barOffset = undefined,
 	} = config || {};
+
+	// barWidth/barOffset sono config di layout condivisa: dalla v1.0 arrivano da
+	// <Chart> attraverso globalConfig (M1), non piu' dal config della serie (che
+	// resta accettato ma deprecato: computeGlobalConfig lo inoltra qui).
+	const barWidth = ctx?.globalConfig?.barWidth ?? padding;
+	const barOffset = ctx?.globalConfig?.barOffset;
 
 	const elements = ctx?.elements;
 
