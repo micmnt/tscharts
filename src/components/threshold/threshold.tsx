@@ -51,15 +51,12 @@ const Threshold = (props: ThresholdProps) => {
 
 	const size = props.size ?? theme?.threshold?.size;
 
-	const {
-		chartXStart: _chartXStart,
-		chartXEnd: _chartXEnd,
-		chartYEnd: _chartYEnd,
-		timeSeriesMaxValue,
-		elements,
-	} = ctx ?? {};
-
 	if (!ctx || !theme || !thresholdElement) return null;
+
+	// Destrutturato DOPO il null-check di ctx (R9): cosi' le dimensioni sono
+	// `number`, non `number | undefined` da `ctx ?? {}`, e non servono cast.
+	const { chartXStart, chartXEnd, chartYEnd, timeSeriesMaxValue, elements } =
+		ctx;
 
 	const thresholdValue = thresholdElement.data;
 
@@ -80,10 +77,6 @@ const Threshold = (props: ThresholdProps) => {
 			...otherThresholds,
 		]);
 	}
-
-	const chartYEnd = _chartYEnd as number;
-	const chartXStart = _chartXStart as number;
-	const chartXEnd = _chartXEnd as number;
 
 	const flatMax = ctx.flatMax ? calculateFlatValue(serieMax) : serieMax;
 

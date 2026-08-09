@@ -41,7 +41,11 @@ export const ChartInteractiveContext =
 export const ChartMouseContext = createContext<ChartMouseState | null>(null);
 export const ChartDispatchContext = createContext<Dispatch<{
 	type: string;
-	payload: ChartState;
+	// Partial: quasi tutte le azioni dispatchano solo il sottoinsieme di campi
+	// che cambiano (es. SET_HOVER_ELEMENT solo hoveredElement). Con le dimensioni
+	// ora non-opzionali (R9), un payload tipizzato ChartState pieno costringerebbe
+	// ogni dispatch a fornire tutte le dimensioni.
+	payload: Partial<ChartState>;
 }> | null>(null);
 
 export function ChartProvider(props: Readonly<ChartProviderProps>) {
@@ -137,25 +141,12 @@ function chartReducer(
 ): ChartState {
 	switch (action.type) {
 		case "INITIALIZE": {
-			const {
-				svgRef,
-				width,
-				chartXStart,
-				chartXEnd,
-				chartYEnd,
-				chartYMiddle,
-				chartID,
-			} = action.payload;
-			return {
-				...chart,
-				svgRef,
-				width,
-				chartXStart,
-				chartXEnd,
-				chartYMiddle,
-				chartYEnd,
-				chartID,
-			};
+			// Spread del payload sopra chart: chart (ChartState) fornisce tutti i
+			// campi required, il payload (Partial) sovrascrive solo quelli
+			// dell'INITIALIZE (dimensioni, svgRef, chartID). Evita di riassegnare
+			// dimensioni `number | undefined` a un ChartState con dimensioni
+			// non-opzionali (R9).
+			return { ...chart, ...action.payload };
 		}
 		case "UPDATE_GLOBAL_CONFIG": {
 			const { globalConfig } = action.payload;

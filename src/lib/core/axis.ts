@@ -49,8 +49,7 @@ export const getChartDimensions = (
 
 // Funzione che genera l'asse x
 export const generateXAxis = (ctx: ChartState & { padding: number }) => {
-	const { chartXStart, chartXEnd, chartYEnd: _chartYEnd, negative } = ctx;
-	const chartYEnd = _chartYEnd as number;
+	const { chartXStart, chartXEnd, chartYEnd, negative } = ctx;
 
 	const normalizedChartYEnd = negative ? ctx.chartYMiddle : chartYEnd;
 
@@ -65,7 +64,12 @@ export const generateYAxis = (
 	ctx: ChartState & { padding: number; yInterval: number },
 ) => {
 	const isStacked = serie.type === "bar-stacked";
-	const isGroupStacked = serie.stackedName;
+	// Tutte le group-bar (non solo quelle con stackedName): il ramo dedicato
+	// sotto calcola il max aggregato del gruppo — max di ogni serie non-stacked
+	// e di ogni stack — che vale anche per le group-bar non impilate. Prima si
+	// attivava solo su stackedName, quindi una group-bar non-stacked cadeva
+	// nell'else (getSeriesByAxisName, che esclude le group-bar) -> max 0.
+	const isGroupBar = serie.type === "group-bar";
 
 	if (!ctx.elements) return null;
 
@@ -101,7 +105,7 @@ export const generateYAxis = (
 		serieMaxValue = calculateStackedSeriesMax(
 			ctx.elements.filter((el): el is TimeSerie => el.type === "bar-stacked"),
 		);
-	} else if (isGroupStacked) {
+	} else if (isGroupBar) {
 		// Listo tutte le serie non stacked
 		const nonStackedSeries = ctx.elements.filter(
 			(el): el is TimeSerie => el.type === "group-bar" && !el.stackedName,
@@ -149,19 +153,7 @@ export const generateYAxis = (
 
 	if (serieIndex < 0) return null;
 
-	const {
-		height: _height,
-		chartXStart: _chartXStart,
-		chartXEnd: _chartXEnd,
-		chartYEnd: _chartYEnd,
-		padding,
-		yInterval,
-	} = ctx;
-
-	const chartXStart = _chartXStart as number;
-	const chartXEnd = _chartXEnd as number;
-	const chartYEnd = _chartYEnd as number;
-	const height = _height as number;
+	const { height, chartXStart, chartXEnd, chartYEnd, padding, yInterval } = ctx;
 
 	const yAxisInterval = (chartYEnd - padding) / yInterval;
 

@@ -6,11 +6,17 @@ import type {
 } from "../../types";
 import { calculateFlatValue, isThresholdSerie, isTimeSerie } from "../utils";
 
-// Serie time-serie (bar/line/bar-stacked/group-bar) la cui chiave d'asse
-// (axisName ?? name) non corrisponde ad alcun asse Y renderizzato: verrebbero
-// disegnate su una scala isolata, basata sul proprio max, che nessun asse
-// mostra -> grafico fuorviante (R12). Se non ci sono assi Y non si segnala
-// nulla: un grafico volutamente senza assi non e' un errore.
+// Serie "bar"/"line" singole la cui chiave d'asse (axisName ?? name) non
+// corrisponde ad alcun asse Y renderizzato: verrebbero disegnate su una scala
+// isolata, basata sul proprio max, che nessun asse mostra -> grafico
+// fuorviante (R12). Se non ci sono assi Y non si segnala nulla: un grafico
+// volutamente senza assi non e' un errore.
+//
+// Solo "bar" e "line": sono gli unici tipi la cui scala e' calcolata per
+// chiave d'asse (getSerieMaxValueForAxis(axisName ?? name)). Le "group-bar" e
+// le "bar-stacked" usano invece una scala AGGREGATA (max di tutte le serie del
+// gruppo / dello stack), quindi il loro name non e' una chiave d'asse e non va
+// confrontato con i nomi degli assi (altrimenti falso positivo).
 export const getSeriesMissingYAxis = (
 	elements: Serie[],
 	yAxisNames: string[],
@@ -18,7 +24,8 @@ export const getSeriesMissingYAxis = (
 	if (yAxisNames.length === 0) return [];
 	return elements.filter(
 		(el): el is TimeSerie =>
-			isTimeSerie(el) && !yAxisNames.includes(el.axisName ?? el.name),
+			(el.type === "bar" || el.type === "line") &&
+			!yAxisNames.includes(el.axisName ?? el.name),
 	);
 };
 

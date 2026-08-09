@@ -46,6 +46,17 @@ describe("getSeriesMissingYAxis", () => {
 		expect(getSeriesMissingYAxis(elements, [])).toEqual([]);
 	});
 
+	it("ignora group-bar e bar-stacked (scala aggregata, il name non e' una chiave d'asse)", () => {
+		const groupA = { name: "prodotto A", type: "group-bar" as const, data: [] };
+		const groupB = { name: "prodotto B", type: "group-bar" as const, data: [] };
+		const stacked = { name: "st1", type: "bar-stacked" as const, data: [] };
+		// asse Y "vendite": i name delle group-bar/stacked NON corrispondono, ma
+		// non vanno segnalati (falso positivo evitato).
+		expect(
+			getSeriesMissingYAxis([groupA, groupB, stacked], ["vendite"]),
+		).toEqual([]);
+	});
+
 	it("segnala piu' serie problematiche insieme", () => {
 		const elements = [bar("a"), line("b"), bar("c", "a")];
 		// asse Y solo "a": "b" (chiave b) manca; "c" (axisName a) ok; "a" ok

@@ -85,19 +85,15 @@ const Axis = (props: AxisProps) => {
 	const { padding, yInterval } = theme;
 
 	const {
-		chartXEnd: _chartXEnd,
-		chartXStart: _chartXStart,
-		chartYEnd: _chartYEnd,
+		chartXEnd,
+		chartXStart,
+		chartYEnd,
 		elements,
 		globalConfig,
 		hasTooltip,
 	} = ctx;
 
 	const hoveredElement = interactive?.hoveredElement;
-
-	const chartXEnd = _chartXEnd as number;
-	const chartXStart = _chartXStart as number;
-	const chartYEnd = _chartYEnd as number;
 
 	const labelFontSize = labelSize ?? theme?.axis?.labelSize;
 
@@ -430,7 +426,12 @@ const Axis = (props: AxisProps) => {
 		);
 	}
 
-	const foundSerieElement = elements?.find((el) => el.name === name);
+	// Una serie si associa a un asse Y per name OPPURE per axisName (coerente
+	// con getSeriesByAxisName). Serve alle group-bar, il cui asse ha un nome
+	// (es. "vendite") diverso dai name delle singole serie ("prodotto A"...).
+	const foundSerieElement = elements?.find(
+		(el) => el.name === name || el.axisName === name,
+	);
 	const serieElement =
 		foundSerieElement && isTimeSerie(foundSerieElement)
 			? foundSerieElement
@@ -465,7 +466,10 @@ const Axis = (props: AxisProps) => {
 						dominantBaseline="middle"
 					>
 						<textPath startOffset="50%" href={`#axis-${yAxis.nameLabelPath}`}>
-							{yAxis.uom ? `${yAxis.name} (${yAxis.uom})` : `${yAxis.name}`}
+							{/* Titolo dall'asse (prop name), non dalla serie: per le
+							    group-bar la serie trovata ha un name diverso (es.
+							    "prodotto A") dal nome dell'asse ("vendite"). */}
+							{yAxis.uom ? `${name} (${yAxis.uom})` : `${name}`}
 						</textPath>
 					</text>
 				</>

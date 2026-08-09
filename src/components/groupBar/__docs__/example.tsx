@@ -7,6 +7,7 @@ const elements = [
 	{
 		name: "prodotto A",
 		type: "group-bar",
+		axisName: "vendite",
 		uom: "u",
 		data: [
 			{ date: "2024-03-13T14:33:16.796Z", value: 12 },
@@ -18,6 +19,7 @@ const elements = [
 	{
 		name: "prodotto B",
 		type: "group-bar",
+		axisName: "vendite",
 		uom: "u",
 		data: [
 			{ date: "2024-03-13T14:33:16.796Z", value: 8 },

@@ -128,16 +128,7 @@ const Legend = (props: LegendProps) => {
 
 	const { padding } = theme;
 
-	const {
-		elements,
-		chartXStart: _chartXStart,
-		chartXEnd: _chartXEnd,
-		chartYEnd: _chartYEnd,
-	} = ctx as ChartState;
-
-	const chartXStart = _chartXStart as number;
-	const chartXEnd = _chartXEnd as number;
-	const chartYEnd = _chartYEnd as number;
+	const { elements, chartXStart, chartXEnd, chartYEnd } = ctx as ChartState;
 
 	const legendY = ctx?.negative
 		? 4 * padding + chartYEnd

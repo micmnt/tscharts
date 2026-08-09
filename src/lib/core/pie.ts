@@ -43,9 +43,9 @@ export const generateAngleDonutPaths = (
 
 	const { value: centerValue } = centerElement ?? {};
 
-	const centerX = (width as number) / 2;
-	const centerY = (height as number) / 2 - padding;
-	const radius = ((height as number) - 2 * padding) / 2;
+	const centerX = width / 2;
+	const centerY = height / 2 - padding;
+	const radius = (height - 2 * padding) / 2;
 
 	const ringThickness = ctx.innerRadius ?? radius / 2;
 
@@ -149,9 +149,9 @@ export const generateDonutPaths = (
 
 	const { value: centerValue } = centerElement ?? {};
 
-	const centerX = (width as number) / 2;
-	const centerY = (height as number) / 2 - padding;
-	const radius = ((height as number) - 2 * padding) / 2;
+	const centerX = width / 2;
+	const centerY = height / 2 - padding;
+	const radius = (height - 2 * padding) / 2;
 	const innerRadius = radius - (ctx.innerRadius ?? radius / 2);
 
 	const startAngles = serieData.map(
@@ -222,10 +222,7 @@ export const generatePiePaths = (
 		0,
 	);
 
-	const { width: _width, height: _height, padding } = ctx;
-
-	const width = _width as number;
-	const height = _height as number;
+	const { width, height, padding } = ctx;
 
 	const centerX = width / 2;
 	const centerY = height / 2 - 1.5 * padding;

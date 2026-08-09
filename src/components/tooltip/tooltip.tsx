@@ -237,13 +237,7 @@ const Tooltip = (props: TooltipProps) => {
 		return null;
 	}
 
-	const {
-		elements,
-		chartXStart: _chartXStart,
-		chartXEnd: _chartXEnd,
-		chartYEnd: _chartYEnd,
-		chartID,
-	} = ctx;
+	const { elements, chartXStart, chartXEnd, chartYEnd, chartID } = ctx;
 
 	const { hoveredElement: _hoveredElement } = interactive ?? {};
 
@@ -276,10 +270,6 @@ const Tooltip = (props: TooltipProps) => {
 	// Puo' essere null prima del primo movimento del mouse (R17): niente cast
 	// che lo nasconda, cosi' il type-checker obbliga a guardarlo dove serve.
 	const mousePosition: Position | null = _mousePosition ?? null;
-
-	const chartYEnd = _chartYEnd as number;
-	const chartXEnd = _chartXEnd as number;
-	const chartXStart = _chartXStart as number;
 
 	const tooltipTitle = title
 		? title(hoveredElement?.label)

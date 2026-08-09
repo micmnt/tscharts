@@ -65,12 +65,17 @@ export type ChartState = {
 	// reducer/ChartProvider non gira a ogni movimento del mouse. Vedi
 	// ChartMouseState.
 	hoveredElement?: { elementIndex: number; label: string } | null;
-	width?: number;
-	height?: number;
-	chartXStart?: number;
-	chartXEnd?: number;
-	chartYEnd?: number;
-	chartYMiddle?: number;
+	// Dimensioni del grafico: non-opzionali (R9). Valgono 0 finche' il container
+	// non e' misurato (initialState); i valori reali arrivano con INITIALIZE.
+	// Tenerle `number` (non `number | undefined`) elimina ~40 cast `as number`
+	// sparsi nei componenti e nelle funzioni core; lo 0 "non inizializzato" e'
+	// gestito dai gate (Svg su height, initializeChart su chartYEnd > 0).
+	width: number;
+	height: number;
+	chartXStart: number;
+	chartXEnd: number;
+	chartYEnd: number;
+	chartYMiddle: number;
 	negative?: boolean;
 	horizontal?: boolean;
 	flatMax?: boolean;

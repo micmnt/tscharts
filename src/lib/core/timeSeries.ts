@@ -84,9 +84,9 @@ export const generateStackedDataPaths = (
 	if (serieIndex < 0) return null;
 
 	const {
-		chartXStart: _chartXStart,
-		chartXEnd: _chartXEnd,
-		chartYEnd: _chartYEnd,
+		chartXStart,
+		chartXEnd,
+		chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
 		radius,
@@ -95,10 +95,6 @@ export const generateStackedDataPaths = (
 		bottomRightRadius,
 		bottomLeftRadius,
 	} = ctx;
-
-	const chartXEnd = _chartXEnd as number;
-	const chartXStart = _chartXStart as number;
-	const chartYEnd = _chartYEnd as number;
 
 	const xAxisInterval =
 		(chartXEnd - chartXStart) / (timeSerieData?.length || 1);
@@ -199,8 +195,8 @@ export const generateNegativeDataPaths = (
 	if (serieIndex < 0) return null;
 
 	const {
-		chartXStart: _chartXStart,
-		chartXEnd: _chartXEnd,
+		chartXStart,
+		chartXEnd,
 		padding,
 		barWidth: ctxBarWidth,
 		radius,
@@ -210,9 +206,6 @@ export const generateNegativeDataPaths = (
 		bottomLeftRadius,
 		globalConfig,
 	} = ctx;
-
-	const chartXStart = _chartXStart as number;
-	const chartXEnd = _chartXEnd as number;
 
 	// Calcolo l'intervallo tra un punto/barra e l'altro sull'asse X
 	const xAxisInterval = (chartXEnd - chartXStart) / timeSerieData?.length || 1;
@@ -359,9 +352,9 @@ export const generateDataPaths = (
 	if (serieIndex < 0) return null;
 
 	const {
-		chartXStart: _chartXStart,
-		chartXEnd: _chartXEnd,
-		chartYEnd: _chartYEnd,
+		chartXStart,
+		chartXEnd,
+		chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
 		radius,
@@ -371,10 +364,6 @@ export const generateDataPaths = (
 		bottomLeftRadius,
 		globalConfig,
 	} = ctx;
-
-	const chartXStart = _chartXStart as number;
-	const chartXEnd = _chartXEnd as number;
-	const chartYEnd = _chartYEnd as number;
 
 	// Calcolo l'intervallo tra un punto/barra e l'altro sull'asse X
 	const xAxisInterval = (chartXEnd - chartXStart) / timeSerieData?.length || 1;
@@ -552,9 +541,9 @@ export const generateGroupDataPaths = (
 	if (serieIndex < 0) return null;
 
 	const {
-		chartXStart: _chartXStart,
-		chartXEnd: _chartXEnd,
-		chartYEnd: _chartYEnd,
+		chartXStart,
+		chartXEnd,
+		chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
 		barGroupGap: ctxBarGroupGap,
@@ -564,10 +553,6 @@ export const generateGroupDataPaths = (
 		bottomRightRadius,
 		bottomLeftRadius,
 	} = ctx;
-
-	const chartXStart = _chartXStart as number;
-	const chartXEnd = _chartXEnd as number;
-	const chartYEnd = _chartYEnd as number;
 
 	const xAxisGroupInterval =
 		(chartXEnd - chartXStart) / timeSerieData?.length || 1;
@@ -700,9 +685,9 @@ export const generateStackedGroupDataPaths = (
 	if (serieGroupIndex < 0) return null;
 
 	const {
-		chartXStart: _chartXStart,
-		chartXEnd: _chartXEnd,
-		chartYEnd: _chartYEnd,
+		chartXStart,
+		chartXEnd,
+		chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
 		barGroupGap: ctxBarGroupGap,
@@ -712,10 +697,6 @@ export const generateStackedGroupDataPaths = (
 		bottomRightRadius,
 		bottomLeftRadius,
 	} = ctx;
-
-	const chartXStart = _chartXStart as number;
-	const chartXEnd = _chartXEnd as number;
-	const chartYEnd = _chartYEnd as number;
 
 	const xAxisGroupInterval =
 		(chartXEnd - chartXStart) / timeSerieData?.length || 1;
@@ -895,9 +876,9 @@ export const generateHorizontalDataPaths = (
 	if (serieIndex < 0) return null;
 
 	const {
-		chartXStart: _chartXStart,
-		chartXEnd: _chartXEnd,
-		chartYEnd: _chartYEnd,
+		chartXStart: rawChartXStart,
+		chartXEnd: rawChartXEnd,
+		chartYEnd,
 		padding,
 		barWidth: ctxBarWidth,
 		radius,
@@ -911,9 +892,8 @@ export const generateHorizontalDataPaths = (
 	// barOffset ora è parametrico
 	const effectiveBarOffset =
 		typeof barOffset === "number" ? barOffset : DEFAULT_HORIZONTAL_BAR_OFFSET;
-	const chartXStart = (_chartXStart as number) + effectiveBarOffset;
-	const chartXEnd = (_chartXEnd as number) - 8;
-	const chartYEnd = _chartYEnd as number;
+	const chartXStart = rawChartXStart + effectiveBarOffset;
+	const chartXEnd = rawChartXEnd - 8;
 
 	const yAxisInterval = (chartYEnd - padding) / timeSerieData?.length || 1;
 
