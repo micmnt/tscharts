@@ -11,6 +11,7 @@ import {
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
 import { isTimeSerie } from "../../lib/utils";
+import { SerieValueLabels } from "../shared/SerieValueLabels";
 
 export type GroupBarProps = {
 	name: string;
@@ -141,49 +142,24 @@ const GroupBar = (props: GroupBarProps) => {
 						fill={serieColor}
 					/>
 				))}
-			{topLabelSerie &&
-				labelsPoints.map(
-					(point: [x: number, y: number], dataPointIndex: number) =>
-						point[0] > -1 ? (
-							<text
-								textAnchor="middle"
-								fontSize={topLabelSize}
-								fontWeight="bold"
-								fill={topLabelColor}
-								key={`${serieElement.name}-top-label-${dataPointIndex}`}
-								x={point[0]}
-								y={Number.isNaN(point[1]) ? 0 : point[1]}
-							>
-								{topLabelSerieElement?.format
-									? topLabelSerieElement.format(
-											topLabelSerieElement?.data?.[dataPointIndex]?.value,
-										)
-									: topLabelSerieElement?.data?.[dataPointIndex]?.value}
-							</text>
-						) : null,
-				)}
-			{showLabels &&
-				barPoints
-					.map((point: [x: number, y: number], dataPointIndex: number) =>
-						point[0] > -1 ? (
-							<text
-								textAnchor="middle"
-								fontSize={labelSize}
-								fontWeight="bold"
-								fill={labelColor}
-								key={`${serieElement.name}-label-${dataPointIndex}`}
-								x={point[0]}
-								y={Number.isNaN(point[1]) ? 0 : point[1]}
-							>
-								{serieElement.format
-									? serieElement.format(
-											serieElement?.data?.[dataPointIndex]?.value,
-										)
-									: serieElement?.data?.[dataPointIndex]?.value}
-							</text>
-						) : null,
-					)
-					.filter((el: [x: number, y: number]) => el !== null)}
+			{topLabelSerie && (
+				<SerieValueLabels
+					points={labelsPoints}
+					serie={topLabelSerieElement}
+					fontSize={topLabelSize}
+					color={topLabelColor}
+					keyPrefix={`${serieElement.name}-top-label`}
+				/>
+			)}
+			{showLabels && (
+				<SerieValueLabels
+					points={barPoints}
+					serie={serieElement}
+					fontSize={labelSize}
+					color={labelColor}
+					keyPrefix={`${serieElement.name}-label`}
+				/>
+			)}
 		</>
 	);
 };
