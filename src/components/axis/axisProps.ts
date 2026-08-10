@@ -46,7 +46,15 @@ export type XAxisProps = AxisBaseProps & {
 
 // Asse Y: `name` identifica la scala (di fatto obbligatorio: warnDev se nessuna
 // serie combacia).
-export type YAxisProps = AxisBaseProps;
+export type YAxisProps = AxisBaseProps & {
+	// Dominio controllabile (S1b): `min`/`max` sovrascrivono il dominio
+	// auto-calcolato ([0, max dei dati]). Utile per "entrare" in un intervallo di
+	// valori (es. min=98, max=102). Con `max` esplicito il flatMax viene ignorato.
+	// I valori fuori dominio sono clampati ai bordi. Solo grafici verticali
+	// non-negativi, asse Y singolo (bar/line).
+	min?: number;
+	max?: number;
+};
 
 // Alias deprecato <Axis type="...">: union discriminata sul `type`, cosi' con
 // type="xAxis" si ottengono le props X e con type="yAxis" quelle Y.

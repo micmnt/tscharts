@@ -255,12 +255,19 @@ export const generateYAxis = (
 
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, serieMaxValue);
 
-	const lastValue = serie.format ? serie.format(flatMaxValue) : flatMaxValue;
+	// Dominio controllabile (S1b): con <YAxis min max> i tick coprono [yMin, yMax]
+	// (flatMax ignorato). Default [0, flatMaxValue] -> byte-identico (yMin=0,
+	// domainSpan=flatMaxValue).
+	const domainMax = ctx.yMax ?? flatMaxValue;
+	const domainMin = ctx.yMin ?? 0;
+	const domainSpan = domainMax - domainMin;
+
+	const lastValue = serie.format ? serie.format(domainMax) : domainMax;
 
 	const yAxisLabels = [...Array(yInterval)]
 		.map((_, index) => {
-			const flatInterval = flatMaxValue / yInterval;
-			const axisValue = flatInterval * index;
+			const flatInterval = domainSpan / yInterval;
+			const axisValue = domainMin + flatInterval * index;
 
 			const serieValue = serie.format ? serie.format(axisValue) : axisValue;
 

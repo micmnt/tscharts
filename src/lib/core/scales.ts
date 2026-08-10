@@ -45,17 +45,53 @@ export const createBandScale = ({
 	};
 };
 
-// Scala "time": mappa un istante (ms epoch) a una coordinata pixel con un
-// mapping lineare dominio->range. Stessa forma di BandScale (position/invert),
-// ma il dominio e' continuo (tempo) invece che l'indice di categoria: e' cio'
-// che rende la spaziatura proporzionale al tempo e non all'indice (S2b). I
-// tick sono N istanti equispaziati nel dominio.
+// Scala lineare generica: mappa un valore continuo dal dominio [d0,d1] al range
+// pixel [r0,r1]. E' il primitivo condiviso da tutte le scale continue della
+// libreria: la scala tempo (createTimeScale) e la scala dei valori Y
+// (getChartYScale) sono entrambe scale lineari, cambiano solo cosa rappresenta
+// il dominio (istante / valore) e i nomi.
+export type LinearScale = {
+	// px corrispondente a un valore del dominio.
+	scale: (value: number) => number;
+	// valore corrispondente a una coordinata px (inverso di scale).
+	invert: (px: number) => number;
+	// N valori equispaziati nel dominio [min, max] (estremi inclusi).
+	ticks: (count: number) => number[];
+	domain: readonly [number, number];
+};
+
+export const createLinearScale = ({
+	domain,
+	range,
+}: {
+	domain: readonly [number, number];
+	range: readonly [number, number];
+}): LinearScale => {
+	const [d0, d1] = domain;
+	const [r0, r1] = range;
+	// dominio degenere (estremi uguali) -> span 1 per non dividere per zero;
+	// tutti i valori finiscono su r0.
+	const dspan = d1 - d0 || 1;
+	const rspan = r1 - r0;
+
+	return {
+		domain,
+		scale: (value: number) => r0 + ((value - d0) / dspan) * rspan,
+		invert: (px: number) => d0 + ((px - r0) / (rspan || 1)) * dspan,
+		ticks: (count: number) => {
+			const n = Math.max(1, Math.floor(count));
+			if (n === 1) return [d0];
+			return Array.from({ length: n }, (_, i) => d0 + (dspan * i) / (n - 1));
+		},
+	};
+};
+
+// Scala "time": una LinearScale il cui dominio e' il tempo (ms epoch). E' cio'
+// che rende la spaziatura proporzionale al tempo e non all'indice (S2b).
+// `position` e' l'alias di `scale` (il valore mappato e' un istante).
 export type TimeScale = {
-	// Coordinata (px) di un istante.
 	position: (time: number) => number;
-	// Istante corrispondente a una coordinata x (inverso di position).
 	invert: (x: number) => number;
-	// N istanti equispaziati nel dominio [min, max] (estremi inclusi).
 	ticks: (count: number) => number[];
 	domain: readonly [number, number];
 };
@@ -67,22 +103,12 @@ export const createTimeScale = ({
 	domain: readonly [number, number];
 	range: readonly [number, number];
 }): TimeScale => {
-	const [d0, d1] = domain;
-	const [r0, r1] = range;
-	// dominio degenere (un solo punto, o date tutte uguali) -> span 1 per non
-	// dividere per zero; tutti i punti finiscono su r0.
-	const span = d1 - d0 || 1;
-	const rspan = r1 - r0;
-
+	const lin = createLinearScale({ domain, range });
 	return {
-		domain,
-		position: (time: number) => r0 + ((time - d0) / span) * rspan,
-		invert: (x: number) => d0 + ((x - r0) / (rspan || 1)) * span,
-		ticks: (count: number) => {
-			const n = Math.max(1, Math.floor(count));
-			if (n === 1) return [d0];
-			return Array.from({ length: n }, (_, i) => d0 + (span * i) / (n - 1));
-		},
+		domain: lin.domain,
+		position: lin.scale,
+		invert: lin.invert,
+		ticks: lin.ticks,
 	};
 };
 
@@ -102,4 +128,40 @@ export const getChartTimeScale = (ctx: {
 		domain: ctx.timeDomain,
 		range: [ctx.chartXStart + ctx.padding, ctx.chartXEnd - ctx.padding],
 	});
+};
+
+// Scala dei VALORI dell'asse Y (grafico verticale, non-negativo). Riproduce
+// esattamente il posizionamento storico: con min=0 (default) `scale(v)` equivale
+// a `chartYEnd - getValuePosition(max, v, chartYEnd - padding)` (byte-identico).
+// `min`/`max` custom (S1b-B) restringono il dominio; i valori fuori vengono
+// CLAMPati ai bordi (no-op col dominio di default, dove ogni valore <= max).
+// I grafici negativi/stacked-negativi NON usano questa scala: hanno un dominio
+// simmetrico attorno a zero, gestito a parte.
+export const getChartYScale = ({
+	min = 0,
+	max,
+	chartYEnd,
+	padding,
+}: {
+	min?: number;
+	max: number;
+	chartYEnd: number;
+	padding: number;
+}): LinearScale => {
+	const span = max - min || 1;
+	const dim = chartYEnd - padding || 1;
+	const clamp = (v: number) => (v < min ? min : v > max ? max : v);
+
+	return {
+		domain: [min, max],
+		// `dim * (v - min) / span` = getValuePosition(span, v-min, dim); con min=0
+		// e' identico a getValuePosition(max, v, dim). serieY = chartYEnd - quello.
+		scale: (value: number) => chartYEnd - (dim * (clamp(value) - min)) / span,
+		invert: (px: number) => min + ((chartYEnd - px) * span) / dim,
+		ticks: (count: number) => {
+			const n = Math.max(1, Math.floor(count));
+			if (n === 1) return [min];
+			return Array.from({ length: n }, (_, i) => min + (span * i) / (n - 1));
+		},
+	};
 };

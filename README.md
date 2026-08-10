@@ -122,6 +122,25 @@ Asse dei valori. La prop `name` collega l'asse alla serie (o al gruppo, via `axi
 | `gridColor` / `lineColor` / `labelColor` | `string` | colori del tema | Override colore di gridline / linea asse / etichette |
 | `labelSize` / `titleSize` | `number` | dimensioni del tema | Override dimensione font di etichette / titolo |
 | `titleDx` / `titleDy` | `number` | `0` | Offset del titolo dell'asse |
+| `min` / `max` | `number` | `0` / max dei dati | Dominio controllabile: sovrascrive l'intervallo auto-calcolato. Vedi [Dominio Y](#dominio-y) |
+
+#### Dominio Y
+
+Di default l'asse Y va da `0` al massimo dei dati (arrotondato per eccesso se
+`flatMax`). Con `min`/`max` su `<YAxis>` si controlla l'intervallo — utile per
+"entrare" in una banda stretta di valori (es. una saturazione che oscilla tra 98
+e 102) dove il dominio automatico schiaccerebbe la linea in cima.
+
+```tsx
+<YAxis name="saturazione" min={98} max={102} showLine showGrid />
+```
+
+Note:
+- Con `max` esplicito il `flatMax` viene **ignorato** (il valore dato è autoritativo).
+- I valori fuori `[min, max]` sono **clampati** ai bordi.
+- Scope attuale: grafici verticali non-negativi, con un singolo asse Y
+  (bar/line). Non si applica a grafici negativi/orizzontali né agli assi
+  multipli.
 
 ### `<XAxis>`
 

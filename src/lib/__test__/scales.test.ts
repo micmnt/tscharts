@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { getValuePosition } from "../core/primitives";
 import {
 	createBandScale,
+	createLinearScale,
 	createTimeScale,
 	getChartTimeScale,
+	getChartYScale,
 } from "../core/scales";
 
 describe("createBandScale", () => {
@@ -119,5 +122,67 @@ describe("getChartTimeScale", () => {
 		expect(
 			getChartTimeScale({ chartXStart: 0, chartXEnd: 400, padding: 20 }),
 		).toBeNull();
+	});
+});
+
+describe("createLinearScale", () => {
+	const s = createLinearScale({ domain: [0, 200], range: [400, 20] });
+
+	it("scale mappa linearmente dominio -> range (invertito per l'asse Y)", () => {
+		expect(s.scale(0)).toBe(400); // base in basso
+		expect(s.scale(200)).toBe(20); // max in alto
+		expect(s.scale(100)).toBe(210); // metà
+	});
+
+	it("invert è l'inverso di scale", () => {
+		for (const v of [0, 37, 100, 199, 200]) {
+			expect(s.invert(s.scale(v))).toBeCloseTo(v, 9);
+		}
+	});
+
+	it("ticks: N valori equispaziati con estremi inclusi", () => {
+		expect(s.ticks(5)).toEqual([0, 50, 100, 150, 200]);
+	});
+
+	it("createTimeScale delega a createLinearScale (position === scale)", () => {
+		const t = createTimeScale({ domain: [0, 1000], range: [100, 500] });
+		const l = createLinearScale({ domain: [0, 1000], range: [100, 500] });
+		for (const v of [0, 250, 613, 1000]) {
+			expect(t.position(v)).toBe(l.scale(v));
+		}
+	});
+});
+
+describe("getChartYScale", () => {
+	const chartYEnd = 360;
+	const padding = 20;
+
+	it("con min=0 è byte-identica al posizionamento storico (getValuePosition)", () => {
+		const max = 250;
+		const y = getChartYScale({ max, chartYEnd, padding });
+		for (const v of [0, 12.5, 120, 187.4, 250]) {
+			const legacy = chartYEnd - getValuePosition(max, v, chartYEnd - padding);
+			expect(y.scale(v)).toBe(legacy); // uguaglianza ESATTA, non approssimata
+		}
+	});
+
+	it("min/max custom restringono il dominio (S1b-B)", () => {
+		const y = getChartYScale({ min: 98, max: 102, chartYEnd, padding });
+		expect(y.scale(98)).toBe(chartYEnd); // base del dominio in basso
+		expect(y.scale(102)).toBe(padding); // top del dominio in alto
+		expect(y.scale(100)).toBeCloseTo((chartYEnd + padding) / 2, 6); // metà
+	});
+
+	it("clampa i valori fuori dominio ai bordi", () => {
+		const y = getChartYScale({ min: 0, max: 100, chartYEnd, padding });
+		expect(y.scale(150)).toBe(y.scale(100)); // sopra max -> bordo alto
+		expect(y.scale(-30)).toBe(y.scale(0)); // sotto min -> bordo basso
+	});
+
+	it("invert è l'inverso di scale (entro il dominio)", () => {
+		const y = getChartYScale({ min: 10, max: 90, chartYEnd, padding });
+		for (const v of [10, 33, 60, 90]) {
+			expect(y.invert(y.scale(v))).toBeCloseTo(v, 6);
+		}
 	});
 });

@@ -65,6 +65,8 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 				scaleType: initialState.scaleType,
 				parseDate: initialState.parseDate,
 				timeDomain: initialState.timeDomain,
+				yMin: initialState.yMin,
+				yMax: initialState.yMax,
 			},
 		});
 	}, [
@@ -76,6 +78,8 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 		initialState.scaleType,
 		initialState.parseDate,
 		initialState.timeDomain,
+		initialState.yMin,
+		initialState.yMax,
 	]);
 
 	// Slice memoizzate: cambiano riferimento solo quando cambia uno dei loro
@@ -102,6 +106,8 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 			scaleType: chart.scaleType,
 			parseDate: chart.parseDate,
 			timeDomain: chart.timeDomain,
+			yMin: chart.yMin,
+			yMax: chart.yMax,
 		}),
 		[
 			chart.elements,
@@ -122,6 +128,8 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 			chart.scaleType,
 			chart.parseDate,
 			chart.timeDomain,
+			chart.yMin,
+			chart.yMax,
 		],
 	);
 
@@ -198,6 +206,8 @@ function chartReducer(
 				scaleType,
 				parseDate,
 				timeDomain,
+				yMin,
+				yMax,
 			} = action.payload;
 
 			return {
@@ -210,6 +220,8 @@ function chartReducer(
 				scaleType,
 				parseDate,
 				timeDomain,
+				yMin,
+				yMax,
 			};
 		}
 		default: {

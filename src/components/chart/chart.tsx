@@ -160,6 +160,12 @@ const Chart = (props: ChartProps) => {
 		scaleType === "time" ? computeTimeDomain(elements, parseDate) : undefined;
 	const timeDomainMin = rawTimeDomain?.[0];
 	const timeDomainMax = rawTimeDomain?.[1];
+
+	// Dominio Y controllabile (S1b): min/max letti dal primo <YAxis> (scope
+	// single-axis). Override del dominio auto [0, max]; finiscono nel ChartState
+	// e da li' raggiungono generatore e asse.
+	const yMin = yAxisElements[0]?.props?.min as number | undefined;
+	const yMax = yAxisElements[0]?.props?.max as number | undefined;
 	// Reference stabile: cambia solo quando cambiano gli estremi, non a ogni
 	// render (computeTimeDomain ritorna un nuovo array ogni volta).
 	const timeDomain = useMemo<readonly [number, number] | undefined>(
@@ -191,6 +197,8 @@ const Chart = (props: ChartProps) => {
 			scaleType,
 			parseDate,
 			timeDomain,
+			yMin,
+			yMax,
 		}),
 		[
 			elements,
@@ -203,6 +211,8 @@ const Chart = (props: ChartProps) => {
 			scaleType,
 			parseDate,
 			timeDomain,
+			yMin,
+			yMax,
 		],
 	);
 

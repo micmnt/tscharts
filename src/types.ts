@@ -91,6 +91,10 @@ export type ChartState = {
 	scaleType?: "band" | "time";
 	parseDate?: (date: string) => number | Date;
 	timeDomain?: readonly [number, number];
+	// Dominio Y controllabile (S1b): override di [0, max-auto] letto da
+	// <YAxis min max>. Singolo asse, grafici verticali non-negativi.
+	yMin?: number;
+	yMax?: number;
 	// Se nel chart e' presente un <Tooltip>: axis.tsx lo usa per decidere se
 	// renderizzare gli hover-rect, senza piu' interrogare il DOM (R7).
 	hasTooltip?: boolean;
@@ -119,6 +123,8 @@ export type ChartStructuralState = Pick<
 	| "scaleType"
 	| "parseDate"
 	| "timeDomain"
+	| "yMin"
+	| "yMax"
 >;
 
 // Slice "interattiva" del ChartState: l'elemento in hover, che cambia solo al

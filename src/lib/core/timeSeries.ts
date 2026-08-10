@@ -17,7 +17,7 @@ import {
 	generateVerticalBarPath,
 	getValuePosition,
 } from "./primitives";
-import { createBandScale, getChartTimeScale } from "./scales";
+import { createBandScale, getChartTimeScale, getChartYScale } from "./scales";
 import {
 	calculateStackedSeriesMax,
 	getEffectiveMaxValue,
@@ -402,14 +402,30 @@ export const generateDataPaths = (
 	// Calcolo il valore massimo della serie arrotondato al primo numero dell'ordine di grandezza utile. Ex. (20, 200, 2000)
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, serieMaxValue);
 
-	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
-		const value = getValuePosition(
-			flatMaxValue,
-			serieEl.value ?? 0,
-			chartYEnd - padding,
-		);
+	// Scala Y dei valori (S1b). Dominio di default [0, flatMaxValue] -> byte-
+	// identico al posizionamento storico. Con <YAxis min max> il dominio diventa
+	// [yMin, yMax] (flatMax ignorato); i valori fuori sono clampati.
+	const hasCustomYDomain = ctx.yMin !== undefined || ctx.yMax !== undefined;
+	const yScale = getChartYScale({
+		min: ctx.yMin,
+		max: ctx.yMax ?? flatMaxValue,
+		chartYEnd,
+		padding,
+	});
 
-		const serieY = isDefined(serieEl.value) ? chartYEnd - value : null;
+	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
+		const serieY = isDefined(serieEl.value)
+			? yScale.scale(serieEl.value)
+			: null;
+
+		// `value` = altezza visiva (px). Col dominio di default resta
+		// getValuePosition (byte-identico A2); col dominio custom deriva dalla
+		// scala (baseline chartYEnd - top serieY), cosi' le label restano corrette.
+		const value = hasCustomYDomain
+			? serieY !== null
+				? chartYEnd - serieY
+				: 0
+			: getValuePosition(flatMaxValue, serieEl.value ?? 0, chartYEnd - padding);
 
 		if (type === "bar") {
 			const barWidth = ctxBarWidth ?? padding;
