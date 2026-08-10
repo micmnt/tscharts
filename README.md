@@ -19,7 +19,7 @@ import "tscharts/style.css";
 ## Quick start
 
 ```tsx
-import { Axis, Bar, Chart, Legend } from "tscharts";
+import { Bar, Chart, Legend, XAxis, YAxis } from "tscharts";
 
 const elements = [
   {
@@ -37,22 +37,23 @@ const elements = [
 
 function App() {
   return (
-    <Chart width={400} height={400} elements={elements}>
-      <Axis type="yAxis" name="vendite" showLine showName />
+    <Chart width={400} height={400} elements={elements} barWidth={28}>
+      <YAxis name="vendite" showLine showName />
       <Bar name="vendite" />
-      <Axis
-        type="xAxis"
+      <XAxis
         dataPoints={["13/03", "14/03", "15/03", "16/03"]}
         showLine
         showName
       />
-      <Legend legendType="horizontal" height={90} />
+      <Legend height={90} />
     </Chart>
   );
 }
 ```
 
-`<Chart>` riceve `elements` (le serie dati) e dimensioni fisse (`width`/`height`); i figli (`Axis`, `Bar`, `Legend`, ...) leggono lo stato condiviso e si occupano ciascuno di una parte del grafico. Ogni serie in `elements` è collegata ai componenti tramite la prop `name`.
+`<Chart>` riceve `elements` (le serie dati) e dimensioni fisse (`width`/`height`); i figli (`XAxis`, `YAxis`, `Bar`, `Legend`, ...) leggono lo stato condiviso e si occupano ciascuno di una parte del grafico. Ogni serie in `elements` è collegata ai componenti tramite la prop `name`.
+
+> Aggiorni da una versione 0.x? Vedi [Migrazione a v1.0](#migrazione-a-v10).
 
 Per gli altri tipi di grafico (line, pie, donut, group-bar, threshold, angle-donut) ed esempi più avanzati (barre stacked, drag interattivo, assi multipli), vedi Storybook: https://tscharts.netlify.app
 
@@ -70,7 +71,10 @@ Componente radice: fornisce il contesto condiviso (dimensioni, dati, tema) a tut
 | `children` | `ReactNode` | — (richiesta) | I componenti figli del grafico (`Axis`, `Bar`, `Line`, ...) |
 | `name` | `string` | `"chart"` | Nome usato per generare l'id univoco del grafico |
 | `flatMax` | `boolean` | `true` | Arrotonda per eccesso il valore massimo degli assi all'ordine di grandezza superiore (es. 1234 → 2000) invece di usarlo esatto |
-| `style` | `any` | — | Stile CSS applicato all'elemento `<svg>` |
+| `barWidth` | `number` | `padding` del tema | Larghezza delle barre in px, condivisa da tutte le serie bar/group-bar |
+| `barGroupGap` | `number` | `padding / 4` | Spazio tra le barre di uno stesso gruppo (group-bar) |
+| `barOffset` | `number` | — | Offset orizzontale delle barre (usato dai grafici a barre orizzontali) |
+| `style` | `CSSProperties` | — | Stile CSS applicato all'elemento `<svg>` |
 | `theme` | `Partial<ThemeState>` | `defaultTheme` | Override parziale del tema (colori serie, padding, font, assi, griglia...). Vedi [Tema](#tema) |
 
 #### Tema
@@ -105,27 +109,48 @@ const darkChartTheme: Partial<ThemeState> = {
 };
 ```
 
-### `<Axis>`
+### `<YAxis>`
+
+Asse dei valori. La prop `name` collega l'asse alla serie (o al gruppo, via `axisName`).
 
 | Prop | Tipo | Default | Descrizione |
 |------|------|---------|-------------|
-| `type` | `"xAxis" \| "yAxis"` | — (richiesta) | Quale asse disegnare |
-| `name` | `string` | — | Per `yAxis`, nome della serie a cui l'asse è associato; per entrambi, titolo mostrato se `showName` |
-| `dataPoints` | `string[]` | `[]` | Etichette dell'asse X (una per punto dato) |
-| `showGrid` | `boolean` | `false` | Mostra le gridline associate all'asse |
+| `name` | `string` | — | Nome della serie/asse a cui è associato; anche titolo se `showName` |
+| `showGrid` | `boolean` | `false` | Mostra le gridline orizzontali |
 | `showLine` | `boolean` | `false` | Mostra la linea dell'asse |
-| `showLabels` | `boolean` | `true` | Mostra le etichette dei valori/categorie |
+| `showName` | `boolean` | `false` | Mostra il titolo dell'asse |
+| `gridColor` / `lineColor` / `labelColor` | `string` | colori del tema | Override colore di gridline / linea asse / etichette |
+| `labelSize` / `titleSize` | `number` | dimensioni del tema | Override dimensione font di etichette / titolo |
+| `titleDx` / `titleDy` | `number` | `0` | Offset del titolo dell'asse |
+
+### `<XAxis>`
+
+Asse delle categorie. Ospita anche selezione e click sulle label.
+
+| Prop | Tipo | Default | Descrizione |
+|------|------|---------|-------------|
+| `dataPoints` | `string[]` | `[]` | Etichette dell'asse X (una per punto dato) |
+| `name` | `string` | — | Titolo dell'asse, mostrato se `showName` |
+| `showGrid` | `boolean` | `false` | Mostra le gridline verticali |
+| `showLine` | `boolean` | `false` | Mostra la linea dell'asse |
+| `showLabels` | `boolean` | `true` | Mostra le etichette delle categorie |
 | `showName` | `boolean` | `false` | Mostra il titolo dell'asse |
 | `gridColor` / `lineColor` / `labelColor` | `string` | colori del tema | Override colore di gridline / linea asse / etichette |
 | `labelSize` / `titleSize` | `number` | dimensioni del tema | Override dimensione font di etichette / titolo |
 | `titleDx` / `titleDy` | `number` | `0` | Offset del titolo dell'asse |
 | `tiltLabels` | `boolean` | `true` | Inclina le etichette (utile con molti `dataPoints`) |
 | `tiltLabelsAngle` | `number` | `45` | Angolo di inclinazione, se `tiltLabels` |
-| `horizontal` | `boolean` | `false` | Adatta l'asse X a un grafico a barre/linee orizzontali |
+| `horizontal` | `boolean` | `false` | Adatta l'asse a un grafico a barre/linee orizzontali |
 | `labelXOffset` / `labelYOffset` | `number` | `0` | Offset manuale delle etichette |
-| `selectedArea` | `string[]` | — | Coppia `[inizio, fine]` di `dataPoints` da evidenziare come intervallo selezionato (solo `xAxis`) |
+| `selectedValue` | `string` | — | Categoria (`dataPoint`) da evidenziare |
+| `selectedColor` | `string` | — | Colore dell'evidenza di `selectedValue` |
+| `onLabelClick` | `(label: string, index: number) => void` | — | Callback al click su una label |
+| `selectedArea` | `string[]` | — | Coppia `[inizio, fine]` di `dataPoints` da evidenziare come intervallo |
 | `selectedAreaColor` | `string` | `"red"` | Colore dell'area selezionata |
 | `selectedAreaOpacity` | `number` | `0.2` | Opacità dell'area selezionata |
+
+> **Deprecato:** `<Axis type="xAxis|yAxis" …>` continua a funzionare (delega a
+> `<XAxis>`/`<YAxis>`) ma è deprecato e verrà rimosso nella 2.0.
 
 ### `<Bar>`
 
@@ -136,19 +161,20 @@ const darkChartTheme: Partial<ThemeState> = {
 | `showLabels` | `boolean` | `false` | Mostra il valore dentro ogni barra |
 | `topLabelSerie` | `string` | `""` | Nome di un'altra serie i cui valori vengono mostrati sopra le barre (es. un totale) |
 | `horizontal` | `boolean` | `false` | Disegna le barre orizzontalmente invece che in verticale |
-| `config.barClickAction` | `(value) => void` | — | Callback al click su una barra, riceve il punto dato |
-| `config.barDragAction` | `(payload: BarDragPayload) => void` | — | Abilita il drag verticale sulla barra; `payload` contiene `value`, `previousValue`, `deltaValue`, `index`, `date`, `serieName` |
-| `config.dragValueDecimals` | `number` | `2` | Decimali di arrotondamento del valore durante il drag |
-| `config.barWidth` | `number` | `padding` del tema | Larghezza della barra in px |
-| `config.radius` | `number` | `0` | Raggio di arrotondamento su tutti e 4 gli angoli |
-| `config.topLeftRadius` / `topRightRadius` / `bottomRightRadius` / `bottomLeftRadius` | `number` | `0` | Raggio per singolo angolo, sovrascrive `radius` |
-| `config.labelSize` / `topLabelSize` | `number` | `12` | Dimensione font delle label interne/superiori |
-| `config.labelColor` / `topLabelColor` | `string` | `"white"` / `"black"` | Colore delle label interne/superiori |
-| `config.barOffset` | `number` | — | Offset aggiuntivo (solo grafici `horizontal`) |
+| `onBarClick` | `(value) => void` | — | Callback al click su una barra, riceve il punto dato |
+| `onBarDrag` | `(payload: BarDragPayload) => void` | — | Abilita il drag verticale sulla barra; `payload` contiene `value`, `previousValue`, `deltaValue`, `index`, `date`, `serieName` |
+| `dragValueDecimals` | `number` | `2` | Decimali di arrotondamento del valore durante il drag |
+| `radius` | `number` | `0` | Raggio di arrotondamento su tutti e 4 gli angoli |
+| `topLeftRadius` / `topRightRadius` / `bottomRightRadius` / `bottomLeftRadius` | `number` | `0` | Raggio per singolo angolo, sovrascrive `radius` |
+| `labelSize` / `topLabelSize` | `number` | `12` | Dimensione font delle label interne/superiori |
+| `labelColor` / `topLabelColor` | `string` | `"white"` / `"black"` | Colore delle label interne/superiori |
+
+> Larghezza (`barWidth`) e offset (`barOffset`) delle barre sono props di
+> **`<Chart>`**. L'oggetto **`config`** è deprecato (rimozione nella 2.0).
 
 ### `<GroupBar>`
 
-Barre raggruppate (più serie affiancate per ogni punto sull'asse X). Config sostanzialmente identica a `<Bar>`, senza drag/click e senza `horizontal`.
+Barre raggruppate (più serie affiancate per ogni punto sull'asse X). Props sostanzialmente identiche a `<Bar>`, senza drag/click e senza `horizontal`.
 
 | Prop | Tipo | Default | Descrizione |
 |------|------|---------|-------------|
@@ -156,11 +182,13 @@ Barre raggruppate (più serie affiancate per ogni punto sull'asse X). Config sos
 | `stacked` | `boolean` | `false` | Impila questa barra con le altre che condividono lo stesso `stackedName` |
 | `showLabels` | `boolean` | `false` | Mostra il valore dentro ogni barra |
 | `topLabelSerie` | `string` | `""` | Nome di un'altra serie da mostrare come etichetta sopra le barre |
-| `config.radius` | `number` | `0` | Raggio di arrotondamento su tutti e 4 gli angoli |
-| `config.topLeftRadius` / `topRightRadius` / `bottomRightRadius` / `bottomLeftRadius` | `number` | `0` | Raggio per singolo angolo |
-| `config.barWidth` | `number` | `padding` del tema | Larghezza della barra in px |
-| `config.labelSize` / `topLabelSize` | `number` | `12` | Dimensione font delle label |
-| `config.labelColor` / `topLabelColor` | `string` | `"white"` / `"black"` | Colore delle label |
+| `radius` | `number` | `0` | Raggio di arrotondamento su tutti e 4 gli angoli |
+| `topLeftRadius` / `topRightRadius` / `bottomRightRadius` / `bottomLeftRadius` | `number` | `0` | Raggio per singolo angolo |
+| `labelSize` / `topLabelSize` | `number` | `12` | Dimensione font delle label |
+| `labelColor` / `topLabelColor` | `string` | `"white"` / `"black"` | Colore delle label |
+
+> Larghezza (`barWidth`) e spaziatura di gruppo (`barGroupGap`) sono props di
+> **`<Chart>`**. L'oggetto **`config`** è deprecato (rimozione nella 2.0).
 
 ### `<Line>`
 
@@ -234,7 +262,7 @@ Linea di soglia orizzontale o verticale sovrapposta al grafico.
 
 | Prop | Tipo | Default | Descrizione |
 |------|------|---------|-------------|
-| `legendType` | `"horizontal" \| "vertical"` | — (richiesta) | Layout della legenda |
+| `legendType` | `"horizontal" \| "vertical"` | `"horizontal"` | Layout della legenda |
 | `showDots` | `boolean` | `true` | Mostra il pallino colorato accanto al nome di ogni serie |
 | `height` | `number` | `60` | Altezza riservata alla legenda nell'SVG |
 | `hideSeries` | `string[]` | `[]` | Nomi delle serie da escludere dalla legenda |
@@ -253,3 +281,54 @@ Linea di soglia orizzontale o verticale sovrapposta al grafico.
 | `footer` | `(series: Serie[], hoveredElementIndex: number) => ReactNode` | — | Contenuto custom in fondo al tooltip, al posto del totale calcolato |
 | `cumulatedSeriesValue` | `{ series: string[]; label: string; format?: (value: number) => string }` | — | Se presente, mostra la somma dei valori delle `series` indicate con l'etichetta `label` |
 | `customElement` | `(props) => ReactNode` | — | Sostituisce completamente il rendering di riga per ogni serie nel tooltip |
+
+## Migrazione a v1.0
+
+Le API vecchie restano quasi tutte funzionanti ma **deprecate** (avviso in
+console in sviluppo) e verranno rimosse nella **2.0**. Elenco completo nel
+[CHANGELOG](./CHANGELOG.md).
+
+**Assi** — `<Axis type>` → `<XAxis>` / `<YAxis>`:
+
+```diff
+- import { Axis } from "tscharts";
++ import { XAxis, YAxis } from "tscharts";
+
+- <Axis type="yAxis" name="vendite" showLine showName />
+- <Axis type="xAxis" dataPoints={dataPoints} showLine />
++ <YAxis name="vendite" showLine showName />
++ <XAxis dataPoints={dataPoints} showLine />
+```
+
+**Larghezza/spaziatura barre** — dal `config` della serie a `<Chart>`:
+
+```diff
+- <Chart width={400} height={400} elements={elements}>
+-   <Bar name="vendite" config={{ barWidth: 28 }} />
++ <Chart width={400} height={400} elements={elements} barWidth={28}>
++   <Bar name="vendite" />
+```
+
+**Props di Bar/GroupBar** — da `config={{…}}` a props piatte
+(`barClickAction` → `onBarClick`, `barDragAction` → `onBarDrag`):
+
+```diff
+- <Bar name="vendite" config={{ radius: 8, barClickAction: onClick }} />
++ <Bar name="vendite" radius={8} onBarClick={onClick} />
+```
+
+**Selezione e click sulle label** — dal `config` di Bar all'asse:
+
+```diff
+- <Bar name="vendite" config={{ selectedValue: "14/03", barClickAction: onClick }} />
++ <Bar name="vendite" />
++ <XAxis dataPoints={dataPoints} selectedValue="14/03" onLabelClick={onClick} />
+```
+
+**Breaking senza retrocompatibilità:**
+
+- `type` è **obbligatorio** su ogni serie di `elements`.
+- Prop `<Line>`: `higlightLabels` → **`highlightLabels`**.
+- Import del CSS: `import "tscharts/style.css"` (non più `tscharts/dist/style.css`).
+- `labels` (label custom) è ora solo su serie `pie`/`donut`.
+- `<Chart style>` è tipizzata `CSSProperties`.

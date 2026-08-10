@@ -1,6 +1,6 @@
 {
 	"name": "tscharts",
-	"version": "0.17.6",
+	"version": "1.0.0",
 	"description": "Libreria di componenti React per grafici SVG, senza dipendenze runtime",
 	"type": "module",
 	"sideEffects": [
