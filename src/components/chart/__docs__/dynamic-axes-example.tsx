@@ -1,5 +1,6 @@
 import React, { type FC } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Bar from "../../bar/bar";
 import Legend from "../../legend/legend";
 import Line from "../../line/line";
@@ -51,17 +52,11 @@ const DynamicAxesExample: FC = () => {
 		>
 			<Chart width={520} height={400} elements={elements}>
 				{yAxes.map((axisName) => (
-					<Axis key={axisName} type="yAxis" name={axisName} showLine showName />
+					<YAxis key={axisName} name={axisName} showLine showName />
 				))}
 				<Bar name="vendite" />
 				<Line name="temperatura" showDots />
-				<Axis
-					type="xAxis"
-					name="giorno"
-					dataPoints={dataPoints}
-					showLine
-					showName
-				/>
+				<XAxis name="giorno" dataPoints={dataPoints} showLine showName />
 				<Tooltip />
 				<Legend legendType="horizontal" height={60} showDots />
 			</Chart>

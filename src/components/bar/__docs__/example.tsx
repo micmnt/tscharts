@@ -1,5 +1,6 @@
 import React, { type FC } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Chart from "../../chart/chart";
 import Legend from "../../legend/legend";
 import Bar, { type BarProps } from "../bar";
@@ -102,15 +103,14 @@ const Example: FC<BarProps & { barWidth?: number }> = ({
 			}}
 		>
 			<Chart width={400} height={400} elements={[elements]} barWidth={barWidth}>
-				<Axis type="yAxis" name="tempi migliori" showLine showName />
+				<YAxis name="tempi migliori" showLine showName />
 				<Bar
 					name={name}
 					stacked={stacked}
 					showLabels={showLabels}
 					config={config}
 				/>
-				<Axis
-					type="xAxis"
+				<XAxis
 					dataPoints={dataPoints}
 					showLine
 					showName

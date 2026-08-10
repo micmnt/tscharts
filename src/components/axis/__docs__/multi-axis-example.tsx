@@ -5,7 +5,8 @@ import Legend from "../../legend/legend";
 import Line from "../../line/line";
 import Threshold from "../../threshold/threshold";
 import Tooltip from "../../tooltip/tooltip";
-import Axis from "../axis";
+import XAxis from "../xAxis";
+import YAxis from "../yAxis";
 
 const elements = [
 	{
@@ -43,12 +44,12 @@ const MultiAxisExample: FC = () => {
 	return (
 		<div style={{ display: "flex", justifyContent: "center", height: "100%" }}>
 			<Chart width={500} height={350} elements={elements}>
-				<Axis type="yAxis" name="vendite" showLine showName />
+				<YAxis name="vendite" showLine showName />
 				<Bar name="vendite" />
 				<Threshold dashed name="soglia" axisName="vendite" />
-				<Axis type="yAxis" name="temperatura" showLine showName />
+				<YAxis name="temperatura" showLine showName />
 				<Line name="temperatura" showDots />
-				<Axis type="xAxis" dataPoints={dataPoints} showLine />
+				<XAxis dataPoints={dataPoints} showLine />
 				<Tooltip />
 				<Legend legendType="horizontal" height={50} showDots />
 			</Chart>

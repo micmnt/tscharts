@@ -22,6 +22,7 @@ import "../../styles.css";
 /* Utils Imports */
 import Svg from "../../components/svg/svg";
 /* Components Imports */
+import YAxis from "../axis/yAxis";
 import Bar from "../bar/bar";
 import Line from "../line/line";
 
@@ -90,9 +91,11 @@ const Chart = (props: ChartProps) => {
 	// cosi' assi generati dinamicamente vengono contati correttamente (R6).
 	const flatChildren = flattenChildren(children);
 
-	// Assi Y renderizzati (per conteggio e per il controllo R12 sotto).
+	// Assi Y renderizzati (per conteggio e per il controllo R12 sotto). Riconosco
+	// sia <YAxis> (per riferimento al componente) sia il vecchio
+	// <Axis type="yAxis"> (per props.type, alias deprecato).
 	const yAxisElements = flatChildren.filter(
-		(childEl) => childEl.props?.type === "yAxis",
+		(childEl) => childEl.type === YAxis || childEl.props?.type === "yAxis",
 	);
 	const yAxisCount = yAxisElements.length;
 
@@ -105,7 +108,7 @@ const Chart = (props: ChartProps) => {
 		.filter((name): name is string => Boolean(name));
 	for (const serie of getSeriesMissingYAxis(elements, yAxisNames)) {
 		warnDev(
-			`La serie "${serie.name}" usa l'asse "${serie.axisName ?? serie.name}" che non corrisponde a nessun <Axis type="yAxis" />: verra' disegnata su una scala isolata non mostrata da alcun asse. Aggiungi axisName con il nome di un asse Y esistente.`,
+			`La serie "${serie.name}" usa l'asse "${serie.axisName ?? serie.name}" che non corrisponde a nessun <YAxis />: verra' disegnata su una scala isolata non mostrata da alcun asse. Aggiungi axisName con il nome di un asse Y esistente.`,
 		);
 	}
 

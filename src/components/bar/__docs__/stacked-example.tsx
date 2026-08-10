@@ -1,5 +1,6 @@
 import React, { type FC } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Chart from "../../chart/chart";
 import Bar, { type BarProps } from "../bar";
 
@@ -166,7 +167,7 @@ const StackedExample: FC<BarProps & { barWidth?: number }> = ({
 			}}
 		>
 			<Chart width={400} height={400} elements={elements} barWidth={barWidth}>
-				<Axis type="yAxis" name="tempi migliori" showLine />
+				<YAxis name="tempi migliori" showLine />
 				<Bar
 					name={name}
 					stacked={stacked}
@@ -179,7 +180,7 @@ const StackedExample: FC<BarProps & { barWidth?: number }> = ({
 					showLabels={showLabels}
 					config={config}
 				/>
-				<Axis type="xAxis" dataPoints={dataPoints} showLine />
+				<XAxis dataPoints={dataPoints} showLine />
 			</Chart>
 		</div>
 	);

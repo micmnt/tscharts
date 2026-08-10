@@ -1,5 +1,6 @@
 import React, { type FC, useState } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Chart from "../../chart/chart";
 import Legend from "../../legend/legend";
 import Tooltip from "../../tooltip/tooltip";
@@ -49,13 +50,13 @@ const DragNegativeExample: FC = () => {
 					: "Trascina la barra 'a' (parte da -30) verso il basso"}
 			</div>
 			<Chart width={400} height={400} elements={[serie]}>
-				<Axis type="yAxis" name="variazione" showLine showGrid showName />
+				<YAxis name="variazione" showLine showGrid showName />
 				<Bar
 					name="variazione"
 					showLabels
 					config={{ barDragAction: handleDrag }}
 				/>
-				<Axis type="xAxis" dataPoints={dataPoints} showLine />
+				<XAxis dataPoints={dataPoints} showLine />
 				<Tooltip />
 				<Legend legendType="horizontal" height={40} showDots />
 			</Chart>

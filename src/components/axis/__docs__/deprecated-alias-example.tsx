@@ -3,8 +3,8 @@ import Bar from "../../bar/bar";
 import Chart from "../../chart/chart";
 import Legend from "../../legend/legend";
 import Tooltip from "../../tooltip/tooltip";
-import XAxis from "../xAxis";
-import YAxis from "../yAxis";
+// Import intenzionale dell'alias DEPRECATO per dimostrarne il funzionamento.
+import Axis from "../axis";
 
 const elements = [
 	{
@@ -22,18 +22,10 @@ const elements = [
 
 const dataPoints = ["13/03", "14/03", "15/03", "16/03"];
 
-// La selezione e' di proprieta' dell'asse (M2): `selectedValue`/`selectedColor`
-// evidenziano una categoria, `onLabelClick` rende le label cliccabili. Nessuna
-// di queste passa piu' dal config di Bar.
-type SelectionExampleProps = {
-	selectedValue?: string;
-	selectedColor?: string;
-};
-
-const SelectionExample: FC<SelectionExampleProps> = ({
-	selectedValue = "15/03",
-	selectedColor = "#6366f1",
-}) => {
+// Demo dell'alias deprecato <Axis type="...">: continua a funzionare (delega a
+// <XAxis>/<YAxis>) ma stampa in console un avviso di deprecation (una volta per
+// istanza). Verra' rimosso nella 2.0 — la nuova API e' <XAxis>/<YAxis>.
+const DeprecatedAliasExample: FC = () => {
 	return (
 		<div
 			style={{
@@ -44,18 +36,14 @@ const SelectionExample: FC<SelectionExampleProps> = ({
 			}}
 		>
 			<Chart width={480} height={400} elements={elements} barWidth={28}>
-				<YAxis name="vendite" showLine showName />
+				<Axis type="yAxis" name="vendite" showLine showName />
 				<Bar name="vendite" />
-				<XAxis
+				<Axis
+					type="xAxis"
 					name="giorno"
 					dataPoints={dataPoints}
 					showLine
 					showName
-					selectedValue={selectedValue}
-					selectedColor={selectedColor}
-					onLabelClick={(label, index) =>
-						console.log("[onLabelClick]", label, index)
-					}
 				/>
 				<Tooltip />
 				<Legend legendType="horizontal" height={60} showDots />
@@ -64,4 +52,4 @@ const SelectionExample: FC<SelectionExampleProps> = ({
 	);
 };
 
-export default SelectionExample;
+export default DeprecatedAliasExample;

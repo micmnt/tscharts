@@ -1,5 +1,6 @@
 import React, { type FC } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Bar from "../../bar/bar";
 import Chart from "../../chart/chart";
 import Legend from "../../legend/legend";
@@ -38,15 +39,9 @@ const IntersectExample: FC<IntersectExampleProps> = ({ intersect = false }) => {
 			}}
 		>
 			<Chart width={480} height={400} elements={elements} barWidth={22}>
-				<Axis type="yAxis" name="vendite" showLine showName />
+				<YAxis name="vendite" showLine showName />
 				<Bar name="vendite" />
-				<Axis
-					type="xAxis"
-					name="giorno"
-					dataPoints={dataPoints}
-					showLine
-					showName
-				/>
+				<XAxis name="giorno" dataPoints={dataPoints} showLine showName />
 				<Tooltip intersect={intersect} showGrid />
 				<Legend legendType="horizontal" height={60} showDots />
 			</Chart>

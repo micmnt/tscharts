@@ -1,5 +1,6 @@
 import React, { type FC } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Chart from "../../chart/chart";
 import GroupBar, { type GroupBarProps } from "../groupBar";
 
@@ -47,10 +48,10 @@ const Example: FC<GroupBarProps> = ({
 			}}
 		>
 			<Chart width={400} height={400} elements={elements}>
-				<Axis type="yAxis" name="vendite" showLine showName />
+				<YAxis name="vendite" showLine showName />
 				<GroupBar name={name} showLabels={showLabels} config={config} />
 				<GroupBar name="prodotto B" showLabels={showLabels} config={config} />
-				<Axis type="xAxis" dataPoints={dataPoints} showLine />
+				<XAxis dataPoints={dataPoints} showLine />
 			</Chart>
 		</div>
 	);

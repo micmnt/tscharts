@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
 import Chart from "../../chart/chart";
 import Tooltip from "../../tooltip/tooltip";
 import Bar from "../bar";
@@ -32,8 +32,7 @@ const HorizontalExample: FC = () => {
 		>
 			<Chart width={500} height={300} elements={elements}>
 				<Bar name="richieste" horizontal />
-				<Axis
-					type="xAxis"
+				<XAxis
 					horizontal
 					dataPoints={dataPoints}
 					showLine

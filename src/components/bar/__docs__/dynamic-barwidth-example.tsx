@@ -1,5 +1,6 @@
 import React, { type FC } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Chart from "../../chart/chart";
 import Legend from "../../legend/legend";
 import Tooltip from "../../tooltip/tooltip";
@@ -42,15 +43,9 @@ const DynamicBarWidthExample: FC<DynamicBarWidthProps> = ({
 			}}
 		>
 			<Chart width={480} height={400} elements={elements} barWidth={barWidth}>
-				<Axis type="yAxis" name="vendite" showLine showName />
+				<YAxis name="vendite" showLine showName />
 				<Bar name="vendite" />
-				<Axis
-					type="xAxis"
-					name="giorno"
-					dataPoints={dataPoints}
-					showLine
-					showName
-				/>
+				<XAxis name="giorno" dataPoints={dataPoints} showLine showName />
 				<Tooltip />
 				<Legend legendType="horizontal" height={60} showDots />
 			</Chart>

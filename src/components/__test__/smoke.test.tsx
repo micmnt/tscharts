@@ -4,7 +4,8 @@ import type { ReactElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import type { Serie } from "../../types";
 import AngleDonut from "../angleDonut/angleDonut";
-import Axis from "../axis/axis";
+import XAxis from "../axis/xAxis";
+import YAxis from "../axis/yAxis";
 import Bar from "../bar/bar";
 import Chart from "../chart/chart";
 import Donut from "../donut/donut";
@@ -52,9 +53,9 @@ describe("smoke: ogni famiglia di grafico monta e produce output valido", () => 
 		];
 		await expectRendersCleanly(
 			<Chart width={600} height={400} elements={elements}>
-				<Axis type="yAxis" name="vendite" showName />
+				<YAxis name="vendite" showName />
 				<Bar name="vendite" showLabels />
-				<Axis type="xAxis" dataPoints={dataPoints} />
+				<XAxis dataPoints={dataPoints} />
 			</Chart>,
 		);
 	});
@@ -73,9 +74,9 @@ describe("smoke: ogni famiglia di grafico monta e produce output valido", () => 
 		];
 		await expectRendersCleanly(
 			<Chart width={600} height={400} elements={elements}>
-				<Axis type="yAxis" name="temp" showName />
+				<YAxis name="temp" showName />
 				<Line name="temp" showDots showLabels />
-				<Axis type="xAxis" dataPoints={dataPoints} />
+				<XAxis dataPoints={dataPoints} />
 			</Chart>,
 		);
 	});
@@ -103,10 +104,10 @@ describe("smoke: ogni famiglia di grafico monta e produce output valido", () => 
 		];
 		await expectRendersCleanly(
 			<Chart width={600} height={400} elements={elements}>
-				<Axis type="yAxis" name="a1" showName />
+				<YAxis name="a1" showName />
 				<Bar name="a1" stacked />
 				<Bar name="a2" stacked />
-				<Axis type="xAxis" dataPoints={dataPoints} />
+				<XAxis dataPoints={dataPoints} />
 			</Chart>,
 		);
 	});
@@ -136,10 +137,10 @@ describe("smoke: ogni famiglia di grafico monta e produce output valido", () => 
 		];
 		await expectRendersCleanly(
 			<Chart width={600} height={400} elements={elements}>
-				<Axis type="yAxis" name="vendite" showName />
+				<YAxis name="vendite" showName />
 				<GroupBar name="prodotto A" showLabels />
 				<GroupBar name="prodotto B" showLabels />
-				<Axis type="xAxis" dataPoints={dataPoints} />
+				<XAxis dataPoints={dataPoints} />
 			</Chart>,
 		);
 	});
@@ -217,10 +218,10 @@ describe("smoke: ogni famiglia di grafico monta e produce output valido", () => 
 		];
 		await expectRendersCleanly(
 			<Chart width={600} height={400} elements={elements}>
-				<Axis type="yAxis" name="vendite" showName />
+				<YAxis name="vendite" showName />
 				<Bar name="vendite" />
 				<Threshold name="soglia" axisName="vendite" showLabel />
-				<Axis type="xAxis" dataPoints={dataPoints} />
+				<XAxis dataPoints={dataPoints} />
 			</Chart>,
 		);
 	});
@@ -239,9 +240,9 @@ describe("smoke: ogni famiglia di grafico monta e produce output valido", () => 
 		];
 		await expectRendersCleanly(
 			<Chart width={600} height={400} elements={elements}>
-				<Axis type="yAxis" name="saldo" showName />
+				<YAxis name="saldo" showName />
 				<Bar name="saldo" showLabels />
-				<Axis type="xAxis" dataPoints={dataPoints} />
+				<XAxis dataPoints={dataPoints} />
 			</Chart>,
 		);
 	});
@@ -260,9 +261,9 @@ describe("smoke: ogni famiglia di grafico monta e produce output valido", () => 
 		];
 		await expectRendersCleanly(
 			<Chart width={600} height={400} elements={elements}>
-				<Axis type="yAxis" name="vendite" showName />
+				<YAxis name="vendite" showName />
 				<Bar name="vendite" horizontal />
-				<Axis type="xAxis" dataPoints={dataPoints} horizontal />
+				<XAxis dataPoints={dataPoints} horizontal />
 			</Chart>,
 		);
 	});

@@ -1,5 +1,6 @@
 import React, { type FC } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Chart from "../../chart/chart";
 import Line, { type LineProps } from "../../line/line";
 import Threshold from "../threshold";
@@ -108,7 +109,7 @@ const Example: FC<LineProps & { thresholdName: string }> = ({
 			}}
 		>
 			<Chart width={400} height={400} elements={[elements, threshold]}>
-				<Axis type="yAxis" name="tempi migliori" showLine />
+				<YAxis name="tempi migliori" showLine />
 				<Line
 					name={name}
 					showDots={showDots}
@@ -116,7 +117,7 @@ const Example: FC<LineProps & { thresholdName: string }> = ({
 					hideLine={hideLine}
 				/>
 				<Threshold dashed name={thresholdName} />
-				<Axis type="xAxis" dataPoints={dataPoints} showLine />
+				<XAxis dataPoints={dataPoints} showLine />
 			</Chart>
 		</div>
 	);

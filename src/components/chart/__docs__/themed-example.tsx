@@ -1,6 +1,7 @@
 import React, { type FC } from "react";
 import type { ThemeState } from "../../../types";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Bar from "../../bar/bar";
 import Legend from "../../legend/legend";
 import Line from "../../line/line";
@@ -68,16 +69,10 @@ const ThemedExample: FC<ThemedExampleProps> = ({ theme }) => {
 			}}
 		>
 			<Chart width={480} height={400} elements={elements} theme={theme}>
-				<Axis type="yAxis" name="vendite" showGrid showLine showName />
+				<YAxis name="vendite" showGrid showLine showName />
 				<Bar name="vendite" showLabels />
 				<Line name="obiettivo" dashed />
-				<Axis
-					type="xAxis"
-					name="giorno"
-					dataPoints={dataPoints}
-					showLine
-					showName
-				/>
+				<XAxis name="giorno" dataPoints={dataPoints} showLine showName />
 				<Tooltip showGrid />
 				<Legend legendType="horizontal" height={60} showDots />
 			</Chart>

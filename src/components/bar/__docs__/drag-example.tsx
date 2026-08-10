@@ -1,5 +1,6 @@
 import React, { type FC, useState } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Chart from "../../chart/chart";
 import Legend from "../../legend/legend";
 import Bar, { type BarDragPayload } from "../bar";
@@ -88,7 +89,7 @@ const DragExample: FC<DragExampleProps> = ({
 					: "Drag a bar to update its value in real time"}
 			</div>
 			<Chart width={460} height={360} elements={elements} barWidth={barWidth}>
-				<Axis type="yAxis" name="tempi migliori" showLine showName />
+				<YAxis name="tempi migliori" showLine showName />
 				<Bar
 					name={name}
 					showLabels={showLabels}
@@ -97,8 +98,7 @@ const DragExample: FC<DragExampleProps> = ({
 						barDragAction: handleDrag,
 					}}
 				/>
-				<Axis
-					type="xAxis"
+				<XAxis
 					dataPoints={dataPoints}
 					showLine
 					showName

@@ -1,5 +1,6 @@
 import React, { type FC } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Chart from "../../chart/chart";
 import Bar, { type BarProps } from "../bar";
 
@@ -45,9 +46,9 @@ const NegativeExample: FC<BarProps> = ({
 			}}
 		>
 			<Chart width={400} height={400} elements={elements}>
-				<Axis type="yAxis" name="variazione" showLine showName />
+				<YAxis name="variazione" showLine showName />
 				<Bar name={name} showLabels={showLabels} config={config} />
-				<Axis type="xAxis" dataPoints={dataPoints} showLine />
+				<XAxis dataPoints={dataPoints} showLine />
 			</Chart>
 		</div>
 	);

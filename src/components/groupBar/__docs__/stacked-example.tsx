@@ -1,5 +1,6 @@
 import React, { type FC } from "react";
-import Axis from "../../axis/axis";
+import XAxis from "../../axis/xAxis";
+import YAxis from "../../axis/yAxis";
 import Chart from "../../chart/chart";
 import Legend from "../../legend/legend";
 import Tooltip from "../../tooltip/tooltip";
@@ -62,7 +63,7 @@ const StackedExample: FC<GroupBarProps> = ({
 			}}
 		>
 			<Chart width={450} height={400} elements={elements}>
-				<Axis type="yAxis" name="vendite" showLine showName />
+				<YAxis name="vendite" showLine showName />
 				<GroupBar
 					name="prodotto A"
 					stacked
@@ -81,7 +82,7 @@ const StackedExample: FC<GroupBarProps> = ({
 					showLabels={showLabels}
 					config={config}
 				/>
-				<Axis type="xAxis" dataPoints={dataPoints} showLine />
+				<XAxis dataPoints={dataPoints} showLine />
 				<Tooltip />
 				<Legend legendType="horizontal" height={60} showDots />
 			</Chart>
