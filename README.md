@@ -148,9 +148,41 @@ Asse delle categorie. Ospita anche selezione e click sulle label.
 | `selectedArea` | `string[]` | — | Coppia `[inizio, fine]` di `dataPoints` da evidenziare come intervallo |
 | `selectedAreaColor` | `string` | `"red"` | Colore dell'area selezionata |
 | `selectedAreaOpacity` | `number` | `0.2` | Opacità dell'area selezionata |
+| `scaleType` | `"band" \| "time"` | `"band"` | `"time"` posiziona i punti delle serie **line** proporzionalmente alla data (non all'indice). Vedi [Asse temporale](#asse-temporale) |
+| `parseDate` | `(date: string) => number \| Date` | `new Date(d).getTime()` | Converte la stringa `date` in istante. Serve quando `date` non è ISO 8601 (es. `"13/03"`). Solo con `scaleType="time"` |
+| `ticks` | `"data" \| number` | `"data"` | `"data"` = un tick per punto dato alla sua posizione temporale; un numero = N tick equispaziati nel dominio. Solo con `scaleType="time"` |
+| `tickFormat` | `(time: number) => string` | data grezza / `toLocaleDateString` | Formatta l'etichetta di un tick temporale |
 
 > **Deprecato:** `<Axis type="xAxis|yAxis" …>` continua a funzionare (delega a
 > `<XAxis>`/`<YAxis>`) ma è deprecato e verrà rimosso nella 2.0.
+
+#### Asse temporale
+
+Di default l'asse X è **categorico** (`band`): i punti sono equidistanti, uno
+per indice, e il campo `date` è solo un'etichetta. Con `scaleType="time"` l'asse
+diventa **quantitativo**: i punti delle serie `line` si distribuiscono in modo
+proporzionale al tempo, quindi un campionamento irregolare viene mostrato
+fedelmente (due misure ravvicinate restano vicine, un buco grande è largo).
+
+```tsx
+const parseDate = (d: string) => new Date(d).getTime();
+
+<Chart width={560} height={400} elements={elements}>
+  <YAxis name="vendite" showLine showName />
+  <Line name="vendite" showDots />
+  <XAxis scaleType="time" parseDate={parseDate} ticks="data" showLine />
+  <Tooltip />
+</Chart>
+```
+
+Note:
+- Agisce **solo sulle serie `line`**; le barre restano categoriche.
+- Il dominio `[min, max]` è calcolato dalle date delle serie line via `parseDate`
+  (default `new Date(d).getTime()`; passa un `parseDate` custom per formati non
+  ISO come `"13/03"`).
+- L'hover aggancia il **punto dato più vicino nel tempo**.
+- `ticks="data"` mostra un tick per punto; `ticks={N}` mostra N tick equispaziati
+  nel dominio, etichettati con `tickFormat`.
 
 ### `<Bar>`
 

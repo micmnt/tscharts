@@ -23,8 +23,11 @@ import { flattenChildren } from "../../lib/children";
 /* Core Imports */
 import {
 	convertToSVGPoint,
+	createBandScale,
 	getCategorySpacing,
 	getChartDimensions,
+	getChartTimeScale,
+	normalizeTime,
 } from "../../lib/core";
 import {
 	type ChartLayoutConfig,
@@ -287,25 +290,74 @@ const Svg = (props: SVGProps) => {
 				// sbagliato calcolato sull'asse sbagliato.
 				if (!ctxHorizontal && hoverableSerie) {
 					const serieData = hoverableSerie.data;
-					const xInterval = (chartXEnd - chartXStart) / (serieData.length || 1);
-					// Stessa fonte di verita' della centratura label (axis.tsx): per
-					// i GroupBar l'aggancio dell'hover tiene conto della larghezza
-					// dell'intero gruppo, non di una singola barra (R5).
-					const xSpace = getCategorySpacing(
-						ctxElements ?? [],
-						ctxGlobalConfig,
-						padding ?? 0,
-					);
-					const hoveredIndex = Math.round(
-						(svgPoint.x - chartXStart - xSpace) / xInterval,
-					);
-					// intersect=true (R15): l'hover si attiva solo se il mouse e'
-					// dentro i bounds dell'elemento. La mezza-larghezza dell'elemento
-					// (barra o gruppo) e' xSpace - padding/2 (deriva da
-					// getCategorySpacing). Con intersect=false e' sempre attivo
-					// (prossimita', comportamento storico).
-					const center = chartXStart + xSpace + hoveredIndex * xInterval;
-					const halfWidth = xSpace - (padding ?? 0) / 2;
+
+					// Asse tempo (S2b): i punti non sono equispaziati, quindi l'indice
+					// e' il punto DATO piu' vicino nel tempo (non un round su band).
+					// Stessa getChartTimeScale usata da generatore line e asse.
+					const timeScale =
+						ctx?.scaleType === "time"
+							? getChartTimeScale({
+									timeDomain: ctx.timeDomain,
+									chartXStart,
+									chartXEnd,
+									padding: padding ?? 0,
+								})
+							: null;
+
+					let hoveredIndex: number;
+					let center: number;
+					let halfWidth: number;
+
+					if (timeScale) {
+						const times = serieData.map((d) =>
+							normalizeTime(d.date, ctx?.parseDate),
+						);
+						const mouseTime = timeScale.invert(svgPoint.x);
+						hoveredIndex = 0;
+						let bestDist = Number.POSITIVE_INFINITY;
+						times.forEach((t, i) => {
+							const dist = Math.abs(t - mouseTime);
+							if (dist < bestDist) {
+								bestDist = dist;
+								hoveredIndex = i;
+							}
+						});
+						center = timeScale.position(times[hoveredIndex] ?? 0);
+						// tolleranza intersect: meta' distanza pixel dal vicino piu'
+						// prossimo (i punti tempo non sono equispaziati).
+						const neighborGaps = [
+							times[hoveredIndex - 1],
+							times[hoveredIndex + 1],
+						]
+							.filter((t): t is number => isDefined(t))
+							.map((t) => Math.abs(timeScale.position(t) - center));
+						halfWidth = neighborGaps.length
+							? Math.min(...neighborGaps) / 2
+							: (padding ?? 0);
+					} else {
+						// Stessa fonte di verita' della centratura label (xAxis.tsx): per
+						// i GroupBar l'aggancio dell'hover tiene conto della larghezza
+						// dell'intero gruppo, non di una singola barra (R5). Stessa
+						// BandScale "centro categoria" di xAxis.tsx: invert per l'indice,
+						// position per il centro -> hover e label non divergono (S2a).
+						const xSpace = getCategorySpacing(
+							ctxElements ?? [],
+							ctxGlobalConfig,
+							padding ?? 0,
+						);
+						const xScale = createBandScale({
+							start: chartXStart,
+							end: chartXEnd,
+							count: serieData.length,
+							firstOffset: xSpace,
+						});
+						hoveredIndex = xScale.invert(svgPoint.x);
+						// intersect=true (R15): l'hover si attiva solo se il mouse e'
+						// dentro i bounds dell'elemento (xSpace - padding/2).
+						center = xScale.position(hoveredIndex);
+						halfWidth = xSpace - (padding ?? 0) / 2;
+					}
+
 					const isOverElement =
 						!intersect || Math.abs(svgPoint.x - center) <= halfWidth;
 
@@ -348,6 +400,9 @@ const Svg = (props: SVGProps) => {
 			ctxGlobalConfig,
 			padding,
 			intersect,
+			ctx?.scaleType,
+			ctx?.timeDomain,
+			ctx?.parseDate,
 		],
 	);
 

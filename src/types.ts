@@ -84,6 +84,13 @@ export type ChartState = {
 	timeSeriesMaxValue?: number;
 	chartID?: string | null;
 	globalConfig?: GlobalConfig;
+	// Asse X temporale (S2b): "time" posiziona i punti delle serie line in modo
+	// proporzionale alla data (non all'indice). `parseDate` converte la stringa
+	// `date` in ms epoch (default new Date(d).getTime()); `timeDomain` e' il
+	// [min,max] gia' calcolato da <Chart> dai dati delle serie line.
+	scaleType?: "band" | "time";
+	parseDate?: (date: string) => number | Date;
+	timeDomain?: readonly [number, number];
 	// Se nel chart e' presente un <Tooltip>: axis.tsx lo usa per decidere se
 	// renderizzare gli hover-rect, senza piu' interrogare il DOM (R7).
 	hasTooltip?: boolean;
@@ -109,6 +116,9 @@ export type ChartStructuralState = Pick<
 	| "chartID"
 	| "globalConfig"
 	| "hasTooltip"
+	| "scaleType"
+	| "parseDate"
+	| "timeDomain"
 >;
 
 // Slice "interattiva" del ChartState: l'elemento in hover, che cambia solo al

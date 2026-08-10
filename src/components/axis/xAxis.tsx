@@ -1,10 +1,13 @@
 import { Fragment } from "react";
 /* Core Imports */
 import {
+	createBandScale,
 	DEFAULT_HORIZONTAL_BAR_OFFSET,
 	generateXAxis,
 	getCategorySpacing,
+	getChartTimeScale,
 	NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER,
+	normalizeTime,
 } from "../../lib/core";
 /* Utils Imports */
 import { isFunction, isTimeSerie, warnDev } from "../../lib/utils";
@@ -41,6 +44,8 @@ const XAxis = (props: XAxisProps) => {
 		selectedColor,
 		onLabelClick,
 		showLabels = true,
+		ticks = "data",
+		tickFormat,
 	} = props;
 
 	const { ctx, interactive, dispatch, theme } = useAxisBase();
@@ -242,7 +247,87 @@ const XAxis = (props: XAxisProps) => {
 
 	const serieData = serie.data as TimeSerieEl[];
 
-	const xAxisInterval = (chartXEnd - chartXStart) / (serieData?.length || 1);
+	// Asse tempo (S2b): tick posizionati dalla stessa scala usata dal generatore
+	// line e dall'hover (getChartTimeScale). `ticks="data"` -> un tick per punto
+	// dato (label = date grezza); numero -> N tick equispaziati (label via
+	// tickFormat o toLocaleDateString). Nessun hover-rect/selezione qui: sono
+	// concetti band, l'hover tempo e' gestito da svg.tsx (nearest point).
+	const timeScale =
+		ctx.scaleType === "time" ? getChartTimeScale({ ...ctx, padding }) : null;
+
+	if (timeScale) {
+		const lineSerie = elements?.find((el) => el.type === "line");
+		const lineData = (lineSerie?.data ?? []) as TimeSerieEl[];
+		const byData = ticks === "data";
+
+		const tickTimes = byData
+			? lineData.map((d) => normalizeTime(d.date, ctx.parseDate))
+			: timeScale.ticks(typeof ticks === "number" ? ticks : 6);
+
+		const tickY = ctx.negative
+			? chartYEnd + NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER * padding
+			: chartYEnd + padding;
+
+		return (
+			<>
+				{showLine ? (
+					<path
+						d={xAxis?.path}
+						strokeWidth={theme?.axis?.size}
+						stroke={lineColor ?? theme?.axis?.color}
+					/>
+				) : null}
+				{showLabels
+					? tickTimes.map((time, tickIndex) => {
+							const x = timeScale.position(time);
+							const value = tickFormat
+								? tickFormat(time)
+								: byData
+									? (lineData[tickIndex]?.date ?? String(time))
+									: new Date(time).toLocaleDateString();
+							return (
+								<Fragment key={`time-tick-${time}-${tickIndex}`}>
+									{showGrid ? (
+										<path
+											d={`M ${x} ${chartYEnd + (padding * 1) / 3} V 0`}
+											strokeWidth={theme?.grid?.size}
+											strokeDasharray={theme?.grid?.dashed ? 5 : 0}
+											stroke={gridColor ?? theme?.grid?.color}
+										/>
+									) : null}
+									<text
+										textAnchor={tiltLabels ? "start" : "middle"}
+										x={x - labelXOffset}
+										y={tickY - labelYOffset}
+										fontSize={labelFontSize}
+										fill={labelTextColor}
+										transform={
+											tiltLabels
+												? `rotate(${tiltLabelsAngle}, ${x}, ${tickY})`
+												: undefined
+										}
+									>
+										{value}
+									</text>
+								</Fragment>
+							);
+						})
+					: null}
+				{showName ? (
+					<text
+						x={chartXEnd / 2}
+						y={chartYEnd + 45}
+						textAnchor="middle"
+						fontSize={titleSize ?? theme?.axis?.titleSize}
+						fill={theme?.axis?.titleColor}
+						fontWeight={600}
+					>
+						{name}
+					</text>
+				) : null}
+			</>
+		);
+	}
 
 	// Offset della prima categoria: stessa fonte di verita' usata da svg.tsx
 	// per l'hover (getCategorySpacing), cosi' label dell'asse e aggancio del
@@ -250,10 +335,19 @@ const XAxis = (props: XAxisProps) => {
 	// dell'intero gruppo (K9/K10), non di una singola barra.
 	const xSpacing = getCategorySpacing(elements ?? [], globalConfig, padding);
 
+	// Scala band "centro categoria": label dell'asse (position) e hover di
+	// svg.tsx (invert) consumano la STESSA scala, quindi non possono divergere.
+	const xScale = createBandScale({
+		start: chartXStart,
+		end: chartXEnd,
+		count: serieData?.length ?? 0,
+		firstOffset: xSpacing,
+	});
+
 	const labels = dataPoints.map((label, labelIndex) => {
 		return {
 			value: label,
-			x: xAxisInterval * labelIndex + chartXStart + xSpacing,
+			x: xScale.position(labelIndex),
 			y: ctx.negative
 				? chartYEnd + NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER * padding
 				: chartYEnd + padding,
@@ -290,8 +384,7 @@ const XAxis = (props: XAxisProps) => {
 	}
 
 	const xPoints = labels.map((label, labelIndex) => {
-		const hoverRectWidth =
-			ctx?.globalConfig?.barWidth ?? xAxisInterval - padding;
+		const hoverRectWidth = ctx?.globalConfig?.barWidth ?? xScale.step - padding;
 
 		const hoverRectX = label.x - hoverRectWidth / 2;
 

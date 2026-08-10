@@ -29,6 +29,19 @@ export type XAxisProps = AxisBaseProps & {
 	selectedValue?: string;
 	selectedColor?: string;
 	onLabelClick?: (label: string, index: number) => void;
+	// Asse temporale (S2b): "time" posiziona i punti delle serie line
+	// proporzionalmente alla data. Default "band" (categorico, comportamento
+	// storico).
+	scaleType?: "band" | "time";
+	// Converte la stringa `date` in ms epoch (o Date). Default
+	// `new Date(d).getTime()`. Serve quando `date` non e' ISO 8601 (es. "13/03").
+	parseDate?: (date: string) => number | Date;
+	// Tick dell'asse tempo: "data" (default) = uno per punto dato, alla sua
+	// posizione temporale; un numero = N tick equispaziati nel dominio.
+	ticks?: "data" | number;
+	// Formattazione etichetta di un tick temporale. Default: modalita' "data" =
+	// stringa date grezza, modalita' numerica = toLocaleDateString.
+	tickFormat?: (time: number) => string;
 };
 
 // Asse Y: `name` identifica la scala (di fatto obbligatorio: warnDev se nessuna

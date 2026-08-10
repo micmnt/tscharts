@@ -4,6 +4,33 @@ Tutte le modifiche rilevanti a questo progetto sono documentate qui.
 Il formato si ispira a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e il progetto segue il [Semantic Versioning](https://semver.org/lang/it/).
 
+## [1.1.0] - 2026-08-10
+
+### Added
+
+- **Asse X temporale** su `<XAxis scaleType="time">`: i punti delle serie
+  `line` si posizionano proporzionalmente alla **data** (non all'indice), quindi
+  un campionamento irregolare viene mostrato fedelmente. Props correlate:
+  - `parseDate?: (date: string) => number | Date` — conversione della stringa
+    `date` (default `new Date(d).getTime()`; utile per formati non-ISO come
+    `"13/03"`);
+  - `ticks?: "data" | number` — `"data"` (default) un tick per punto dato alla
+    sua posizione temporale, un numero N tick equispaziati nel dominio;
+  - `tickFormat?: (time: number) => string` — etichetta del tick temporale.
+
+  Agisce solo sulle serie `line` (le barre restano categoriche); l'hover aggancia
+  il punto dato più vicino nel tempo. Vedi
+  [README](./README.md#asse-temporale). Default `scaleType="band"` invariato.
+
+### Internal
+
+- Scale esplicite nel core (`createBandScale`, `createTimeScale`,
+  `getChartTimeScale`): l'aritmetica di posizionamento X, prima ripetuta a mano
+  nei generatori/asse/hover, è ora incapsulata in oggetti scala condivisi —
+  `position`/`invert` non possono più divergere. Refactor a comportamento
+  invariato (byte-identico con la config di default), abilitante per l'asse
+  temporale. Nessuna nuova dipendenza runtime.
+
 ## [1.0.0] - 2026-08-10
 
 Primo rilascio stabile. Consolida l'API dei componenti e sposta ogni prop sul

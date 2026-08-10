@@ -17,11 +17,13 @@ import {
 	generateVerticalBarPath,
 	getValuePosition,
 } from "./primitives";
+import { createBandScale, getChartTimeScale } from "./scales";
 import {
 	calculateStackedSeriesMax,
 	getEffectiveMaxValue,
 	getSerieMaxValueForAxis,
 	getTimeSerieMaxValue,
+	normalizeTime,
 } from "./series";
 
 // Funzione condivisa dalle 6 varianti di generate*DataPaths: inizializza le
@@ -96,8 +98,14 @@ export const generateStackedDataPaths = (
 		bottomLeftRadius,
 	} = ctx;
 
-	const xAxisInterval =
-		(chartXEnd - chartXStart) / (timeSerieData?.length || 1);
+	// Scala X (band): le barre stacked partono dal bordo sinistro (offset
+	// padding/2), come nel caso non-stacked.
+	const xScale = createBandScale({
+		start: chartXStart,
+		end: chartXEnd,
+		count: timeSerieData?.length ?? 0,
+		firstOffset: padding / 2,
+	});
 
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, stackedMaxValue);
 
@@ -121,7 +129,7 @@ export const generateStackedDataPaths = (
 		const serieY = chartYEnd - value - prevPosition;
 
 		const barWidth = ctxBarWidth ?? padding;
-		const serieElX = xAxisInterval * serieElIndex + (chartXStart + padding / 2);
+		const serieElX = xScale.position(serieElIndex);
 
 		const point =
 			value < MIN_STACKED_BAR_HEIGHT_FOR_LABEL
@@ -207,8 +215,18 @@ export const generateNegativeDataPaths = (
 		globalConfig,
 	} = ctx;
 
-	// Calcolo l'intervallo tra un punto/barra e l'altro sull'asse X
-	const xAxisInterval = (chartXEnd - chartXStart) / timeSerieData?.length || 1;
+	// Spaziatura del punto linea verso il centro cella (la barra parte dal bordo).
+	const xSpacing = globalConfig?.barWidth
+		? Number(globalConfig?.barWidth) / 2
+		: padding;
+
+	// Scala X (band): barra da padding/2, punto linea +xSpacing (offset invariati).
+	const xScale = createBandScale({
+		start: chartXStart,
+		end: chartXEnd,
+		count: timeSerieData?.length ?? 0,
+		firstOffset: type === "bar" ? padding / 2 : padding / 2 + xSpacing,
+	});
 
 	// Calcolo il valore massimo della serie arrotondato al primo numero dell'ordine di grandezza utile. Ex. (20, 200, 2000)
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, serieMaxValue);
@@ -239,8 +257,7 @@ export const generateNegativeDataPaths = (
 
 		if (type === "bar") {
 			const barWidth = ctxBarWidth ?? padding;
-			const serieElX =
-				xAxisInterval * serieElIndex + (chartXStart + padding / 2);
+			const serieElX = xScale.position(serieElIndex);
 
 			// Punto medio della barra tra zeroY (la base, non chartYEnd come nel
 			// caso non-negativo) e serieY, con lo stesso nudge verso la base
@@ -283,12 +300,7 @@ export const generateNegativeDataPaths = (
 				isNegative,
 			);
 		}
-		const xSpacing = globalConfig?.barWidth
-			? Number(globalConfig?.barWidth) / 2
-			: padding;
-
-		const serieElX =
-			xAxisInterval * serieElIndex + xSpacing + (chartXStart + padding / 2);
+		const serieElX = xScale.position(serieElIndex);
 
 		const formattedX =
 			isDefined(serieElX) && !Number.isNaN(serieElX) ? serieElX : null;
@@ -365,8 +377,27 @@ export const generateDataPaths = (
 		globalConfig,
 	} = ctx;
 
-	// Calcolo l'intervallo tra un punto/barra e l'altro sull'asse X
-	const xAxisInterval = (chartXEnd - chartXStart) / timeSerieData?.length || 1;
+	// Spaziatura aggiuntiva del punto linea (la barra parte dal bordo sinistro,
+	// il punto linea e' spostato verso il centro cella).
+	const xSpacing = globalConfig?.barWidth
+		? Number(globalConfig?.barWidth) / 2
+		: padding;
+
+	// Scala X (band): incapsula `step * index + base` e il suo inverso. La barra
+	// parte da padding/2, il punto linea aggiunge xSpacing (offset invariati).
+	const xScale = createBandScale({
+		start: chartXStart,
+		end: chartXEnd,
+		count: timeSerieData?.length ?? 0,
+		firstOffset: type === "bar" ? padding / 2 : padding / 2 + xSpacing,
+	});
+
+	// S2b: per le serie LINE su asse tempo il punto X e' proporzionale alla data
+	// (getChartTimeScale, stessa fonte usata da asse e hover), non all'indice.
+	// Le barre restano band. Se scaleType != "time" -> null -> comportamento
+	// storico invariato.
+	const timeScale =
+		type === "line" && ctx.scaleType === "time" ? getChartTimeScale(ctx) : null;
 
 	// Calcolo il valore massimo della serie arrotondato al primo numero dell'ordine di grandezza utile. Ex. (20, 200, 2000)
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, serieMaxValue);
@@ -382,8 +413,7 @@ export const generateDataPaths = (
 
 		if (type === "bar") {
 			const barWidth = ctxBarWidth ?? padding;
-			const serieElX =
-				xAxisInterval * serieElIndex + (chartXStart + padding / 2);
+			const serieElX = xScale.position(serieElIndex);
 
 			const point =
 				value < MIN_BAR_HEIGHT_FOR_LABEL
@@ -415,12 +445,9 @@ export const generateDataPaths = (
 				bottomLeftRadius,
 			);
 		}
-		const xSpacing = globalConfig?.barWidth
-			? Number(globalConfig?.barWidth) / 2
-			: padding;
-
-		const serieElX =
-			xAxisInterval * serieElIndex + xSpacing + (chartXStart + padding / 2);
+		const serieElX = timeScale
+			? timeScale.position(normalizeTime(serieEl.date, ctx.parseDate))
+			: xScale.position(serieElIndex);
 
 		const formattedX =
 			isDefined(serieElX) && !Number.isNaN(serieElX) ? serieElX : null;
@@ -554,8 +581,14 @@ export const generateGroupDataPaths = (
 		bottomLeftRadius,
 	} = ctx;
 
-	const xAxisGroupInterval =
-		(chartXEnd - chartXStart) / timeSerieData?.length || 1;
+	// Scala X (band) della categoria: firstOffset padding/2 come le altre barre.
+	// L'offset di slot dentro il gruppo resta additivo (K8/K10).
+	const xScale = createBandScale({
+		start: chartXStart,
+		end: chartXEnd,
+		count: timeSerieData?.length ?? 0,
+		firstOffset: padding / 2,
+	});
 
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, serieMaxValue);
 
@@ -569,19 +602,12 @@ export const generateGroupDataPaths = (
 		const serieY = isDefined(serieEl.value) ? chartYEnd - value : null;
 
 		const barWidth = ctxBarWidth ?? padding;
-		// Incremento diretto barWidth+gap invece che derivato da
-		// xAxisInterval: cosi' le barre dello stesso gruppo restano vicine
-		// indipendentemente da quanto spazio la categoria ha a disposizione
-		// (K8).
+		// Incremento diretto barWidth+gap: le barre dello stesso gruppo restano
+		// vicine indipendentemente dallo spazio della categoria (K8). Base
+		// allineata alle altre generate*DataPaths tramite la band scale (K10).
 		const barGap = ctxBarGroupGap ?? padding / 4;
-		// Base chartXStart+padding/2, non padding/4: allineata alle altre
-		// funzioni generate*DataPaths e a generateStackedGroupDataPaths, cosi'
-		// serie stacked e non-stacked nello stesso chart partono dallo stesso
-		// punto (K10).
 		const serieElX =
-			serieElIndex * xAxisGroupInterval +
-			(barWidth + barGap) * serieIndex +
-			(chartXStart + padding / 2);
+			xScale.position(serieElIndex) + (barWidth + barGap) * serieIndex;
 
 		const point =
 			value < MIN_BAR_HEIGHT_FOR_LABEL
@@ -698,8 +724,13 @@ export const generateStackedGroupDataPaths = (
 		bottomLeftRadius,
 	} = ctx;
 
-	const xAxisGroupInterval =
-		(chartXEnd - chartXStart) / timeSerieData?.length || 1;
+	// Scala X (band) della categoria: firstOffset padding/2, slot additivo.
+	const xScale = createBandScale({
+		start: chartXStart,
+		end: chartXEnd,
+		count: timeSerieData?.length ?? 0,
+		firstOffset: padding / 2,
+	});
 
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, stackedMaxValue);
 
@@ -724,15 +755,11 @@ export const generateStackedGroupDataPaths = (
 
 		const barWidth = ctxBarWidth ?? padding;
 
-		// Incremento diretto barWidth+gap invece che derivato da
-		// xAxisInterval/groupBarNumber: cosi' le barre dello stesso gruppo
-		// restano vicine indipendentemente da quanto spazio la categoria ha
-		// a disposizione (K8).
+		// Incremento diretto barWidth+gap: barre dello stesso gruppo vicine
+		// indipendentemente dallo spazio della categoria (K8).
 		const barGap = ctxBarGroupGap ?? padding / 4;
 		const serieElX =
-			serieElIndex * xAxisGroupInterval +
-			(barWidth + barGap) * serieGroupIndex +
-			(chartXStart + padding / 2);
+			xScale.position(serieElIndex) + (barWidth + barGap) * serieGroupIndex;
 
 		const point =
 			value < MIN_STACKED_BAR_HEIGHT_FOR_LABEL
@@ -895,7 +922,15 @@ export const generateHorizontalDataPaths = (
 	const chartXStart = rawChartXStart + effectiveBarOffset;
 	const chartXEnd = rawChartXEnd - 8;
 
-	const yAxisInterval = (chartYEnd - padding) / timeSerieData?.length || 1;
+	// Scala band applicata alla dimensione Y (grafico orizzontale: le categorie
+	// scorrono in verticale). Stessa astrazione dell'asse X, orientamento
+	// diverso; offset di partenza padding/2 invariato.
+	const yScale = createBandScale({
+		start: 0,
+		end: chartYEnd - padding,
+		count: timeSerieData?.length ?? 0,
+		firstOffset: padding / 2,
+	});
 
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, serieMaxValue);
 
@@ -907,7 +942,7 @@ export const generateHorizontalDataPaths = (
 		);
 		const serieX = isDefined(serieEl.value) ? chartXStart + value : null;
 		const barHeight = ctxBarWidth ?? padding;
-		const serieElY = yAxisInterval * serieElIndex + padding / 2;
+		const serieElY = yScale.position(serieElIndex);
 
 		if (type === "bar") {
 			const point =

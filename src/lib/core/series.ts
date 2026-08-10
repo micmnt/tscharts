@@ -4,7 +4,50 @@ import type {
 	TimeSerie,
 	TimeSerieEl,
 } from "../../types";
-import { calculateFlatValue, isThresholdSerie, isTimeSerie } from "../utils";
+import {
+	calculateFlatValue,
+	isThresholdSerie,
+	isTimeSerie,
+	warnDev,
+} from "../utils";
+
+// Converte la stringa `date` di un punto in ms epoch. `parseDate` (opzionale)
+// gestisce formati non-ISO (es. "13/03"); di default usa new Date(d).getTime().
+// Accetta sia number (ms) che Date come ritorno del parser (S2b).
+export const normalizeTime = (
+	date: string,
+	parseDate?: (d: string) => number | Date,
+): number => {
+	const value = parseDate ? parseDate(date) : new Date(date).getTime();
+	return value instanceof Date ? value.getTime() : value;
+};
+
+// Dominio temporale [min, max] calcolato dalle SOLE serie line (decisione S2b:
+// la scala tempo agisce solo su line). Ritorna undefined se non ci sono istanti
+// validi. Avvisa in dev sui `date` che parseDate non riesce a interpretare.
+export const computeTimeDomain = (
+	elements: Serie[],
+	parseDate?: (date: string) => number | Date,
+): [number, number] | undefined => {
+	const times: number[] = [];
+
+	for (const el of elements) {
+		if (el.type !== "line") continue;
+		for (const point of el.data) {
+			const time = normalizeTime(point.date, parseDate);
+			if (Number.isNaN(time)) {
+				warnDev(
+					`<XAxis scaleType="time">: data "${point.date}" non interpretabile (parseDate ha restituito NaN). Il punto verra' ignorato nel dominio.`,
+				);
+				continue;
+			}
+			times.push(time);
+		}
+	}
+
+	if (times.length === 0) return undefined;
+	return [Math.min(...times), Math.max(...times)];
+};
 
 // Serie "bar"/"line" singole la cui chiave d'asse (axisName ?? name) non
 // corrisponde ad alcun asse Y renderizzato: verrebbero disegnate su una scala

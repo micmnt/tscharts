@@ -62,6 +62,9 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 				horizontal: initialState.horizontal,
 				flatMax: initialState.flatMax,
 				timeSeriesMaxValue: initialState.timeSeriesMaxValue,
+				scaleType: initialState.scaleType,
+				parseDate: initialState.parseDate,
+				timeDomain: initialState.timeDomain,
 			},
 		});
 	}, [
@@ -70,6 +73,9 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 		initialState.horizontal,
 		initialState.flatMax,
 		initialState.timeSeriesMaxValue,
+		initialState.scaleType,
+		initialState.parseDate,
+		initialState.timeDomain,
 	]);
 
 	// Slice memoizzate: cambiano riferimento solo quando cambia uno dei loro
@@ -93,6 +99,9 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 			chartID: chart.chartID,
 			globalConfig: chart.globalConfig,
 			hasTooltip: chart.hasTooltip,
+			scaleType: chart.scaleType,
+			parseDate: chart.parseDate,
+			timeDomain: chart.timeDomain,
 		}),
 		[
 			chart.elements,
@@ -110,6 +119,9 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 			chart.chartID,
 			chart.globalConfig,
 			chart.hasTooltip,
+			chart.scaleType,
+			chart.parseDate,
+			chart.timeDomain,
 		],
 	);
 
@@ -177,8 +189,16 @@ function chartReducer(
 			return { ...chart, hasTooltip };
 		}
 		case "SYNC_PROPS": {
-			const { elements, negative, horizontal, flatMax, timeSeriesMaxValue } =
-				action.payload;
+			const {
+				elements,
+				negative,
+				horizontal,
+				flatMax,
+				timeSeriesMaxValue,
+				scaleType,
+				parseDate,
+				timeDomain,
+			} = action.payload;
 
 			return {
 				...chart,
@@ -187,6 +207,9 @@ function chartReducer(
 				horizontal,
 				flatMax,
 				timeSeriesMaxValue,
+				scaleType,
+				parseDate,
+				timeDomain,
 			};
 		}
 		default: {

@@ -8,6 +8,7 @@ import { ChartProvider } from "../../contexts/chartContext";
 /* Core Imports */
 import { flattenChildren } from "../../lib/children";
 import {
+	computeTimeDomain,
 	getAxisCount,
 	getSeriesMissingYAxis,
 	getTimeSerieMaxValue,
@@ -22,6 +23,7 @@ import "../../styles.css";
 /* Utils Imports */
 import Svg from "../../components/svg/svg";
 /* Components Imports */
+import XAxis from "../axis/xAxis";
 import YAxis from "../axis/yAxis";
 import Bar from "../bar/bar";
 import Line from "../line/line";
@@ -142,6 +144,32 @@ const Chart = (props: ChartProps) => {
 		.flatMap((timeSerieEl) => timeSerieEl.data)
 		?.some((el) => el.value < 0);
 
+	// Asse X temporale (S2b): rilevo <XAxis scaleType="time"> (o l'alias
+	// deprecato <Axis type="xAxis" scaleType="time">), leggo parseDate e calcolo
+	// il dominio tempo dalle sole serie line. Questi finiscono nel ChartState e
+	// da li' raggiungono generatore line, asse e hover.
+	const xAxisChild = flatChildren.find(
+		(childEl) => childEl.type === XAxis || childEl.props?.type === "xAxis",
+	);
+	const scaleType: "time" | undefined =
+		xAxisChild?.props?.scaleType === "time" ? "time" : undefined;
+	const parseDate = xAxisChild?.props?.parseDate as
+		| ((date: string) => number | Date)
+		| undefined;
+	const rawTimeDomain =
+		scaleType === "time" ? computeTimeDomain(elements, parseDate) : undefined;
+	const timeDomainMin = rawTimeDomain?.[0];
+	const timeDomainMax = rawTimeDomain?.[1];
+	// Reference stabile: cambia solo quando cambiano gli estremi, non a ogni
+	// render (computeTimeDomain ritorna un nuovo array ogni volta).
+	const timeDomain = useMemo<readonly [number, number] | undefined>(
+		() =>
+			timeDomainMin !== undefined && timeDomainMax !== undefined
+				? [timeDomainMin, timeDomainMax]
+				: undefined,
+		[timeDomainMin, timeDomainMax],
+	);
+
 	const { leftAxisCount, rightAxisCount } = getAxisCount(yAxisCount);
 
 	const initialState = useMemo(
@@ -160,6 +188,9 @@ const Chart = (props: ChartProps) => {
 			chartYMiddle: 0,
 			flatMax,
 			timeSeriesMaxValue,
+			scaleType,
+			parseDate,
+			timeDomain,
 		}),
 		[
 			elements,
@@ -169,6 +200,9 @@ const Chart = (props: ChartProps) => {
 			negative,
 			horizontal,
 			flatMax,
+			scaleType,
+			parseDate,
+			timeDomain,
 		],
 	);
 
