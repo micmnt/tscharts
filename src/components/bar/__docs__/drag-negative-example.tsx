@@ -51,11 +51,7 @@ const DragNegativeExample: FC = () => {
 			</div>
 			<Chart width={400} height={400} elements={[serie]}>
 				<YAxis name="variazione" showLine showGrid showName />
-				<Bar
-					name="variazione"
-					showLabels
-					config={{ barDragAction: handleDrag }}
-				/>
+				<Bar name="variazione" showLabels onBarDrag={handleDrag} />
 				<XAxis dataPoints={dataPoints} showLine />
 				<Tooltip />
 				<Legend legendType="horizontal" height={40} showDots />

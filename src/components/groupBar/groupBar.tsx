@@ -3,6 +3,7 @@
 /* React Imports */
 import { useMemo } from "react";
 /* Hooks Imports */
+import { useDeprecatedConfigWarning } from "../../hooks/useDeprecatedConfig";
 import { useSerie } from "../../hooks/useSerie";
 /* Core Imports */
 import {
@@ -18,6 +19,20 @@ export type GroupBarProps = {
 	stacked?: boolean;
 	showLabels?: boolean;
 	topLabelSerie?: string;
+	// Props piatte (v1.0): sostituiscono il vecchio oggetto `config`.
+	radius?: number;
+	topLeftRadius?: number;
+	topRightRadius?: number;
+	bottomRightRadius?: number;
+	bottomLeftRadius?: number;
+	labelSize?: number;
+	labelColor?: string;
+	topLabelSize?: number;
+	topLabelColor?: string;
+	/**
+	 * @deprecated Usa le props piatte di <GroupBar> (radius, labelSize, ...).
+	 * barWidth/barGroupGap vanno su <Chart> (M1). Rimozione nella 2.0.
+	 */
 	config?: {
 		radius?: number;
 		topLeftRadius?: number;
@@ -32,6 +47,20 @@ export type GroupBarProps = {
 		topLabelColor?: string;
 	};
 };
+
+// Chiavi "bar-local" del config deprecato (per l'avviso M4). Escluse
+// barWidth/barGroupGap (M1 -> Chart), che avvisano in computeGlobalConfig.
+const GROUP_BAR_LOCAL_CONFIG_KEYS = [
+	"radius",
+	"topLeftRadius",
+	"topRightRadius",
+	"bottomRightRadius",
+	"bottomLeftRadius",
+	"labelSize",
+	"labelColor",
+	"topLabelSize",
+	"topLabelColor",
+] as const;
 
 const GroupBar = (props: GroupBarProps) => {
 	const {
@@ -53,17 +82,25 @@ const GroupBar = (props: GroupBarProps) => {
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
-	const {
-		radius = 0,
-		topLeftRadius = 0,
-		topRightRadius = 0,
-		bottomRightRadius = 0,
-		bottomLeftRadius = 0,
-		labelSize = 12,
-		topLabelSize = 12,
-		labelColor = "white",
-		topLabelColor = "black",
-	} = config || {};
+	// v1.0: props piatte con fallback al `config` deprecato (la prop piatta vince).
+	useDeprecatedConfigWarning(
+		config,
+		GROUP_BAR_LOCAL_CONFIG_KEYS,
+		"GroupBar",
+		"radius, labelSize, labelColor, topLabelSize, topLabelColor",
+	);
+
+	const radius = props.radius ?? config?.radius ?? 0;
+	const topLeftRadius = props.topLeftRadius ?? config?.topLeftRadius ?? 0;
+	const topRightRadius = props.topRightRadius ?? config?.topRightRadius ?? 0;
+	const bottomRightRadius =
+		props.bottomRightRadius ?? config?.bottomRightRadius ?? 0;
+	const bottomLeftRadius =
+		props.bottomLeftRadius ?? config?.bottomLeftRadius ?? 0;
+	const labelSize = props.labelSize ?? config?.labelSize ?? 12;
+	const topLabelSize = props.topLabelSize ?? config?.topLabelSize ?? 12;
+	const labelColor = props.labelColor ?? config?.labelColor ?? "white";
+	const topLabelColor = props.topLabelColor ?? config?.topLabelColor ?? "black";
 
 	// barWidth/barGroupGap sono config di layout condivisa: dalla v1.0 arrivano
 	// da <Chart> attraverso globalConfig (M1), non piu' dal config della serie

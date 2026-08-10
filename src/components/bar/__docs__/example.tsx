@@ -91,6 +91,7 @@ const Example: FC<BarProps & { barWidth?: number }> = ({
 	stacked = false,
 	showLabels = false,
 	barWidth,
+	onBarClick,
 	config = {},
 }) => {
 	return (
@@ -108,6 +109,7 @@ const Example: FC<BarProps & { barWidth?: number }> = ({
 					name={name}
 					stacked={stacked}
 					showLabels={showLabels}
+					onBarClick={onBarClick}
 					config={config}
 				/>
 				<XAxis

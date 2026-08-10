@@ -93,10 +93,8 @@ const DragExample: FC<DragExampleProps> = ({
 				<Bar
 					name={name}
 					showLabels={showLabels}
-					config={{
-						dragValueDecimals,
-						barDragAction: handleDrag,
-					}}
+					dragValueDecimals={dragValueDecimals}
+					onBarDrag={handleDrag}
 				/>
 				<XAxis
 					dataPoints={dataPoints}

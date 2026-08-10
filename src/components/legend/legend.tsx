@@ -17,7 +17,8 @@ export type LegendProps = {
 	height?: number;
 	hideSeries?: string[];
 	customLabel?: (el: PieSerieEl | Serie) => ReactNode;
-	legendType: "horizontal" | "vertical";
+	// Orientamento della legenda: default "horizontal" (v1.0, prima obbligatorio).
+	legendType?: "horizontal" | "vertical";
 };
 
 export const DEFAULT_LEGEND_HEIGHT = 60;
@@ -104,7 +105,7 @@ const Legend = (props: LegendProps) => {
 	const {
 		showDots = true,
 		customLabel = null,
-		legendType,
+		legendType = "horizontal",
 		height = DEFAULT_LEGEND_HEIGHT,
 		hideSeries = [],
 	} = props;
@@ -115,14 +116,6 @@ const Legend = (props: LegendProps) => {
 
 	if (!ctx || !theme) {
 		warnDev("<Legend /> deve essere renderizzato dentro <Chart>.");
-		return null;
-	}
-
-	if (
-		!legendType ||
-		(legendType !== "horizontal" && legendType !== "vertical")
-	) {
-		warnDev('<Legend />: legendType deve essere "horizontal" o "vertical".');
 		return null;
 	}
 

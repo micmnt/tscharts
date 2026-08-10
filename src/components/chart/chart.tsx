@@ -1,7 +1,7 @@
 /* Types Imports */
 
 /* React Imports */
-import { useId, useMemo, useRef } from "react";
+import { type CSSProperties, useId, useMemo, useRef } from "react";
 /* Context Imports */
 import { ChartProvider } from "../../contexts/chartContext";
 
@@ -30,7 +30,7 @@ export type ChartProps = {
 	elements: Serie[];
 	width: number;
 	height: number;
-	style?: any;
+	style?: CSSProperties;
 	children: React.ReactNode;
 	name?: string;
 	flatMax?: boolean;

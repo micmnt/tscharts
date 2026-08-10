@@ -1,5 +1,6 @@
 /* Types Imports */
 import {
+	type CSSProperties,
 	type JSX,
 	type MouseEvent,
 	type MouseEventHandler,
@@ -31,14 +32,14 @@ import {
 } from "../../lib/globalConfig";
 import { isDefined, isTimeSerie } from "../../lib/utils";
 import type { Serie } from "../../types";
-import { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
+import Legend, { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
 import Tooltip from "../tooltip/tooltip";
 
 export type SVGProps = {
 	children: ReactNode;
 	containerRef: RefObject<HTMLDivElement | null>;
 	chartID: string | null;
-	style?: any;
+	style?: CSSProperties;
 	leftAxisCount?: number;
 	rightAxisCount?: number;
 	ariaLabel?: string;
@@ -56,12 +57,9 @@ const getDefaultAriaLabel = (elements?: Serie[]) => {
 
 // Funzione che calcola l'altezza della legenda
 const getLegendHeight = (children: JSX.Element[]) => {
-	/* Verifico che esista un elemento Legend */
-	const legend = children.find(
-		(childEl) =>
-			childEl.props?.legendType !== null &&
-			childEl.props?.legendType !== undefined,
-	);
+	/* Verifico che esista un elemento Legend (per riferimento al componente: da
+	   v1.0 legendType e' opzionale, quindi non e' piu' un marcatore affidabile). */
+	const legend = children.find((childEl) => childEl.type === Legend);
 
 	if (!legend) return 0;
 

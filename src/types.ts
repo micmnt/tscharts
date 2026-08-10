@@ -20,7 +20,6 @@ export type AngleDonutSerieEl = PieSerieEl & {
 type BaseSerie = {
 	name: string;
 	uom?: string;
-	labels?: { name: string; value?: string }[];
 	axisName?: string;
 	stackedName?: string;
 	color?: string;
@@ -35,6 +34,9 @@ export type TimeSerie = BaseSerie & {
 export type PieSerie = BaseSerie & {
 	type: "pie" | "donut";
 	data: PieSerieEl[];
+	// Label personalizzate al centro (donut) / accanto alle fette: usate solo da
+	// pie/donut, quindi vivono qui e non su BaseSerie (v1.0).
+	labels?: { name: string; value?: string }[];
 };
 
 export type AngleDonutSerie = BaseSerie & {
