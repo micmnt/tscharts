@@ -137,6 +137,74 @@ export const getChartTimeScale = (ctx: {
 // CLAMPati ai bordi (no-op col dominio di default, dove ogni valore <= max).
 // I grafici negativi/stacked-negativi NON usano questa scala: hanno un dominio
 // simmetrico attorno a zero, gestito a parte.
+// Zoom rotella (S3): dato il dominio corrente, il dominio base (limite), il
+// valore sotto il cursore e il delta della rotella, calcola il nuovo dominio.
+// - deltaY > 0 (giu') -> zoom out; < 0 (su') -> zoom in.
+// - il valore sotto il cursore resta ancorato allo stesso punto (zoom "focale");
+// - lo span e' clampato tra minSpan (max zoom-in) e il baseSpan (max zoom-out);
+// - il dominio e' clampato dentro baseDomain (niente pan nel vuoto).
+export const computeWheelZoom = ({
+	domain,
+	baseDomain,
+	value,
+	deltaY,
+	zoomStep = 1.15,
+	minSpanRatio = 0.02,
+	snap,
+}: {
+	domain: readonly [number, number];
+	baseDomain: readonly [number, number];
+	value: number;
+	deltaY: number;
+	// Fattore di zoom per "tacca" di rotella: una tacca standard (deltaY~=100)
+	// applica esattamente `zoomStep`. Piu' alto = zoom piu' aggressivo.
+	zoomStep?: number;
+	minSpanRatio?: number;
+	// Se >0, arrotonda gli estremi del dominio al multiplo indicato (via i
+	// decimali "sporchi"); resta dentro il base e lo span minimo.
+	snap?: number;
+}): [number, number] => {
+	const [cMin, cMax] = domain;
+	const [baseMin, baseMax] = baseDomain;
+	const span = cMax - cMin;
+	const baseSpan = baseMax - baseMin || 1;
+
+	// deltaY > 0 (rotella giu') -> factor > 1 -> span cresce (zoom out); su' -> in.
+	const factor = zoomStep ** (deltaY / 100);
+	const minSpan = baseSpan * minSpanRatio;
+	const newSpan = Math.min(baseSpan, Math.max(minSpan, span * factor));
+
+	// mantiene `value` alla stessa frazione del dominio (zoom focale sul cursore)
+	const frac = span === 0 ? 0.5 : (value - cMin) / span;
+	let newMin = value - frac * newSpan;
+	let newMax = newMin + newSpan;
+
+	// clamp dentro il dominio base
+	if (newMin < baseMin) {
+		newMin = baseMin;
+		newMax = baseMin + newSpan;
+	} else if (newMax > baseMax) {
+		newMax = baseMax;
+		newMin = baseMax - newSpan;
+	}
+
+	// snap: estremi al multiplo di `snap`, restando dentro il base. Se lo snap
+	// degenererebbe il dominio (span < snap vicino a un bordo) lo lascio invariato.
+	if (snap && snap > 0) {
+		let sMin = Math.round(newMin / snap) * snap;
+		let sMax = Math.round(newMax / snap) * snap;
+		if (sMax - sMin < snap) sMax = sMin + snap;
+		sMin = Math.max(baseMin, sMin);
+		sMax = Math.min(baseMax, sMax);
+		if (sMax > sMin) {
+			newMin = sMin;
+			newMax = sMax;
+		}
+	}
+
+	return [newMin, newMax];
+};
+
 export const getChartYScale = ({
 	min = 0,
 	max,

@@ -95,6 +95,12 @@ export type ChartState = {
 	// <YAxis min max>. Singolo asse, grafici verticali non-negativi.
 	yMin?: number;
 	yMax?: number;
+	// Zoom interattivo Y (S3): `zoomable` da <YAxis zoomable>; `yBaseDomain` e' il
+	// dominio di partenza/reset ([yMin??0, yMax??autoMax], calcolato da Chart);
+	// `zoomDomain` e' il dominio interattivo corrente (null = nessuno zoom).
+	zoomable?: boolean;
+	yBaseDomain?: readonly [number, number];
+	zoomDomain?: readonly [number, number] | null;
 	// Se nel chart e' presente un <Tooltip>: axis.tsx lo usa per decidere se
 	// renderizzare gli hover-rect, senza piu' interrogare il DOM (R7).
 	hasTooltip?: boolean;
@@ -125,6 +131,9 @@ export type ChartStructuralState = Pick<
 	| "timeDomain"
 	| "yMin"
 	| "yMax"
+	| "zoomable"
+	| "yBaseDomain"
+	| "zoomDomain"
 >;
 
 // Slice "interattiva" del ChartState: l'elemento in hover, che cambia solo al

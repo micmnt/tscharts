@@ -22,11 +22,13 @@ import {
 import { flattenChildren } from "../../lib/children";
 /* Core Imports */
 import {
+	computeWheelZoom,
 	convertToSVGPoint,
 	createBandScale,
 	getCategorySpacing,
 	getChartDimensions,
 	getChartTimeScale,
+	getChartYScale,
 	normalizeTime,
 } from "../../lib/core";
 import {
@@ -49,6 +51,11 @@ export type SVGProps = {
 	// Config di layout delle barre passata da <Chart> (M1): ha precedenza sul
 	// config (deprecato) dei children in computeGlobalConfig.
 	layoutConfig?: ChartLayoutConfig;
+	// Zoom interattivo Y (S3): callback col dominio corrente (null al reset).
+	onZoomChange?: (domain: [number, number] | null) => void;
+	// Config del passo di zoom (S3b): fattore per tacca e snap degli estremi.
+	zoomStep?: number;
+	zoomSnap?: number;
 };
 
 const getDefaultAriaLabel = (elements?: Serie[]) => {
@@ -84,6 +91,9 @@ const Svg = (props: SVGProps) => {
 		style,
 		ariaLabel,
 		layoutConfig,
+		onZoomChange,
+		zoomStep,
+		zoomSnap,
 	} = props;
 
 	const rootRef = useRef<SVGSVGElement>(null);
@@ -406,6 +416,64 @@ const Svg = (props: SVGProps) => {
 		],
 	);
 
+	// Zoom rotella (S3): listener nativo con { passive: false } perche' React
+	// registra onWheel come passivo -> preventDefault non fermerebbe lo scroll
+	// della pagina. Attivo solo se <YAxis zoomable>. Ricalcola il dominio attorno
+	// al valore sotto il cursore e dispatcha SET_ZOOM (i generatori seguono via
+	// ctx.yMin/yMax, S1b). Il doppio click resetta.
+	useEffect(() => {
+		const el = rootRef.current;
+		if (!el || !ctx?.zoomable || !ctx.yBaseDomain || !dispatch) return;
+
+		const baseDomain = ctx.yBaseDomain;
+		const onWheel = (event: WheelEvent) => {
+			event.preventDefault();
+			const point = convertToSVGPoint(
+				svgRef ?? el,
+				event.clientX,
+				event.clientY,
+			);
+			if (!point) return;
+			const domain = ctx.zoomDomain ?? baseDomain;
+			const value = getChartYScale({
+				min: domain[0],
+				max: domain[1],
+				chartYEnd: chartYEnd ?? 0,
+				padding: padding ?? 0,
+			}).invert(point.y);
+			const next = computeWheelZoom({
+				domain,
+				baseDomain,
+				value,
+				deltaY: event.deltaY,
+				zoomStep,
+				snap: zoomSnap,
+			});
+			dispatch({ type: "SET_ZOOM", payload: { zoomDomain: next } });
+			onZoomChange?.(next);
+		};
+
+		el.addEventListener("wheel", onWheel, { passive: false });
+		return () => el.removeEventListener("wheel", onWheel);
+	}, [
+		ctx?.zoomable,
+		ctx?.yBaseDomain,
+		ctx?.zoomDomain,
+		chartYEnd,
+		padding,
+		dispatch,
+		svgRef,
+		onZoomChange,
+		zoomStep,
+		zoomSnap,
+	]);
+
+	const handleDoubleClick = useCallback(() => {
+		if (!ctx?.zoomable || !ctx.zoomDomain || !dispatch) return;
+		dispatch({ type: "CLEAR_ZOOM", payload: {} });
+		onZoomChange?.(null);
+	}, [ctx?.zoomable, ctx?.zoomDomain, dispatch, onZoomChange]);
+
 	// NB: NON si puo' gatare su chartYEnd > 0 qui: il container prende la sua
 	// altezza dall'<svg> che sta dentro, quindi se Svg ritornasse null il
 	// container collasserebbe a clientHeight 0 e chartYEnd resterebbe negativo
@@ -425,6 +493,7 @@ const Svg = (props: SVGProps) => {
 			height={height + legendHeight}
 			onMouseMove={handleMouseMove}
 			onMouseLeave={handleMouseLeave}
+			onDoubleClick={handleDoubleClick}
 			role="img"
 			aria-label={ariaLabel ?? getDefaultAriaLabel(ctxElements)}
 		>

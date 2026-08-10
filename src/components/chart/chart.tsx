@@ -10,6 +10,7 @@ import { flattenChildren } from "../../lib/children";
 import {
 	computeTimeDomain,
 	getAxisCount,
+	getEffectiveMaxValue,
 	getSeriesMissingYAxis,
 	getTimeSerieMaxValue,
 } from "../../lib/core";
@@ -166,6 +167,22 @@ const Chart = (props: ChartProps) => {
 	// e da li' raggiungono generatore e asse.
 	const yMin = yAxisElements[0]?.props?.min as number | undefined;
 	const yMax = yAxisElements[0]?.props?.max as number | undefined;
+
+	// Zoom interattivo Y (S3): abilitazione + callback dal primo <YAxis>. Il
+	// dominio base (di partenza/reset) e' [yMin ?? 0, yMax ?? autoMax], dove
+	// autoMax e' il massimo auto-calcolato (stesso valore usato dai generatori).
+	const zoomable = yAxisElements[0]?.props?.zoomable === true;
+	const onZoomChange = yAxisElements[0]?.props?.onZoomChange as
+		| ((domain: [number, number] | null) => void)
+		| undefined;
+	const zoomStep = yAxisElements[0]?.props?.zoomStep as number | undefined;
+	const zoomSnap = yAxisElements[0]?.props?.zoomSnap as number | undefined;
+	const yBaseMin = yMin ?? 0;
+	const yBaseMax = yMax ?? getEffectiveMaxValue(flatMax, timeSeriesMaxValue);
+	const yBaseDomain = useMemo<readonly [number, number] | undefined>(
+		() => (zoomable ? [yBaseMin, yBaseMax] : undefined),
+		[zoomable, yBaseMin, yBaseMax],
+	);
 	// Reference stabile: cambia solo quando cambiano gli estremi, non a ogni
 	// render (computeTimeDomain ritorna un nuovo array ogni volta).
 	const timeDomain = useMemo<readonly [number, number] | undefined>(
@@ -199,6 +216,8 @@ const Chart = (props: ChartProps) => {
 			timeDomain,
 			yMin,
 			yMax,
+			zoomable,
+			yBaseDomain,
 		}),
 		[
 			elements,
@@ -213,6 +232,8 @@ const Chart = (props: ChartProps) => {
 			timeDomain,
 			yMin,
 			yMax,
+			zoomable,
+			yBaseDomain,
 		],
 	);
 
@@ -227,6 +248,9 @@ const Chart = (props: ChartProps) => {
 					chartID={chartID}
 					ariaLabel={ariaLabel}
 					layoutConfig={layoutConfig}
+					onZoomChange={onZoomChange}
+					zoomStep={zoomStep}
+					zoomSnap={zoomSnap}
 				>
 					{children}
 				</Svg>

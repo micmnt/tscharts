@@ -54,6 +54,17 @@ export type YAxisProps = AxisBaseProps & {
 	// non-negativi, asse Y singolo (bar/line).
 	min?: number;
 	max?: number;
+	// Zoom interattivo Y (S3): abilita lo zoom con la rotella del mouse sul
+	// grafico (doppio click per resettare). `onZoomChange` notifica il dominio
+	// corrente (null al reset). Stesso scope di min/max.
+	zoomable?: boolean;
+	onZoomChange?: (domain: [number, number] | null) => void;
+	// Quanto zooma ogni tacca di rotella (default 1.15 = 15%). Piu' alto = piu'
+	// aggressivo.
+	zoomStep?: number;
+	// Se >0, arrotonda gli estremi del dominio zoomato al multiplo indicato
+	// (es. 1 = interi), per evitare valori con decimali.
+	zoomSnap?: number;
 };
 
 // Alias deprecato <Axis type="...">: union discriminata sul `type`, cosi' con

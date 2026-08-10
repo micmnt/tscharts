@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getValuePosition } from "../core/primitives";
 import {
+	computeWheelZoom,
 	createBandScale,
 	createLinearScale,
 	createTimeScale,
@@ -184,5 +185,109 @@ describe("getChartYScale", () => {
 		for (const v of [10, 33, 60, 90]) {
 			expect(y.invert(y.scale(v))).toBeCloseTo(v, 6);
 		}
+	});
+});
+
+describe("computeWheelZoom", () => {
+	const base = [0, 100] as const;
+
+	it("zoom in (deltaY < 0) restringe il dominio attorno al valore", () => {
+		const [min, max] = computeWheelZoom({
+			domain: [0, 100],
+			baseDomain: base,
+			value: 50,
+			deltaY: -100,
+		});
+		expect(max - min).toBeLessThan(100); // span ridotto
+		expect(min).toBeLessThan(50);
+		expect(max).toBeGreaterThan(50); // 50 resta dentro
+	});
+
+	it("zoom out (deltaY > 0) allarga, clampato al baseSpan", () => {
+		// parto gia' stretto e zoomo out oltre il base -> torna al base
+		const [min, max] = computeWheelZoom({
+			domain: [40, 60],
+			baseDomain: base,
+			value: 50,
+			deltaY: 100000, // enorme -> span vorrebbe superare il base
+		});
+		expect(min).toBeCloseTo(0, 6);
+		expect(max).toBeCloseTo(100, 6); // clampato al dominio base pieno
+	});
+
+	it("clampa lo span minimo (max zoom-in)", () => {
+		const [min, max] = computeWheelZoom({
+			domain: [0, 100],
+			baseDomain: base,
+			value: 50,
+			deltaY: -100000, // zoom-in enorme
+			minSpanRatio: 0.02,
+		});
+		expect(max - min).toBeCloseTo(2, 6); // 2% di 100
+	});
+
+	it("ancora il valore sotto il cursore alla stessa frazione (zoom focale)", () => {
+		// value al 25% del dominio [0,100] -> resta al 25% del nuovo dominio
+		const [min, max] = computeWheelZoom({
+			domain: [0, 100],
+			baseDomain: base,
+			value: 25,
+			deltaY: -100,
+		});
+		expect((25 - min) / (max - min)).toBeCloseTo(0.25, 6);
+	});
+
+	it("non pana fuori dal dominio base (clamp ai bordi)", () => {
+		// valore vicino al bordo alto: il nuovo dominio non supera baseMax
+		const [min, max] = computeWheelZoom({
+			domain: [0, 100],
+			baseDomain: base,
+			value: 98,
+			deltaY: -100,
+		});
+		expect(max).toBeLessThanOrEqual(100 + 1e-9);
+		expect(min).toBeGreaterThanOrEqual(-1e-9);
+	});
+
+	it("zoomStep piu' alto = zoom piu' aggressivo (span cambia di piu')", () => {
+		const args = {
+			domain: [0, 100] as const,
+			baseDomain: base,
+			value: 50,
+			deltaY: -100, // una tacca in zoom-in
+		};
+		const soft = computeWheelZoom({ ...args, zoomStep: 1.05 });
+		const hard = computeWheelZoom({ ...args, zoomStep: 1.5 });
+		const softSpan = soft[1] - soft[0];
+		const hardSpan = hard[1] - hard[0];
+		// una tacca: soft ~= /1.05 (~95), hard ~= /1.5 (~67) -> hard piu' stretto
+		expect(hardSpan).toBeLessThan(softSpan);
+		expect(softSpan).toBeCloseTo(100 / 1.05, 4);
+		expect(hardSpan).toBeCloseTo(100 / 1.5, 4);
+	});
+
+	it("snap arrotonda gli estremi al multiplo indicato", () => {
+		const [min, max] = computeWheelZoom({
+			domain: [5.4, 60.5],
+			baseDomain: [0, 100],
+			value: 33,
+			deltaY: 0, // nessun cambio di span, solo snap
+			snap: 1,
+		});
+		expect(Number.isInteger(min)).toBe(true);
+		expect(Number.isInteger(max)).toBe(true);
+		expect(min).toBe(5);
+		expect(max).toBe(61); // 60.5 -> 61 (round), dentro base
+	});
+
+	it("snap non degenera il dominio (mantiene almeno un multiplo)", () => {
+		const [min, max] = computeWheelZoom({
+			domain: [50.1, 50.4],
+			baseDomain: [0, 100],
+			value: 50.2,
+			deltaY: 0,
+			snap: 5,
+		});
+		expect(max).toBeGreaterThan(min); // non collassa a span 0
 	});
 });

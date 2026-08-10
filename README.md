@@ -123,6 +123,10 @@ Asse dei valori. La prop `name` collega l'asse alla serie (o al gruppo, via `axi
 | `labelSize` / `titleSize` | `number` | dimensioni del tema | Override dimensione font di etichette / titolo |
 | `titleDx` / `titleDy` | `number` | `0` | Offset del titolo dell'asse |
 | `min` / `max` | `number` | `0` / max dei dati | Dominio controllabile: sovrascrive l'intervallo auto-calcolato. Vedi [Dominio Y](#dominio-y) |
+| `zoomable` | `boolean` | `false` | Abilita lo zoom con la rotella del mouse sull'asse Y (doppio click per resettare) |
+| `onZoomChange` | `(domain: [number, number] \| null) => void` | — | Notifica il dominio Y corrente durante lo zoom (`null` al reset) |
+| `zoomStep` | `number` | `1.15` | Quanto zooma ogni tacca di rotella (fattore; più alto = più aggressivo) |
+| `zoomSnap` | `number` | — | Se `>0`, arrotonda gli estremi del dominio zoomato al multiplo indicato (es. `1` = interi) |
 
 #### Dominio Y
 
@@ -141,6 +145,15 @@ Note:
 - Scope attuale: grafici verticali non-negativi, con un singolo asse Y
   (bar/line). Non si applica a grafici negativi/orizzontali né agli assi
   multipli.
+
+**Zoom interattivo.** Con `zoomable` l'utente zooma il dominio Y con la **rotella**
+del mouse (attorno al cursore); il **doppio click** resetta. Il dominio è limitato
+a quello base (nessun pan nel vuoto) e ha uno zoom massimo. `onZoomChange` riceve
+il dominio corrente ad ogni variazione (`null` al reset).
+
+```tsx
+<YAxis name="temperatura" zoomable onZoomChange={(d) => console.log(d)} />
+```
 
 ### `<XAxis>`
 

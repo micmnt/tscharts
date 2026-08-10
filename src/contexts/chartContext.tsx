@@ -67,6 +67,8 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 				timeDomain: initialState.timeDomain,
 				yMin: initialState.yMin,
 				yMax: initialState.yMax,
+				zoomable: initialState.zoomable,
+				yBaseDomain: initialState.yBaseDomain,
 			},
 		});
 	}, [
@@ -80,6 +82,8 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 		initialState.timeDomain,
 		initialState.yMin,
 		initialState.yMax,
+		initialState.zoomable,
+		initialState.yBaseDomain,
 	]);
 
 	// Slice memoizzate: cambiano riferimento solo quando cambia uno dei loro
@@ -106,8 +110,14 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 			scaleType: chart.scaleType,
 			parseDate: chart.parseDate,
 			timeDomain: chart.timeDomain,
-			yMin: chart.yMin,
-			yMax: chart.yMax,
+			// yMin/yMax EFFETTIVI: lo zoom interattivo (zoomDomain) vince sul
+			// dominio statico da props (S3). I generatori leggono ctx.yMin/yMax e
+			// seguono lo zoom senza modifiche.
+			yMin: chart.zoomDomain ? chart.zoomDomain[0] : chart.yMin,
+			yMax: chart.zoomDomain ? chart.zoomDomain[1] : chart.yMax,
+			zoomable: chart.zoomable,
+			yBaseDomain: chart.yBaseDomain,
+			zoomDomain: chart.zoomDomain,
 		}),
 		[
 			chart.elements,
@@ -130,6 +140,9 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 			chart.timeDomain,
 			chart.yMin,
 			chart.yMax,
+			chart.zoomable,
+			chart.yBaseDomain,
+			chart.zoomDomain,
 		],
 	);
 
@@ -196,6 +209,18 @@ function chartReducer(
 			if (chart.hasTooltip === hasTooltip) return chart;
 			return { ...chart, hasTooltip };
 		}
+		// Zoom interattivo Y (S3): SET_ZOOM imposta il dominio corrente (rotella),
+		// CLEAR_ZOOM lo azzera (doppio click -> torna a yBaseDomain). Distinti da
+		// SYNC_PROPS di proposito: lo zoom NON si resetta a ogni sync dei props.
+		case "SET_ZOOM": {
+			const { zoomDomain } = action.payload ?? {};
+			if (chart.zoomDomain === zoomDomain) return chart;
+			return { ...chart, zoomDomain };
+		}
+		case "CLEAR_ZOOM": {
+			if (!chart.zoomDomain) return chart;
+			return { ...chart, zoomDomain: null };
+		}
 		case "SYNC_PROPS": {
 			const {
 				elements,
@@ -208,8 +233,11 @@ function chartReducer(
 				timeDomain,
 				yMin,
 				yMax,
+				zoomable,
+				yBaseDomain,
 			} = action.payload;
 
+			// zoomDomain NON e' qui: e' stato interattivo, non deriva dai props.
 			return {
 				...chart,
 				elements,
@@ -222,6 +250,8 @@ function chartReducer(
 				timeDomain,
 				yMin,
 				yMax,
+				zoomable,
+				yBaseDomain,
 			};
 		}
 		default: {
