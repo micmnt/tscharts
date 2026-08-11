@@ -20,6 +20,26 @@ e il progetto segue il [Semantic Versioning](https://semver.org/lang/it/).
   raggiungibili da tastiera (Tab + Invio). Vedi
   [README](./README.md#rendering-su-canvas) e la story *Canvas renderer*. Unico
   limite: nessun rendering server-side (fallback all'SVG).
+- **Marche custom** (`useChartMark`): hook pubblico che espone il sistema di
+  coordinate del grafico (scale `x`/`y` zoom-aware, dimensioni, serie, colore,
+  hover) per **comporre marche proprie** come figli di `<Chart>`, senza toccare
+  gli interni. Due modi: riferendo una serie di `elements` per nome (eredita
+  dominio/tooltip/hover/legenda) o portando dati propri (es. candlestick) e
+  posizionandoli con le scale. Vedi
+  [README](./README.md#marche-custom) e la story *Custom marks* (Diamonds,
+  Candlestick). Scope: grafici verticali non-negativi; le marche custom rendono
+  SVG (funzionano anche con `renderer="canvas"`, non accelerate).
+- **`<Line renderDot>`**: render-prop per sostituire il pallino del punto con una
+  marca custom, alla posizione **esatta** del dato (niente disallineamento del
+  centro categoria) e integrata con `showDots`/hover. `props = { x, y, index,
+  value, hovered, color }`. È il modo giusto per marche *attaccate ai punti di una
+  linea* (dot personalizzati); `useChartMark` resta per overlay indipendenti.
+- **`useChartMark` — orientamento/segno e canvas**: nuovo `point(index, value)`
+  che restituisce le coordinate schermo corrette anche su grafici **orizzontali**
+  e **negativi** (`y` è ora sign-aware); nuovo flag `isCanvas`. Nuovo export
+  **`useCanvasMark`** (+ tipo `CanvasDrawOp`): una marca custom può disegnarsi
+  **sul canvas** (`renderer="canvas"`) invece di emettere SVG, per reggere dataset
+  grandi. Vedi la story *Custom marks* → CanvasAccelerated.
 
 ### Fixed
 

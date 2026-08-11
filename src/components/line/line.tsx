@@ -1,6 +1,6 @@
 /* Types Imports */
 
-import { useCallback, useId, useMemo } from "react";
+import { Fragment, type ReactNode, useCallback, useId, useMemo } from "react";
 import {
 	type CanvasDrawOp,
 	useCanvasLayer,
@@ -47,6 +47,20 @@ export type LineProps = {
 	// Vale anche per i grafici negativi (area fino alla linea dello zero); non
 	// per gli orizzontali.
 	fillGradient?: boolean;
+	// Marca custom AL POSTO del <circle> del dot, alla posizione ESATTA del
+	// punto. Con showDots viene chiamata su tutti i punti; senza, solo su quello
+	// in hover (hovered: true). Rende SVG (ignorata in renderer="canvas").
+	renderDot?: (props: LineDotProps) => ReactNode;
+};
+
+// Props passate a renderDot: posizione esatta del dot + stato/stile.
+export type LineDotProps = {
+	x: number;
+	y: number;
+	index: number;
+	value: number;
+	hovered: boolean;
+	color: string;
 };
 
 const Line = (props: LineProps) => {
@@ -68,6 +82,7 @@ const Line = (props: LineProps) => {
 		fill = undefined,
 		fillOpacity = 0,
 		fillGradient = false,
+		renderDot,
 	} = props;
 
 	const interactive = useChartsInteractive();
@@ -360,33 +375,61 @@ const Line = (props: LineProps) => {
 			{!hideLine &&
 				showDots &&
 				validDotPoints.map(
-					(point: [x: number, y: number], dataPointIndex: number) => (
-						<circle
-							key={`${serieElement.name}-dot-${dataPointIndex}`}
-							cx={point[0]}
-							cy={point[1]}
-							r={
-								hoveredElement?.elementIndex === dataPointIndex ? 7 : dotRadius
-							}
-							fillOpacity={0.7}
-							fill={serieColor}
-							stroke={serieColor}
-							strokeWidth={2}
-						/>
-					),
+					(point: [x: number, y: number], dataPointIndex: number) => {
+						const hovered = hoveredElement?.elementIndex === dataPointIndex;
+						// renderDot: marca custom alla posizione esatta del dot.
+						if (renderDot) {
+							return (
+								<Fragment key={`${serieElement.name}-dot-${dataPointIndex}`}>
+									{renderDot({
+										x: point[0],
+										y: point[1],
+										index: dataPointIndex,
+										value: serieElement.data[dataPointIndex]?.value ?? 0,
+										hovered,
+										color: serieColor ?? "#000",
+									})}
+								</Fragment>
+							);
+						}
+						return (
+							<circle
+								key={`${serieElement.name}-dot-${dataPointIndex}`}
+								cx={point[0]}
+								cy={point[1]}
+								r={hovered ? 7 : dotRadius}
+								fillOpacity={0.7}
+								fill={serieColor}
+								stroke={serieColor}
+								strokeWidth={2}
+							/>
+						);
+					},
 				)}
-			{!hideLine && !showDots && hoveredDotPoint && (
-				<circle
-					key={`${serieElement.name}-dot-hover`}
-					cx={hoveredDotPoint[0]}
-					cy={hoveredDotPoint[1]}
-					r={7}
-					fillOpacity={0.7}
-					fill={serieColor}
-					stroke={serieColor}
-					strokeWidth={2}
-				/>
-			)}
+			{!hideLine &&
+				!showDots &&
+				hoveredDotPoint &&
+				(renderDot ? (
+					renderDot({
+						x: hoveredDotPoint[0],
+						y: hoveredDotPoint[1],
+						index: hoveredDotIndex ?? -1,
+						value: serieElement.data[hoveredDotIndex ?? -1]?.value ?? 0,
+						hovered: true,
+						color: serieColor ?? "#000",
+					})
+				) : (
+					<circle
+						key={`${serieElement.name}-dot-hover`}
+						cx={hoveredDotPoint[0]}
+						cy={hoveredDotPoint[1]}
+						r={7}
+						fillOpacity={0.7}
+						fill={serieColor}
+						stroke={serieColor}
+						strokeWidth={2}
+					/>
+				))}
 		</>
 	);
 };

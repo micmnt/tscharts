@@ -99,4 +99,106 @@ describe("Line — dot O(1) senza showDots", () => {
 			expect(Number(circles[0].getAttribute("r"))).toBe(7);
 		});
 	});
+
+	describe("renderDot", () => {
+		it("showDots -> renderDot sostituisce i <circle> alla posizione esatta", async () => {
+			const N = 5;
+			const data = makeData(N);
+			const { container } = render(
+				<Chart
+					width={600}
+					height={300}
+					elements={[{ name: "s", type: "line", uom: "", data }]}
+				>
+					<YAxis name="s" showLine />
+					<Line
+						name="s"
+						showDots
+						renderDot={({ x, y, index }) => (
+							<rect
+								data-testid="dot"
+								data-i={index}
+								x={x}
+								y={y}
+								width={4}
+								height={4}
+							/>
+						)}
+					/>
+				</Chart>,
+			);
+			await waitFor(() =>
+				expect(container.querySelector('[data-testid="dot"]')).toBeTruthy(),
+			);
+			// nessun cerchio standard, N marche custom
+			expect(container.querySelectorAll("circle").length).toBe(0);
+			expect(container.querySelectorAll('[data-testid="dot"]').length).toBe(N);
+			// la marca custom sta esattamente sul dot standard: confronto la x/y con
+			// quella che avrebbe reso <circle> (stessa Line senza renderDot).
+			const ref = render(
+				<Chart
+					width={600}
+					height={300}
+					elements={[{ name: "s", type: "line", uom: "", data }]}
+				>
+					<YAxis name="s" showLine />
+					<Line name="s" showDots />
+				</Chart>,
+			);
+			await waitFor(() =>
+				expect(ref.container.querySelector("circle")).toBeTruthy(),
+			);
+			const circles = Array.from(ref.container.querySelectorAll("circle"));
+			const dots = Array.from(
+				container.querySelectorAll('[data-testid="dot"]'),
+			);
+			dots.forEach((dot, i) => {
+				expect(Number(dot.getAttribute("x"))).toBeCloseTo(
+					Number(circles[i].getAttribute("cx")),
+					3,
+				);
+				expect(Number(dot.getAttribute("y"))).toBeCloseTo(
+					Number(circles[i].getAttribute("cy")),
+					3,
+				);
+			});
+		});
+
+		it("senza showDots -> renderDot solo sul punto in hover", async () => {
+			const dataPoints = ["a", "b", "c", "d"];
+			const { container } = render(
+				<Chart
+					width={600}
+					height={300}
+					elements={[
+						{
+							name: "s",
+							type: "line",
+							uom: "",
+							data: dataPoints.map((d, i) => ({ date: d, value: 20 + i * 10 })),
+						},
+					]}
+				>
+					<YAxis name="s" showLine />
+					<Line
+						name="s"
+						renderDot={({ x, y, hovered }) =>
+							hovered ? <rect data-testid="dot" x={x} y={y} /> : null
+						}
+					/>
+					<XAxis dataPoints={dataPoints} showLine />
+				</Chart>,
+			);
+			await waitFor(() => expect(container.querySelector("path")).toBeTruthy());
+			// a riposo nessuna marca
+			expect(container.querySelectorAll('[data-testid="dot"]').length).toBe(0);
+			const svg = container.querySelector("svg") as SVGSVGElement;
+			fireEvent.mouseMove(svg, { clientX: 300, clientY: 150 });
+			await waitFor(() =>
+				expect(container.querySelectorAll('[data-testid="dot"]').length).toBe(
+					1,
+				),
+			);
+		});
+	});
 });

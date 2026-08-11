@@ -275,6 +275,7 @@ Barre raggruppate (più serie affiancate per ogni punto sull'asse X). Props sost
 | `fill` | `string` | — | Colore di riempimento dell'area sotto la linea (fino alla baseline; nei grafici negativi fino alla linea dello zero). Richiede `fillOpacity > 0` per essere visibile. Vedi [Area chart](#area-chart) |
 | `fillOpacity` | `number` | `0` | Opacità del riempimento |
 | `fillGradient` | `boolean` | `false` | Riempie l'area con una sfumatura verticale (colore → trasparente), effetto area/sparkline. `fillOpacity` è l'opacità in cima (default `0.3`). Non per grafici orizzontali |
+| `renderDot` | `(props) => ReactNode` | — | Marca custom **al posto** del pallino, alla posizione **esatta** del punto. Con `showDots` viene chiamata su ogni punto; senza, solo su quello in hover. `props = { x, y, index, value, hovered, color }`. Rende SVG (ignorata con `renderer="canvas"`). Vedi [Marche custom](#marche-custom) |
 
 #### Area chart
 
@@ -441,6 +442,124 @@ Punti chiave:
 **Limiti noti (canvas)**: nessun rendering server-side (fallback all'SVG).
 
 Vedi la story *Canvas renderer*.
+
+## Marche custom
+
+Oltre alle marche built-in (`<Line>`, `<Bar>`, ...), puoi scrivere le **tue**
+marche e comporle in `<Chart>` come una qualsiasi. L'hook **`useChartMark`**
+espone il sistema di coordinate del grafico (scale + dimensioni + serie + hover),
+lo stesso che usano le marche interne.
+
+```tsx
+import { useChartMark } from "tscharts";
+
+// Error bar su una serie standard
+function ErrorBars({ name, delta }: { name: string; delta: number }) {
+  const mark = useChartMark(name);
+  if (!mark?.serie) return null;
+  return mark.serie.data.map((d, i) => (
+    <line key={i} x1={mark.x(i)} x2={mark.x(i)}
+      y1={mark.y(d.value - delta)} y2={mark.y(d.value + delta)}
+      stroke={mark.color} strokeWidth={2} />
+  ));
+}
+
+<Chart elements={[serie]}>
+  <YAxis name="s" /> <Line name="s" />
+  <ErrorBars name="s" delta={5} />   {/* composta come una marca qualsiasi */}
+  <XAxis dataPoints={dates} />
+</Chart>
+```
+
+**Due modi d'uso**:
+
+- **`useChartMark(name)`** — riferisce una serie di `elements`: ottieni `serie` e
+  `color`, e la marca eredita **dominio, tooltip, hover e legenda** già
+  funzionanti.
+- **`useChartMark()`** (senza nome) — solo scale + dimensioni: la marca porta i
+  **propri dati** come prop (es. candlestick con `open/high/low/close`) e li
+  posiziona con `x`/`y`. Imposta `<YAxis min max>` per far coprire al dominio i
+  tuoi valori.
+
+L'hook ritorna `null` finché il grafico non è misurato (come le marche built-in),
+altrimenti un oggetto `ChartMark`:
+
+| Campo | Tipo | Descrizione |
+|-------|------|-------------|
+| `point` | `(index, value) => { x, y }` | punto **{x,y} sullo schermo** per la categoria `index` al `value`. Consapevole di **orientamento** (verticale/orizzontale) e **segno** (grafici negativi): è l'accessor generale |
+| `x` | `(indexOrTime) => number` | px X: indice categoria (`scaleType="band"`) o timestamp ms (`"time"`). Allineato ai marchi della serie riferita (dot della linea / centro della barra). Convenzione **verticale** |
+| `y` | `(value) => number` | px Y di un valore (**zoom-aware** e **sign-aware**). Convenzione **verticale** |
+| `yInvert` | `(px) => number` | inverso di `y` (px → valore) |
+| `dimensions` | `{ chartXStart, chartXEnd, chartYEnd, chartYMiddle, width, height, padding }` | area di disegno in px |
+| `serie` | `TimeSerie \| undefined` | la serie col nome dato (se passato) |
+| `color` | `string \| undefined` | colore risolto della serie |
+| `hoveredIndex` | `number \| null` | indice della categoria in hover |
+| `scaleType` | `"band" \| "time"` | tipo di scala X attivo |
+| `horizontal` | `boolean` | orientamento del grafico |
+| `isCanvas` | `boolean` | `true` con `renderer="canvas"`: disegna sul canvas (vedi sotto) |
+
+**Orientamento e segno**: usa **`point(index, value)`** per marche che devono
+funzionare anche su grafici **orizzontali** o **negativi** — restituisce le
+coordinate schermo corrette in ogni caso. `x`/`y` sono la decomposizione del caso
+verticale (`y` è comunque sign-aware). Sull'orizzontale l'allineamento usa il
+`barOffset` di default (offset custom per-marca non riflessi).
+
+#### Marche accelerate su canvas
+
+Con `renderer="canvas"`, una marca custom può disegnarsi **sul canvas** invece di
+emettere SVG, per reggere dataset grandi. Usa **`useCanvasMark`** (registra una
+draw-op; no-op in SVG) e il flag `isCanvas`:
+
+```tsx
+import { useChartMark, useCanvasMark } from "tscharts";
+
+function CanvasDiamonds({ name }) {
+  const mark = useChartMark(name);
+  const serie = mark?.serie;
+  useCanvasMark(                       // no-op se renderer="svg"
+    mark?.isCanvas && serie
+      ? (g) => {
+          g.fillStyle = mark.color;
+          serie.data.forEach((d, i) => {
+            const { x, y } = mark.point(i, d.value);
+            g.beginPath();
+            g.moveTo(x, y-4); g.lineTo(x+4, y); g.lineTo(x, y+4); g.lineTo(x-4, y);
+            g.closePath(); g.fill();
+          });
+        }
+      : null,
+  );
+  if (!mark || !serie || mark.isCanvas) return null;   // canvas: già disegnato
+  return <>{/* fallback SVG per renderer="svg" */}</>;
+}
+```
+
+#### Marche attaccate ai punti di una linea: `renderDot`
+
+`useChartMark.x` restituisce il **centro categoria** (come hover/label), che di
+default è leggermente diverso dalla posizione dei pallini di `<Line>`. Per una
+marca che deve stare **esattamente** sul punto della linea (dot personalizzato)
+usa la prop **`renderDot`** di `<Line>`: la posiziona `<Line>` stessa, quindi è
+allineata al pixel e integrata con `showDots` e l'hover.
+
+```tsx
+const diamond = (x, y, r) => `M ${x} ${y-r} L ${x+r} ${y} L ${x} ${y+r} L ${x-r} ${y} Z`;
+
+<Line
+  name="s"
+  showDots
+  renderDot={({ x, y, hovered, color }) => (
+    <path d={diamond(x, y, hovered ? 8 : 6)}
+      fill={hovered ? color : "#fff"} stroke={color} strokeWidth={2} />
+  )}
+/>
+```
+
+In breve: **`renderDot`** per marche *attaccate ai punti di una linea*;
+**`useChartMark`** per overlay *indipendenti* (candlestick, bande, annotazioni).
+
+Vedi la story *Custom marks* (Diamonds via `renderDot`, Candlestick via
+`useChartMark`, CanvasAccelerated via `useCanvasMark`).
 
 ## Migrazione a v1.0
 
