@@ -137,6 +137,26 @@ export const getChartTimeScale = (ctx: {
 // CLAMPati ai bordi (no-op col dominio di default, dove ogni valore <= max).
 // I grafici negativi/stacked-negativi NON usano questa scala: hanno un dominio
 // simmetrico attorno a zero, gestito a parte.
+// Arrotonda gli estremi di un dominio al multiplo `snap`, restando dentro il
+// dominio base e mantenendo almeno un multiplo di ampiezza. Se lo snap
+// degenererebbe il dominio, ritorna quello invariato. Estratto (S3b) per essere
+// applicato all'OUTPUT dello zoom senza "ingoiare" i delta piccoli: l'accumulo
+// interno resta continuo, lo snap tocca solo cio' che si mostra.
+export const snapDomain = (
+	domain: readonly [number, number],
+	snap: number,
+	baseDomain: readonly [number, number],
+): [number, number] => {
+	if (!snap || snap <= 0) return [domain[0], domain[1]];
+	const [baseMin, baseMax] = baseDomain;
+	let min = Math.round(domain[0] / snap) * snap;
+	let max = Math.round(domain[1] / snap) * snap;
+	if (max - min < snap) max = min + snap;
+	min = Math.max(baseMin, min);
+	max = Math.min(baseMax, max);
+	return max > min ? [min, max] : [domain[0], domain[1]];
+};
+
 // Zoom rotella (S3): dato il dominio corrente, il dominio base (limite), il
 // valore sotto il cursore e il delta della rotella, calcola il nuovo dominio.
 // - deltaY > 0 (giu') -> zoom out; < 0 (su') -> zoom in.

@@ -30,6 +30,7 @@ import {
 	getChartTimeScale,
 	getChartYScale,
 	normalizeTime,
+	snapDomain,
 } from "../../lib/core";
 import {
 	type ChartLayoutConfig,
@@ -416,60 +417,96 @@ const Svg = (props: SVGProps) => {
 		],
 	);
 
-	// Zoom rotella (S3): listener nativo con { passive: false } perche' React
-	// registra onWheel come passivo -> preventDefault non fermerebbe lo scroll
-	// della pagina. Attivo solo se <YAxis zoomable>. Ricalcola il dominio attorno
-	// al valore sotto il cursore e dispatcha SET_ZOOM (i generatori seguono via
-	// ctx.yMin/yMax, S1b). Il doppio click resetta.
+	// Zoom rotella (S3): accumulatore CONTINUO del dominio (non snappato),
+	// aggiornato in modo sincrono a ogni evento rotella. E' la fonte di verita'
+	// interattiva; il context riceve il dominio *snappato* solo per il display.
+	// Serve a rendere lo zoom solido in due casi in cui prima "a volte zoomava e
+	// a volte no":
+	//  (a) piu' eventi rotella arrivano PRIMA del re-render di React: leggendo
+	//      ctx.zoomDomain (ancora stantio) il 2o+ evento ripartirebbe dal dominio
+	//      vecchio e lo step andrebbe perso. Qui ogni evento legge/scrive il ref
+	//      in modo sincrono, quindi gli eventi si accumulano correttamente;
+	//  (b) lo snap applicato ad ogni singolo step "ingoia" i delta piccoli
+	//      (trackpad -> zoom minimo -> arrotonda allo stesso dominio): tenendo
+	//      l'accumulo continuo e snappando solo l'output, lo zoom non si blocca.
+	const zoomAccRef = useRef<[number, number] | null>(null);
+	// Reset dell'accumulatore quando il dominio viene azzerato dall'esterno
+	// (doppio click / reset): il context torna senza zoomDomain, l'accumulo pure.
+	if (!ctx?.zoomDomain) zoomAccRef.current = null;
+	// Parametri correnti letti dal listener (agganciato una sola volta): un ref
+	// aggiornato a ogni render evita di ri-agganciare il listener nativo (che, tra
+	// una detach e la successiva attach, potrebbe perdere un evento) e le closure
+	// stantie.
+	const zoomParamsRef = useRef<{
+		baseDomain?: readonly [number, number];
+		chartYEnd?: number;
+		padding?: number;
+		zoomStep?: number;
+		zoomSnap?: number;
+		svgRef?: SVGSVGElement | null;
+		onZoomChange?: (domain: [number, number] | null) => void;
+	}>({});
+	zoomParamsRef.current = {
+		baseDomain: ctx?.yBaseDomain,
+		chartYEnd,
+		padding,
+		zoomStep,
+		zoomSnap,
+		svgRef,
+		onZoomChange,
+	};
+
+	// Listener nativo con { passive: false } perche' React registra onWheel come
+	// passivo -> preventDefault non fermerebbe lo scroll della pagina. Agganciato
+	// UNA volta (dep solo su zoomable/dispatch): tutto il resto viene letto dai
+	// ref sopra, sempre aggiornati.
 	useEffect(() => {
 		const el = rootRef.current;
-		if (!el || !ctx?.zoomable || !ctx.yBaseDomain || !dispatch) return;
+		if (!el || !ctx?.zoomable || !dispatch) return;
 
-		const baseDomain = ctx.yBaseDomain;
 		const onWheel = (event: WheelEvent) => {
+			const p = zoomParamsRef.current;
+			if (!p.baseDomain) return;
 			event.preventDefault();
 			const point = convertToSVGPoint(
-				svgRef ?? el,
+				p.svgRef ?? el,
 				event.clientX,
 				event.clientY,
 			);
 			if (!point) return;
-			const domain = ctx.zoomDomain ?? baseDomain;
+			// parte dall'accumulatore CONTINUO (non dallo snappato mostrato)
+			const current = zoomAccRef.current ?? p.baseDomain;
 			const value = getChartYScale({
-				min: domain[0],
-				max: domain[1],
-				chartYEnd: chartYEnd ?? 0,
-				padding: padding ?? 0,
+				min: current[0],
+				max: current[1],
+				chartYEnd: p.chartYEnd ?? 0,
+				padding: p.padding ?? 0,
 			}).invert(point.y);
+			// accumulo continuo, SENZA snap: non si blocca mai
 			const next = computeWheelZoom({
-				domain,
-				baseDomain,
+				domain: current,
+				baseDomain: p.baseDomain,
 				value,
 				deltaY: event.deltaY,
-				zoomStep,
-				snap: zoomSnap,
+				zoomStep: p.zoomStep,
 			});
-			dispatch({ type: "SET_ZOOM", payload: { zoomDomain: next } });
-			onZoomChange?.(next);
+			zoomAccRef.current = next; // sincrono: il prossimo evento riparte da qui
+			// snap solo sull'output mostrato / notificato
+			const display =
+				p.zoomSnap && p.zoomSnap > 0
+					? snapDomain(next, p.zoomSnap, p.baseDomain)
+					: next;
+			dispatch({ type: "SET_ZOOM", payload: { zoomDomain: display } });
+			p.onZoomChange?.(display);
 		};
 
 		el.addEventListener("wheel", onWheel, { passive: false });
 		return () => el.removeEventListener("wheel", onWheel);
-	}, [
-		ctx?.zoomable,
-		ctx?.yBaseDomain,
-		ctx?.zoomDomain,
-		chartYEnd,
-		padding,
-		dispatch,
-		svgRef,
-		onZoomChange,
-		zoomStep,
-		zoomSnap,
-	]);
+	}, [ctx?.zoomable, dispatch]);
 
 	const handleDoubleClick = useCallback(() => {
 		if (!ctx?.zoomable || !ctx.zoomDomain || !dispatch) return;
+		zoomAccRef.current = null;
 		dispatch({ type: "CLEAR_ZOOM", payload: {} });
 		onZoomChange?.(null);
 	}, [ctx?.zoomable, ctx?.zoomDomain, dispatch, onZoomChange]);

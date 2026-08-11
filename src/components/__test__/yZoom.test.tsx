@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import React from "react";
+import React, { act } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import XAxis from "../axis/xAxis";
 import YAxis from "../axis/yAxis";
@@ -86,7 +86,9 @@ describe("S3 — zoom interattivo Y (rotella)", () => {
 
 		await waitFor(() => {
 			const reset = dotYs(container);
-			reset.forEach((y, i) => expect(y).toBeCloseTo(before[i], 3));
+			reset.forEach((y, i) => {
+				expect(y).toBeCloseTo(before[i], 3);
+			});
 		});
 	});
 
@@ -113,5 +115,79 @@ describe("S3 — zoom interattivo Y (rotella)", () => {
 		const zoomed = onZoomChange.mock.calls.at(-1)?.[0] as [number, number];
 		expect(Number.isInteger(zoomed[0])).toBe(true);
 		expect(Number.isInteger(zoomed[1])).toBe(true);
+	});
+
+	// Regressione: piu' eventi rotella arrivano nello STESSO tick, prima che React
+	// ri-renderizzi. Il 2o evento deve ripartire dal dominio del 1o (accumulo), non
+	// da quello stantio del context -> altrimenti "a volte zooma a volte no".
+	it("eventi rotella rapidi si accumulano (nessuno step perso)", async () => {
+		const onZoomChange = vi.fn();
+		const { container } = render(
+			<Chart width={520} height={400} elements={elements}>
+				<YAxis name="v" zoomable onZoomChange={onZoomChange} showLine />
+				<Line name="v" showDots />
+				<XAxis dataPoints={dataPoints} showLine />
+			</Chart>,
+		);
+		await waitFor(() => expect(container.querySelector("circle")).toBeTruthy());
+		const svg = container.querySelector("svg") as SVGSVGElement;
+
+		const wheel = () =>
+			new WheelEvent("wheel", {
+				deltaY: -120,
+				clientX: 250,
+				clientY: 200,
+				bubbles: true,
+				cancelable: true,
+			});
+		act(() => {
+			svg.dispatchEvent(wheel());
+			svg.dispatchEvent(wheel());
+		});
+
+		const d1 = onZoomChange.mock.calls[0]?.[0] as [number, number];
+		const d2 = onZoomChange.mock.calls[1]?.[0] as [number, number];
+		expect(d2[1] - d2[0]).toBeLessThan(d1[1] - d1[0]); // 2o zooma oltre il 1o
+	});
+
+	// Regressione: con snap, delta piccoli (trackpad) producono zoom minimi che,
+	// arrotondati sul singolo step, tornerebbero allo stesso dominio (stallo).
+	// L'accumulo continuo (snap solo sull'output) deve farlo comunque progredire.
+	it("con zoomSnap i delta piccoli non vengono ingoiati", async () => {
+		const onZoomChange = vi.fn();
+		const { container } = render(
+			<Chart width={520} height={400} elements={elements}>
+				<YAxis
+					name="v"
+					zoomable
+					zoomSnap={1}
+					onZoomChange={onZoomChange}
+					showLine
+				/>
+				<Line name="v" showDots />
+				<XAxis dataPoints={dataPoints} showLine />
+			</Chart>,
+		);
+		await waitFor(() => expect(container.querySelector("circle")).toBeTruthy());
+		const svg = container.querySelector("svg") as SVGSVGElement;
+
+		const smallWheel = () =>
+			new WheelEvent("wheel", {
+				deltaY: -8, // tacca piccola tipo trackpad
+				clientX: 250,
+				clientY: 200,
+				bubbles: true,
+				cancelable: true,
+			});
+		act(() => {
+			for (let i = 0; i < 12; i++) svg.dispatchEvent(smallWheel());
+		});
+
+		const first = onZoomChange.mock.calls[0]?.[0] as [number, number];
+		const last = onZoomChange.mock.calls.at(-1)?.[0] as [number, number];
+		// progredisce oltre il primo step (niente stallo) e resta snappato a interi
+		expect(last[1] - last[0]).toBeLessThan(first[1] - first[0]);
+		expect(Number.isInteger(last[0])).toBe(true);
+		expect(Number.isInteger(last[1])).toBe(true);
 	});
 });
