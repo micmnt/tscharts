@@ -4,6 +4,47 @@ Tutte le modifiche rilevanti a questo progetto sono documentate qui.
 Il formato si ispira a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e il progetto segue il [Semantic Versioning](https://semver.org/lang/it/).
 
+## [1.2.0] - 2026-08-11
+
+### Added
+
+- **Dominio Y controllabile** su `<YAxis min max>`: sovrascrive l'intervallo
+  auto-calcolato `[0, max]`, utile per "entrare" in una banda stretta di valori
+  (es. `min={98} max={102}`). Con `max` esplicito il `flatMax` viene ignorato; i
+  valori fuori dominio sono clampati ai bordi. Scope: asse Y singolo, grafici
+  verticali non-negativi (bar/line).
+- **Zoom interattivo Y** su `<YAxis zoomable>`: zoom con la **rotella** del mouse
+  attorno al cursore, **doppio click** per resettare. Props correlate:
+  - `onZoomChange?: (domain: [number, number] | null) => void` — notifica il
+    dominio corrente (`null` al reset);
+  - `zoomStep?: number` (default `1.15`) — quanto zooma ogni tacca;
+  - `zoomSnap?: number` — arrotonda gli estremi del dominio al multiplo indicato
+    (es. `1` = interi), per evitare valori con decimali.
+
+  Il dominio è limitato a quello base (nessun pan nel vuoto) con uno zoom massimo.
+- **Area chart** su `<Line>`: `fill` + `fillOpacity` riempie l'area sotto la
+  linea fino alla baseline (o alla linea dello zero nei grafici negativi,
+  riempiendo sopra e sotto). Nuova prop **`fillGradient`** per l'area sfumata
+  (colore → trasparente), effetto area/sparkline. Un area chart resta una
+  composizione (`<Line>` con riempimento), non un componente a sé.
+- **Sparkline** documentata come composizione (`<Chart>` compatto senza assi +
+  `<Line fillGradient>`), senza componente wrapper — vedi le story `Line
+  Chart/Sparkline` (in tabella, in card).
+
+### Changed
+
+- **`<Line fill>`** ora riempie un'**area vera** fino alla baseline; prima
+  chiudeva il tratto su se stesso (dall'ultimo al primo punto), producendo una
+  regione imperfetta. Correzione: `fill` fa finalmente ciò che dichiara. La
+  linea (stroke) non è più riempita di default.
+
+### Internal
+
+- **Scale esplicite complete** in `lib/core` (`createLinearScale` come primitivo
+  condiviso da scala tempo e valori Y; `getChartYScale`, `computeWheelZoom`): il
+  posizionamento è incapsulato in oggetti scala, refactor a comportamento
+  invariato (byte-identico con la config di default).
+
 ## [1.1.0] - 2026-08-10
 
 ### Added

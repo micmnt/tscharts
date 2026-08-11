@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import Example from "./example";
 
 const meta: Meta<typeof Example> = {
-	title: "Line Chart with Tooltip",
+	title: "Line Chart/With Tooltip",
 	component: Example,
 	argTypes: {
 		showGrid: { control: { type: "boolean" } },

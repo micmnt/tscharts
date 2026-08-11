@@ -1,6 +1,6 @@
 /* Types Imports */
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { useChartsInteractive } from "../../contexts/chartContext";
 import { useSerie } from "../../hooks/useSerie";
 /* Core Imports */
@@ -29,6 +29,11 @@ export type LineProps = {
 	tiltLabelsAngle?: number;
 	fill?: string;
 	fillOpacity?: number;
+	// Riempie l'area sotto la linea con una sfumatura verticale dal colore
+	// (fill ?? colore serie) a trasparente — effetto area-chart/sparkline.
+	// Vale anche per i grafici negativi (area fino alla linea dello zero); non
+	// per gli orizzontali.
+	fillGradient?: boolean;
 };
 
 const Line = (props: LineProps) => {
@@ -49,9 +54,12 @@ const Line = (props: LineProps) => {
 		tiltLabelsAngle = 45,
 		fill = undefined,
 		fillOpacity = 0,
+		fillGradient = false,
 	} = props;
 
 	const interactive = useChartsInteractive();
+	// id univoco e stabile per il <linearGradient> di questa linea (SSR-safe).
+	const gradientId = `line-gradient-${useId()}`;
 
 	const {
 		ctx,
@@ -118,8 +126,54 @@ const Line = (props: LineProps) => {
 	const labelYSpacing = padding / 2 + labelYOffset;
 	const labelXSpacing = padding / 2 + labelXOffset;
 
+	// Area sotto la linea (fill solido o fillGradient): un path "chiuso" dai punti
+	// validi giu' fino alla baseline — chartYEnd nel caso normale, la linea dello
+	// zero (chartYMiddle) nei grafici negativi (l'area va dal tratto allo zero,
+	// gestendo i valori sia positivi che negativi). Non per horizontal. I punti
+	// invalidi (sentinella [0,-10] dai valori nulli/trimZeros) hanno y < 0.
+	const hasArea = (fill !== undefined || fillGradient) && !horizontal;
+	const areaBaseline = ctx.negative
+		? (ctx.chartYMiddle ?? ctx.chartYEnd)
+		: ctx.chartYEnd;
+	const areaColor = fill ?? serieColor;
+	const areaTopOpacity = fillOpacity || 0.3;
+	const validAreaPoints = hasArea
+		? (linePoints as [number, number][]).filter((p) => p[1] >= 0)
+		: [];
+	const areaPath =
+		validAreaPoints.length > 1
+			? `M ${validAreaPoints[0][0]} ${validAreaPoints[0][1]} ${validAreaPoints
+					.slice(1)
+					.map((p) => `L ${p[0]} ${p[1]}`)
+					.join(
+						" ",
+					)} L ${validAreaPoints[validAreaPoints.length - 1][0]} ${areaBaseline} L ${validAreaPoints[0][0]} ${areaBaseline} Z`
+			: "";
+
 	return (
 		<>
+			{areaPath && (
+				<>
+					{fillGradient && (
+						<defs>
+							<linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+								<stop
+									offset="0%"
+									stopColor={areaColor}
+									stopOpacity={areaTopOpacity}
+								/>
+								<stop offset="100%" stopColor={areaColor} stopOpacity={0} />
+							</linearGradient>
+						</defs>
+					)}
+					<path
+						d={areaPath}
+						fill={fillGradient ? `url(#${gradientId})` : fill}
+						fillOpacity={fillGradient ? undefined : fillOpacity}
+						stroke="none"
+					/>
+				</>
+			)}
 			{!hideLine && (
 				<path
 					strokeLinecap="round"
@@ -128,8 +182,7 @@ const Line = (props: LineProps) => {
 					d={linePath}
 					strokeWidth={theme?.line?.size}
 					stroke={serieColor}
-					fill={fill}
-					fillOpacity={fillOpacity}
+					fill="none"
 				/>
 			)}
 			{(showLabels || highlightLabels) &&

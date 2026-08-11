@@ -271,8 +271,37 @@ Barre raggruppate (più serie affiancate per ogni punto sull'asse X). Props sost
 | `lineOffset` | `number` | — | Offset orizzontale (solo grafici `horizontal`) |
 | `tiltLabels` | `boolean` | `false` | Inclina le etichette |
 | `tiltLabelsAngle` | `number` | `45` | Angolo di inclinazione, se `tiltLabels` |
-| `fill` | `string` | — | Colore di riempimento sotto la linea (area chart) |
+| `fill` | `string` | — | Colore di riempimento dell'area sotto la linea (fino alla baseline; nei grafici negativi fino alla linea dello zero). Richiede `fillOpacity > 0` per essere visibile. Vedi [Area chart](#area-chart) |
 | `fillOpacity` | `number` | `0` | Opacità del riempimento |
+| `fillGradient` | `boolean` | `false` | Riempie l'area con una sfumatura verticale (colore → trasparente), effetto area/sparkline. `fillOpacity` è l'opacità in cima (default `0.3`). Non per grafici orizzontali |
+
+#### Area chart
+
+Un area chart non è un componente a sé: è una `<Line>` con riempimento
+(`fill` + `fillOpacity`, oppure `fillGradient`). L'area va dal tratto alla
+baseline (il fondo), o alla **linea dello zero** nei grafici con valori negativi
+(riempiendo sopra e sotto). Due aree semi-trasparenti su assi diversi mostrano le
+intersezioni. Con `fillGradient` l'area è sfumata (colore → trasparente), come la
+sparkline. Vedi le story *Line Chart/Area* (Normal, Gradient, Negative, DualMixed).
+
+```tsx
+<Line name="vendite" fill="#14b8a6" fillOpacity={0.25} />        // area solida
+<Line name="vendite" fill="#14b8a6" fillGradient />             // area sfumata
+```
+
+#### Sparkline
+
+Non c'è un componente `<Sparkline>`: una sparkline è una **composizione** dei
+primitivi — un `<Chart>` compatto senza assi/legenda/tooltip, con padding piccolo
+(via tema) e una `<Line fillGradient>`.
+
+```tsx
+<Chart width={120} height={32} elements={[serie]} theme={{ padding: 3 }}>
+  <Line name="s" fillGradient />
+</Chart>
+```
+
+Vedi la story *Line Chart/Sparkline* per un esempio inline in una tabella.
 
 ### `<Pie>`
 
