@@ -49,6 +49,12 @@ export type ChartProps = {
 	// defaultTheme, quindi si puo' specificare solo cio' che cambia (es. solo
 	// `seriesColors` o solo `axis.color`) senza perdere gli altri valori.
 	theme?: Partial<ThemeState>;
+	// Motore di rendering delle marche dense (Line/dot). "svg" (default) rende
+	// ogni marca come nodo SVG; "canvas" le disegna su un unico <canvas> (via
+	// Path2D) per reggere dataset grandi (scatter di migliaia di punti). Con
+	// "svg" il canvas e' COMPLETAMENTE escluso (nessun <canvas>, nessun overhead).
+	// Fase 1: agisce su <Line>; assi/legenda/tooltip restano sempre SVG.
+	renderer?: "svg" | "canvas";
 };
 
 const Chart = (props: ChartProps) => {
@@ -65,6 +71,7 @@ const Chart = (props: ChartProps) => {
 		barGroupGap,
 		barOffset,
 		theme,
+		renderer = "svg",
 	} = props;
 
 	// Config di layout condivisa, inoltrata a Svg -> computeGlobalConfig (M1).
@@ -251,6 +258,7 @@ const Chart = (props: ChartProps) => {
 					onZoomChange={onZoomChange}
 					zoomStep={zoomStep}
 					zoomSnap={zoomSnap}
+					renderer={renderer}
 				>
 					{children}
 				</Svg>

@@ -1,8 +1,21 @@
 /* Types Imports */
 
-import { useId, useMemo } from "react";
+import { useCallback, useId, useMemo } from "react";
+import {
+	type CanvasDrawOp,
+	useCanvasLayer,
+} from "../../contexts/canvasContext";
 import { useChartsInteractive } from "../../contexts/chartContext";
+import { useCanvasMark } from "../../hooks/useCanvasMark";
 import { useSerie } from "../../hooks/useSerie";
+/* Canvas Imports */
+import {
+	fillPathGradient,
+	fillPathSolid,
+	paintDots,
+	paintTexts,
+	strokePath,
+} from "../../lib/canvas/paint";
 /* Core Imports */
 import {
 	generateDataPaths,
@@ -104,20 +117,20 @@ const Line = (props: LineProps) => {
 		);
 	}, [ctx, theme, serieElement, padding, trimZeros, horizontal, lineOffset]);
 
-	if (!ctx || !theme || !elements || !serieElement) return null;
-
-	if (!result) return null;
-
-	const { paths, dataPoints } = result;
+	// Derivazioni GUARDATE (sicure anche prima che i dati siano pronti): servono
+	// sia al ramo SVG sia alla draw-op canvas, che va costruita PRIMA degli
+	// early-return (regola degli hook).
+	const { paths, dataPoints } = result ?? {};
 
 	const linePath = paths?.filter((p) => p !== "").join() ?? "";
 
-	const linePoints = dataPoints?.get(serieElement.name) ?? [];
+	const linePoints = dataPoints?.get(serieElement?.name ?? "") ?? [];
 
-	const serieIndex = elements.findIndex((el) => el.name === serieElement.name);
+	const serieIndex =
+		elements?.findIndex((el) => el.name === serieElement?.name) ?? -1;
 
 	const serieColor =
-		serieElement.color ??
+		serieElement?.color ??
 		theme?.seriesColors?.[serieIndex] ??
 		theme?.seriesColors?.[0];
 
@@ -132,9 +145,9 @@ const Line = (props: LineProps) => {
 	// gestendo i valori sia positivi che negativi). Non per horizontal. I punti
 	// invalidi (sentinella [0,-10] dai valori nulli/trimZeros) hanno y < 0.
 	const hasArea = (fill !== undefined || fillGradient) && !horizontal;
-	const areaBaseline = ctx.negative
-		? (ctx.chartYMiddle ?? ctx.chartYEnd)
-		: ctx.chartYEnd;
+	const areaBaseline = ctx?.negative
+		? (ctx?.chartYMiddle ?? ctx?.chartYEnd ?? 0)
+		: (ctx?.chartYEnd ?? 0);
 	const areaColor = fill ?? serieColor;
 	const areaTopOpacity = fillOpacity || 0.3;
 	const validAreaPoints = hasArea
@@ -149,6 +162,122 @@ const Line = (props: LineProps) => {
 						" ",
 					)} L ${validAreaPoints[validAreaPoints.length - 1][0]} ${areaBaseline} L ${validAreaPoints[0][0]} ${areaBaseline} Z`
 			: "";
+
+	// Dot: con showDots si disegnano tutti i punti; senza, SOLO quello sotto il
+	// cursore. Prima si renderizzava un <circle> per ogni punto anche a showDots
+	// off (r=0, invisibili) solo per far crescere a r=7 quello in hover: a 10k+
+	// punti erano migliaia di nodi DOM inutili (fino al crash). L'aspetto e'
+	// identico perche' i non-hover erano gia' invisibili.
+	const validDotPoints = (linePoints as [number, number][]).filter(
+		(el) => el.length > 0,
+	);
+	const hoveredDotIndex = hoveredElement?.elementIndex;
+	const hoveredDotPoint =
+		hoveredDotIndex != null ? validDotPoints[hoveredDotIndex] : undefined;
+
+	// --- Canvas (increment 1): stessa geometria (linePath/areaPath/dot via
+	// Path2D) disegnata su UN nodo. useCanvasMark e' NO-OP in modalita' SVG. ---
+	const canvasLayer = useCanvasLayer();
+	const isCanvas = !!canvasLayer;
+	const areaYTop = validAreaPoints.length
+		? Math.min(...validAreaPoints.map((p) => p[1]))
+		: 0;
+	const drawOp = useCallback<CanvasDrawOp>(
+		(g) => {
+			const color = serieColor ?? "#000";
+			if (areaPath) {
+				if (fillGradient) {
+					fillPathGradient(
+						g,
+						areaPath,
+						areaColor ?? color,
+						areaTopOpacity,
+						areaYTop,
+						areaBaseline,
+					);
+				} else if (fill !== undefined) {
+					fillPathSolid(g, areaPath, fill, fillOpacity);
+				}
+			}
+			if (!hideLine) {
+				strokePath(g, linePath, color, theme?.line?.size ?? 2);
+				if (showDots) {
+					paintDots(
+						g,
+						validDotPoints,
+						color,
+						dotRadius,
+						hoveredDotIndex ?? -1,
+						7,
+					);
+				} else if (hoveredDotPoint) {
+					paintDots(g, [hoveredDotPoint], color, 7, 0, 7);
+				}
+			}
+			// Label di valore (showLabels tutte, highlightLabels solo l'hover), come
+			// i <text> SVG: allineamento e rotazione (tiltLabels) inclusi.
+			if (showLabels || highlightLabels) {
+				const align = horizontal || tiltLabels ? "start" : "center";
+				// Rotazione solo nel caso verticale tiltato (come lo SVG).
+				const rotate = !horizontal && tiltLabels ? tiltLabelsAngle : undefined;
+				const items = (linePoints as [number, number][])
+					.map((point, i) => {
+						if (!showLabels && hoveredDotIndex !== i) return null;
+						if (!point || point.length < 2) return null;
+						const value = serieElement?.data?.[i]?.value;
+						return {
+							x: horizontal
+								? point[0] + labelXSpacing
+								: point[0] - labelXSpacing,
+							y: horizontal ? point[1] : point[1] - labelYSpacing,
+							text: serieElement?.format
+								? String(serieElement.format(value as number))
+								: value == null
+									? ""
+									: String(value),
+							align: align as CanvasTextAlign,
+							rotate,
+						};
+					})
+					.filter((it): it is NonNullable<typeof it> => it !== null);
+				paintTexts(g, items, color, labelSize);
+			}
+		},
+		[
+			serieColor,
+			areaPath,
+			fillGradient,
+			areaColor,
+			areaTopOpacity,
+			areaYTop,
+			areaBaseline,
+			fill,
+			fillOpacity,
+			hideLine,
+			linePath,
+			theme?.line?.size,
+			showDots,
+			validDotPoints,
+			dotRadius,
+			hoveredDotIndex,
+			hoveredDotPoint,
+			showLabels,
+			highlightLabels,
+			linePoints,
+			serieElement,
+			labelSize,
+			labelXSpacing,
+			labelYSpacing,
+			horizontal,
+			tiltLabels,
+			tiltLabelsAngle,
+		],
+	);
+	useCanvasMark(isCanvas && result ? drawOp : null);
+
+	if (!ctx || !theme || !elements || !serieElement || !result) return null;
+	// Canvas-mode: nessun output SVG (le marche sono sul bitmap).
+	if (isCanvas) return null;
 
 	return (
 		<>
@@ -229,9 +358,9 @@ const Line = (props: LineProps) => {
 					},
 				)}
 			{!hideLine &&
-				linePoints
-					.filter((el: [x: number, y: number]) => el.length > 0)
-					.map((point: [x: number, y: number], dataPointIndex: number) => (
+				showDots &&
+				validDotPoints.map(
+					(point: [x: number, y: number], dataPointIndex: number) => (
 						<circle
 							key={`${serieElement.name}-dot-${dataPointIndex}`}
 							cx={point[0]}
@@ -244,7 +373,20 @@ const Line = (props: LineProps) => {
 							stroke={serieColor}
 							strokeWidth={2}
 						/>
-					))}
+					),
+				)}
+			{!hideLine && !showDots && hoveredDotPoint && (
+				<circle
+					key={`${serieElement.name}-dot-hover`}
+					cx={hoveredDotPoint[0]}
+					cy={hoveredDotPoint[1]}
+					r={7}
+					fillOpacity={0.7}
+					fill={serieColor}
+					stroke={serieColor}
+					strokeWidth={2}
+				/>
+			)}
 		</>
 	);
 };

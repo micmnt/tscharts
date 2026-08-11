@@ -38,6 +38,7 @@ import {
 } from "../../lib/globalConfig";
 import { isDefined, isTimeSerie } from "../../lib/utils";
 import type { Serie } from "../../types";
+import CanvasSurface from "../canvas/canvasSurface";
 import Legend, { DEFAULT_LEGEND_HEIGHT } from "../legend/legend";
 import Tooltip from "../tooltip/tooltip";
 
@@ -57,6 +58,9 @@ export type SVGProps = {
 	// Config del passo di zoom (S3b): fattore per tacca e snap degli estremi.
 	zoomStep?: number;
 	zoomSnap?: number;
+	// Motore di rendering (increment 1 canvas): "canvas" monta un <CanvasSurface>
+	// dietro l'<svg>. Default "svg" -> nessun canvas montato (invariante).
+	renderer?: "svg" | "canvas";
 };
 
 const getDefaultAriaLabel = (elements?: Serie[]) => {
@@ -95,6 +99,7 @@ const Svg = (props: SVGProps) => {
 		onZoomChange,
 		zoomStep,
 		zoomSnap,
+		renderer = "svg",
 	} = props;
 
 	const rootRef = useRef<SVGSVGElement>(null);
@@ -521,7 +526,7 @@ const Svg = (props: SVGProps) => {
 
 	const viewBox = `0 0 ${width} ${height + legendHeight}`;
 
-	return (
+	const svgEl = (
 		<svg
 			style={style}
 			ref={rootRef}
@@ -541,6 +546,21 @@ const Svg = (props: SVGProps) => {
 			</ChartMouseContext.Provider>
 		</svg>
 	);
+
+	// Modalita' canvas (increment 1): un <CanvasSurface> dietro l'<svg>, stessa
+	// dimensione. Le marche (Line) registrano draw-op e rendono null nell'svg;
+	// assi/legenda/tooltip restano nell'svg sopra e gestiscono gli eventi.
+	// In "svg" (default) NIENTE di tutto questo: l'svg viene ritornato tale e
+	// quale (invariante: SVG esclude completamente il canvas).
+	if (renderer === "canvas") {
+		return (
+			<CanvasSurface width={width ?? 0} height={(height ?? 0) + legendHeight}>
+				{svgEl}
+			</CanvasSurface>
+		);
+	}
+
+	return svgEl;
 };
 
 export default Svg;

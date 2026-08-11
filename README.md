@@ -76,6 +76,7 @@ Componente radice: fornisce il contesto condiviso (dimensioni, dati, tema) a tut
 | `barOffset` | `number` | — | Offset orizzontale delle barre (usato dai grafici a barre orizzontali) |
 | `style` | `CSSProperties` | — | Stile CSS applicato all'elemento `<svg>` |
 | `theme` | `Partial<ThemeState>` | `defaultTheme` | Override parziale del tema (colori serie, padding, font, assi, griglia...). Vedi [Tema](#tema) |
+| `renderer` | `"svg" \| "canvas"` | `"svg"` | Motore di rendering delle marche dense (`Line`/dot, `Bar`). `"canvas"` le disegna su un unico `<canvas>` per reggere dataset grandi. Vedi [Rendering su canvas](#rendering-su-canvas) |
 
 #### Tema
 
@@ -404,6 +405,42 @@ l'array `data` di una serie temporale) e restituisce un nuovo array.
 | `bin` | `(data, { size? \| count? }) => Point[]` | Istogramma: distribuisce i valori in intervalli (`size` fisso o `count` intervalli equi) e conta i punti. La `date` è l'etichetta dell'intervallo |
 
 Vedi le story *Transform* (MovingAverage, Cumulative, Aggregate, Bin).
+
+## Rendering su canvas
+
+Di default ogni marca è un nodo SVG: un `<circle>` per dot, un `<path>` per
+barra. Ottimo fino a qualche centinaio di marche; oltre, il numero di nodi DOM
+diventa il collo di bottiglia (uno scatter da 10.000 punti crea 10.000 `<circle>`
+→ mount/paint lentissimi). Con **`<Chart renderer="canvas">`** le marche dense
+(`Line` con `showDots`, `Bar`) vengono disegnate su un **unico `<canvas>`** —
+stessa geometria (i path del core via `Path2D`), un solo nodo.
+
+```tsx
+<Chart renderer="canvas" width={800} height={400} elements={[scatter]}>
+  <Line name="s" showDots />   {/* migliaia di punti su un canvas */}
+  <YAxis name="s" />
+  <XAxis dataPoints={dates} />
+</Chart>
+```
+
+È lo **stesso modello compositivo**: cambia solo dove vengono dipinte le marche.
+Punti chiave:
+
+- **Ibrido**: solo le marche dense vanno su canvas; **assi, griglia, legenda,
+  tooltip, hover e selezione restano SVG** e continuano a funzionare identici
+  (l'hover è calcolato matematicamente, non per-elemento).
+- **`renderer="svg"` (default) esclude completamente il canvas**: nessun
+  `<canvas>` montato, nessun overhead — le marche restano SVG byte-identiche.
+- **Interazione barre**: `onBarClick`/`onBarDrag` funzionano anche su canvas
+  (hit-testing geometrico), drag da touch incluso. Per l'accessibilità, le barre
+  cliccabili hanno elementi focusabili invisibili (Tab + Invio); il mouse passa
+  dal canvas.
+- **Quando usarlo**: dataset grandi (scatter/serie fitte, molte barre). Per pochi
+  elementi l'SVG è preferibile (nitido, accessibile, SSR-friendly).
+
+**Limiti noti (canvas)**: nessun rendering server-side (fallback all'SVG).
+
+Vedi la story *Canvas renderer*.
 
 ## Migrazione a v1.0
 

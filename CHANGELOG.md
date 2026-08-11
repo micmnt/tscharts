@@ -4,6 +4,35 @@ Tutte le modifiche rilevanti a questo progetto sono documentate qui.
 Il formato si ispira a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e il progetto segue il [Semantic Versioning](https://semver.org/lang/it/).
 
+## [1.3.0] - 2026-08-11
+
+### Added
+
+- **Rendering su canvas** (`<Chart renderer="canvas">`): motore di rendering
+  **ibrido** per dataset grandi. Le marche dense (`<Line>` con `showDots`,
+  `<Bar>`) vengono disegnate su un **unico `<canvas>`** (stessa geometria dei
+  path del core via `Path2D`), mentre **assi, griglia, legenda, tooltip, hover e
+  selezione restano SVG**. Uno scatter da ~10k punti passa da migliaia di nodi
+  DOM a uno solo (nei nostri test ~250× più veloce al mount). `renderer="svg"`
+  resta il default ed **esclude completamente il canvas** (nessun `<canvas>`,
+  nessun overhead). `onBarClick`/`onBarDrag` funzionano anche su canvas
+  (hit-testing geometrico, drag da touch incluso); le barre cliccabili restano
+  raggiungibili da tastiera (Tab + Invio). Vedi
+  [README](./README.md#rendering-su-canvas) e la story *Canvas renderer*. Unico
+  limite: nessun rendering server-side (fallback all'SVG).
+
+### Fixed
+
+- **`<Line>` — dot O(N) anche senza `showDots`**: veniva reso un `<circle>` per
+  ogni punto (invisibile, `r=0`) solo per far crescere quello in hover, con costo
+  DOM lineare che poteva far crashare la pagina su serie grandi. Ora senza
+  `showDots` si disegna **solo** il punto sotto il cursore (aspetto identico).
+- **Zoom Y con rotella (`zoomStep`/`zoomSnap`) non solido** ("a volte zooma a
+  volte no"): il listener si ri-agganciava a ogni zoom (closure con dominio
+  stantio → step persi con la rotella rapida) e lo snap applicato a ogni step
+  "ingoiava" i delta piccoli. Ora l'accumulo è continuo (sincrono) e lo snap si
+  applica solo all'output mostrato.
+
 ## [1.2.0] - 2026-08-11
 
 ### Added
