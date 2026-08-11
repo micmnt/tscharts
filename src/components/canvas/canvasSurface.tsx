@@ -212,7 +212,10 @@ const CanvasSurface = (props: CanvasSurfaceProps) => {
 						pointerEvents: "none",
 					}}
 				/>
-				{children}
+				{/* L'<svg> (assi, tooltip, hover) va SOPRA il canvas: il canvas e'
+				    posizionato (absolute) quindi senza questo layer si dipingerebbe
+				    sopra l'svg, coprendo il tooltip nell'area delle marche. */}
+				<div style={{ position: "relative", zIndex: 1 }}>{children}</div>
 			</div>
 		</CanvasLayerContext.Provider>
 	);

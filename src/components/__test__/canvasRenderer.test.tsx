@@ -48,6 +48,23 @@ describe("renderer canvas (increment 1) — invariante e modalita'", () => {
 		expect(container.querySelectorAll("circle").length).toBe(0);
 	});
 
+	it("canvas: l'svg (tooltip/assi) sta in un layer SOPRA il canvas", async () => {
+		const { container } = render(
+			<Chart width={600} height={300} elements={elements(5)} renderer="canvas">
+				<YAxis name="s" showLine />
+				<Line name="s" showDots />
+			</Chart>,
+		);
+		await waitFor(() => expect(container.querySelector("canvas")).toBeTruthy());
+		const canvas = container.querySelector("canvas") as HTMLCanvasElement;
+		const svg = container.querySelector("svg") as SVGSVGElement;
+		// l'svg e' avvolto in un layer con zIndex 1; il canvas resta auto (< 1)
+		expect((svg.parentElement as HTMLElement).style.zIndex).toBe("1");
+		expect(canvas.style.zIndex === "" || Number(canvas.style.zIndex) < 1).toBe(
+			true,
+		);
+	});
+
 	it("il canvas e' dietro e non intercetta gli eventi (pointer-events:none)", async () => {
 		const { container } = render(
 			<Chart width={600} height={300} elements={elements(5)} renderer="canvas">
