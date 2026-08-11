@@ -30,6 +30,11 @@ e il progetto segue il [Semantic Versioning](https://semver.org/lang/it/).
 - **Sparkline** documentata come composizione (`<Chart>` compatto senza assi +
   `<Line fillGradient>`), senza componente wrapper — vedi le story `Line
   Chart/Sparkline` (in tabella, in card).
+- **Layer di trasformazione dati** (`tscharts/transform`): funzioni pure
+  `dati → dati` da applicare a monte di `elements` — `movingAverage`,
+  `cumulative`, `aggregate` (`{ by, reduce }`) e `bin` (istogramma). Entry point
+  **separato** per non pesare sul bundle base (~19 kB gzip invariati); zero
+  dipendenze. Resta composizione: si trasforma la serie e la si passa a `<Chart>`.
 
 ### Changed
 

@@ -14,6 +14,10 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.es.js"
 		},
+		"./transform": {
+			"types": "./dist/transform.d.ts",
+			"import": "./dist/transform.es.js"
+		},
 		"./style.css": "./dist/style.css"
 	},
 	"files": [

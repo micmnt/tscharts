@@ -3,9 +3,15 @@ import dts from "vite-plugin-dts";
 export default defineConfig({
 	build: {
 		lib: {
-			entry: "./src/index.ts", // Specifies the entry point for building the library.
+			// Entry multiplo: il base (index) e il layer di trasformazione dati
+			// (transform), esposto come subpath separato `tscharts/transform` cosi'
+			// da non pesare sul bundle base (T1).
+			entry: {
+				index: "./src/index.ts",
+				transform: "./src/transform.ts",
+			},
 			name: "tscharts", // Sets the name of the generated library.
-			fileName: (format) => `index.${format}.js`, // Generates the output file name based on the format.
+			fileName: (format, entryName) => `${entryName}.${format}.js`, // es. index.es.js / transform.es.js
 			formats: ["es"],
 			cssFileName: "style",
 		},

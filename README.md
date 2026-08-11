@@ -375,6 +375,36 @@ Linea di soglia orizzontale o verticale sovrapposta al grafico.
 | `cumulatedSeriesValue` | `{ series: string[]; label: string; format?: (value: number) => string }` | — | Se presente, mostra la somma dei valori delle `series` indicate con l'etichetta `label` |
 | `customElement` | `(props) => ReactNode` | — | Sostituisce completamente il rendering di riga per ogni serie nel tooltip |
 
+## Trasformazione dati
+
+Funzioni **pure** `dati → dati` da applicare **a monte** di `elements`: trasformi
+i dati e li passi al grafico come una normale serie (resta composizione). Vivono
+in un **entry separato** (`tscharts/transform`), così non pesano sul bundle base
+per chi non le usa.
+
+```ts
+import { movingAverage } from "tscharts/transform";
+
+const smooth = movingAverage(serie.data, 4);
+<Chart elements={[{ ...serie, data: smooth }]}>
+  <YAxis name={serie.name} />
+  <Line name={serie.name} />
+  <XAxis dataPoints={serie.data.map((p) => p.date)} />
+</Chart>;
+```
+
+Ogni funzione opera su `Point[]` (`{ date: string; value: number }[]`, cioè
+l'array `data` di una serie temporale) e restituisce un nuovo array.
+
+| Funzione | Firma | Descrizione |
+|----------|-------|-------------|
+| `movingAverage` | `(data, window) => Point[]` | Media mobile: ogni punto è la media degli ultimi `window` punti (finestra più corta all'inizio). Date invariate |
+| `cumulative` | `(data) => Point[]` | Somma progressiva (cumulata) |
+| `aggregate` | `(data, { by, reduce? }) => Point[]` | Raggruppa per la chiave `by(point)` (es. `p => p.date.slice(0,7)` per mese) e riduce (`"sum"` default, o `avg`/`min`/`max`/`count`). La `date` risultante è la chiave |
+| `bin` | `(data, { size? \| count? }) => Point[]` | Istogramma: distribuisce i valori in intervalli (`size` fisso o `count` intervalli equi) e conta i punti. La `date` è l'etichetta dell'intervallo |
+
+Vedi le story *Transform* (MovingAverage, Cumulative, Aggregate, Bin).
+
 ## Migrazione a v1.0
 
 Le API vecchie restano quasi tutte funzionanti ma **deprecate** (avviso in
