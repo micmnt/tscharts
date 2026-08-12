@@ -7,6 +7,28 @@ const meta: Meta<typeof IntersectExample> = {
 	argTypes: {
 		intersect: { control: { type: "boolean" } },
 	},
+	parameters: {
+		docs: {
+			description: {
+				component: [
+					"## Usage",
+					"",
+					"`intersect`: `false` (default) il tooltip segue la colonna più vicina; `true` appare solo quando il mouse è sopra la barra.",
+					"",
+					"```tsx",
+					'import { Chart, Bar, XAxis, YAxis, Tooltip } from "tscharts";',
+					"",
+					"<Chart elements={elements}>",
+					'  <YAxis name="vendite" />',
+					'  <Bar name="vendite" />',
+					"  <XAxis dataPoints={dataPoints} />",
+					"  <Tooltip intersect />",
+					"</Chart>",
+					"```",
+				].join("\n"),
+			},
+		},
+	},
 };
 
 export default meta;

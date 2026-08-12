@@ -1,0 +1,45 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as GroupBar from "./groupBar.stories.tsx";
+import * as GroupBarMixed from "./mixedGroupBar.stories.tsx";
+import * as GroupBarStacked from "./stackedGroupBar.stories.tsx";
+
+<Meta of={GroupBar} title="GroupBar" />
+
+# GroupBarChart
+
+Example of Group Bar Chart using the GroupBar component
+
+#### Example
+
+<Canvas of={GroupBar.Simple} />
+
+#### Mixed Example
+
+<Canvas of={GroupBarMixed.Mixed} />
+
+#### Stacked Example
+
+<Canvas of={GroupBarStacked.Stacked} />
+
+## Usage
+
+```ts
+import { GroupBar, Chart } from "tscharts";
+
+const Example = () => {
+  return (
+    <Chart>
+      <GroupBar name="serie1" />
+    </Chart>
+  );
+};
+
+export default Example;
+```
+
+#### Arguments
+
+- **name** - A string that represents the serie (group) associated with the bars
+- **stacked** - Optional. `Default value: false`. A boolean that determines if the bars in each group are stacked.
+- **showLabels** - Optional. `Default value: false`. A boolean that determines if show or hide the bars' value labels.
+- **topLabelSerie** - Optional. The name of a serie whose values are shown as labels above each group.

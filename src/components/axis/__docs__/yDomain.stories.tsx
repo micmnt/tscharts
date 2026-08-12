@@ -8,6 +8,27 @@ const meta: Meta<typeof YDomainExample> = {
 		min: { control: { type: "number" } },
 		max: { control: { type: "number" } },
 	},
+	parameters: {
+		docs: {
+			description: {
+				component: [
+					"## Usage",
+					"",
+					"`<YAxis min max>` sovrascrive il dominio auto `[0, max]`, utile per entrare in una banda stretta di valori.",
+					"",
+					"```tsx",
+					'import { Chart, Line, XAxis, YAxis } from "tscharts";',
+					"",
+					"<Chart elements={elements}>",
+					"  <YAxis min={98} max={102} />",
+					'  <Line name="saturazione" showDots />',
+					"  <XAxis dataPoints={dataPoints} />",
+					"</Chart>",
+					"```",
+				].join("\n"),
+			},
+		},
+	},
 };
 
 export default meta;

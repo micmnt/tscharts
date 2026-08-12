@@ -1,0 +1,33 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as Donut from "./donut.stories.tsx";
+
+<Meta of={Donut} title="Donut" />
+
+# DonutChart
+
+Example of Donut Chart using the Donut component
+
+#### Example
+
+<Canvas of={Donut.Simple} />
+
+## Usage
+
+```ts
+import { Donut, Chart } from "tscharts";
+
+const Example = () => {
+  return (
+    <Chart>
+      <Donut name="serie1" />
+    </Chart>
+  );
+};
+
+export default Example;
+```
+
+#### Arguments
+
+- **name** - A string that represents the serie associated with the donut slices
+- **config** - Optional. `Default value: {}`. A configuration object for the donut serie (e.g. `innerRadius`, `centerElement`).

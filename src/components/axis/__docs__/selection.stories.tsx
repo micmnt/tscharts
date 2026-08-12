@@ -11,6 +11,31 @@ const meta: Meta<typeof SelectionExample> = {
 		},
 		selectedColor: { control: { type: "color" } },
 	},
+	parameters: {
+		docs: {
+			description: {
+				component: [
+					"## Usage",
+					"",
+					"`selectedValue`/`selectedColor` evidenziano una categoria; `onLabelClick(label, index)` gestisce il click sulle label.",
+					"",
+					"```tsx",
+					'import { Chart, Bar, XAxis, YAxis } from "tscharts";',
+					"",
+					"<Chart elements={elements}>",
+					'  <YAxis name="vendite" />',
+					'  <Bar name="vendite" />',
+					"  <XAxis",
+					'    selectedValue="15/03"',
+					'    selectedColor="#6366f1"',
+					"    onLabelClick={(label, index) => console.log(label, index)}",
+					"  />",
+					"</Chart>",
+					"```",
+				].join("\n"),
+			},
+		},
+	},
 };
 
 export default meta;

@@ -8,6 +8,27 @@ const meta: Meta<typeof YZoomExample> = {
 		zoomStep: { control: { type: "number", step: 0.05 } },
 		zoomSnap: { control: { type: "number" } },
 	},
+	parameters: {
+		docs: {
+			description: {
+				component: [
+					"## Usage",
+					"",
+					"`<YAxis zoomable>` abilita lo zoom con la rotella sull'asse Y (doppio click per resettare); `onZoomChange` notifica il dominio corrente.",
+					"",
+					"```tsx",
+					'import { Chart, Line, XAxis, YAxis } from "tscharts";',
+					"",
+					"<Chart elements={elements}>",
+					"  <YAxis zoomable onZoomChange={(domain) => console.log(domain)} zoomSnap={1} />",
+					'  <Line name="temperatura" showDots />',
+					"  <XAxis dataPoints={dataPoints} />",
+					"</Chart>",
+					"```",
+				].join("\n"),
+			},
+		},
+	},
 };
 
 export default meta;

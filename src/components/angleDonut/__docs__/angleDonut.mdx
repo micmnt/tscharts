@@ -1,0 +1,33 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as AngleDonut from "./angleDonut.stories.tsx";
+
+<Meta of={AngleDonut} title="AngleDonut" />
+
+# AngleDonutChart
+
+Example of Angle Donut Chart using the AngleDonut component
+
+#### Example
+
+<Canvas of={AngleDonut.Simple} />
+
+## Usage
+
+```ts
+import { AngleDonut, Chart } from "tscharts";
+
+const Example = () => {
+  return (
+    <Chart>
+      <AngleDonut name="serie1" />
+    </Chart>
+  );
+};
+
+export default Example;
+```
+
+#### Arguments
+
+- **name** - A string that represents the serie associated with the angle donut
+- **config** - Optional. `Default value: {}`. A configuration object for the angle donut serie (e.g. `innerRadius`, `trackColor`, `centerElement`).
