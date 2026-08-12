@@ -6,10 +6,6 @@ import Tooltip from "../../tooltip/tooltip";
 import XAxis from "../xAxis";
 import YAxis from "../yAxis";
 
-// Date a campionamento IRREGOLARE: due misure ravvicinate a inizio mese, poi
-// buchi crescenti. Con scaleType="time" i punti si distribuiscono in modo
-// proporzionale al tempo (i due punti vicini restano vicini, il buco grande e'
-// largo), cosa che una scala categorica (band) non puo' rappresentare.
 const elements = [
 	{
 		name: "vendite",
@@ -28,7 +24,6 @@ const elements = [
 const parseDate = (d: string) => new Date(d).getTime();
 
 type TimeAxisExampleProps = {
-	// "data" = un tick per punto dato; un numero = N tick equispaziati.
 	ticks?: "data" | number;
 };
 

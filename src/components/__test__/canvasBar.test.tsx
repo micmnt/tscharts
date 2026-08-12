@@ -7,10 +7,6 @@ import YAxis from "../axis/yAxis";
 import Bar from "../bar/bar";
 import Chart from "../chart/chart";
 
-// jsdom non ha Path2D ne' un context 2D reale: li stubbo cosi' il CanvasSurface
-// puo' fare hit-test. isPointInPath ritorna sempre true -> hitTest prende
-// l'ULTIMA region (topmost) = l'ultima barra: sufficiente a provare il wiring
-// click -> hitTest -> onBarClick(data[i]).
 beforeAll(() => {
 	(globalThis as any).Path2D = class {
 		d: string;
@@ -31,7 +27,6 @@ beforeAll(() => {
 		},
 	);
 	(HTMLCanvasElement.prototype as any).getContext = () => fakeCtx;
-	// geometria svg (identita') per convertToSVGPoint
 	(SVGSVGElement.prototype as any).createSVGPoint = () => {
 		const pt = {
 			x: 0,
@@ -69,11 +64,9 @@ describe("renderer canvas — Bar (increment 2)", () => {
 		);
 		const svgBars = svg.container.querySelectorAll('[role="button"]');
 		expect(svgBars.length).toBe(3);
-		expect(svgBars[0].getAttribute("fill")).not.toBe("none"); // barre visibili
+		expect(svgBars[0].getAttribute("fill")).not.toBe("none");
 		expect(svg.container.querySelector("canvas")).toBeNull();
 
-		// canvas + onBarClick: rect focusabili per a11y, ma INVISIBILI (fill none,
-		// pointer-events none: mouse/touch passa al canvas).
 		const cvs = render(
 			<Chart width={600} height={300} elements={elements} renderer="canvas">
 				<YAxis name="s" showLine />
@@ -134,7 +127,6 @@ describe("renderer canvas — Bar (increment 2)", () => {
 			);
 		});
 
-		// solo click (non draggabile): il wrapper resta scrollabile
 		const clickOnly = render(
 			<Chart width={600} height={300} elements={elements} renderer="canvas">
 				<YAxis name="s" showLine />
@@ -161,7 +153,6 @@ describe("renderer canvas — Bar (increment 2)", () => {
 		);
 		await waitFor(() => expect(container.querySelector("canvas")).toBeTruthy());
 		const svg = container.querySelector("svg") as SVGSVGElement;
-		// il click sull'svg bolla sul div wrapper -> hit-test -> ultima barra
 		fireEvent.click(svg, { clientX: 100, clientY: 100 });
 		expect(onBarClick).toHaveBeenCalledTimes(1);
 		expect(onBarClick).toHaveBeenCalledWith(data[2]);

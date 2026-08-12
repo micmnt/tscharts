@@ -6,9 +6,6 @@ import Legend from "../../legend/legend";
 import Tooltip from "../../tooltip/tooltip";
 import Line from "../line";
 
-// Un area chart NON e' un componente a se': e' una <Line> con riempimento
-// (fill + fillOpacity, oppure fillGradient). Qui tre varianti che riusano lo
-// stesso primitivo componibile.
 const dataPoints = ["gen", "feb", "mar", "apr", "mag", "giu"];
 
 type AreaExampleProps = {
@@ -17,9 +14,6 @@ type AreaExampleProps = {
 
 const AreaExample: FC<AreaExampleProps> = ({ variant = "normal" }) => {
 	if (variant === "dual") {
-		// Doppio asse Y con due aree miste (positivi + negativi): i grafici
-		// negativi condividono la linea dello zero a meta' canvas, quindi le due
-		// aree semi-trasparenti si sovrappongono e si vedono le intersezioni.
 		const elements = [
 			{
 				name: "ricavi",
@@ -71,7 +65,6 @@ const AreaExample: FC<AreaExampleProps> = ({ variant = "normal" }) => {
 		},
 	];
 
-	// L'area sfumata usa la stessa prop della sparkline: fillGradient.
 	const gradient = variant === "gradient";
 
 	return (

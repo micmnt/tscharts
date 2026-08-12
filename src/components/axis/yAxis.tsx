@@ -1,7 +1,7 @@
 import { Fragment } from "react";
-/* Core Imports */
+
 import { generateYAxis } from "../../lib/core";
-/* Utils Imports */
+
 import { isTimeSerie, warnDev } from "../../lib/utils";
 import type { YAxisProps } from "./axisProps";
 import { useAxisBase } from "./useAxisBase";
@@ -40,9 +40,6 @@ const YAxis = (props: YAxisProps) => {
 
 	const labelTextColor = labelColor ?? theme.axis?.labelColor;
 
-	// Una serie si associa a un asse Y per name OPPURE per axisName (coerente
-	// con getSeriesByAxisName). Serve alle group-bar, il cui asse ha un nome
-	// (es. "vendite") diverso dai name delle singole serie ("prodotto A"...).
 	const foundSerieElement = elements?.find(
 		(el) => el.name === name || el.axisName === name,
 	);
@@ -58,7 +55,6 @@ const YAxis = (props: YAxisProps) => {
 		return null;
 	}
 
-	// Creazione dell'asse Y
 	const yAxis = generateYAxis(serieElement, { ...ctx, padding, yInterval });
 
 	if (!yAxis) return null;
@@ -80,9 +76,7 @@ const YAxis = (props: YAxisProps) => {
 						dominantBaseline="middle"
 					>
 						<textPath startOffset="50%" href={`#axis-${yAxis.nameLabelPath}`}>
-							{/* Titolo dall'asse (prop name), non dalla serie: per le
-							    group-bar la serie trovata ha un name diverso (es.
-							    "prodotto A") dal nome dell'asse ("vendite"). */}
+							{}
 							{yAxis.uom ? `${name} (${yAxis.uom})` : `${name}`}
 						</textPath>
 					</text>

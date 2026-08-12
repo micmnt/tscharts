@@ -7,8 +7,6 @@ import Line from "../../line/line";
 import Tooltip from "../../tooltip/tooltip";
 import Chart from "../chart";
 
-// Due serie su due assi Y distinti (left/right). L'asse Y "temperatura" va a
-// destra: perche' resti a destra servono DUE assi Y contati correttamente.
 const elements = [
 	{
 		name: "vendite",
@@ -37,9 +35,6 @@ const dataPoints = ["13/03", "14/03", "15/03"];
 
 const yAxes = ["vendite", "temperatura"];
 
-// Assi Y generati dinamicamente con .map: l'ispezione dei children scende
-// dentro array e Fragment (flattenChildren), quindi il layout riserva
-// correttamente lo spazio per entrambi gli assi.
 const DynamicAxesExample: FC = () => {
 	return (
 		<div

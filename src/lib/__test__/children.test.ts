@@ -2,7 +2,6 @@ import { createElement, Fragment } from "react";
 import { describe, expect, it } from "vitest";
 import { flattenChildren } from "../children";
 
-// Componenti finti solo per avere reference/props distinte
 const Axis = (_props: { type?: string; name?: string }) => null;
 const Bar = (_props: { name?: string }) => null;
 

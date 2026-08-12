@@ -1,4 +1,3 @@
-/* React Imports */
 import { useMemo } from "react";
 import { useSerie } from "../../hooks/useSerie";
 import { generateDonutPaths } from "../../lib/core";
@@ -41,9 +40,6 @@ const Donut = (props: DonutProps) => {
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
-	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
-	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
-	// singoli campi e' sicuro e piu' semplice da mantenere corretto.
 	const result = useMemo(() => {
 		if (!ctx || !theme || !serieElement) return null;
 		return generateDonutPaths(serieElement, {

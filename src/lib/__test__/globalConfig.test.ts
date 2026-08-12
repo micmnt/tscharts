@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computeGlobalConfig } from "../globalConfig";
 
-// computeGlobalConfig costruisce il GlobalConfig (barWidth/barGroupGap/barOffset)
-// dalle props di layout di <Chart>.
 describe("computeGlobalConfig", () => {
 	it("copia le chiavi di layout impostate", () => {
 		expect(

@@ -7,7 +7,6 @@ import {
 	polarToCartesian,
 } from "./primitives";
 
-// Funzione che genera i path per una serie di un grafico a ciambella aperto con un angolo
 export const generateAngleDonutPaths = (
 	serie: AngleDonutSerie,
 	ctx: ChartState & {
@@ -88,12 +87,6 @@ export const generateAngleDonutPaths = (
 			normalizedValueAngle,
 		);
 
-		// X quasi costante per tutti gli anelli (poco a sinistra del centro,
-		// non del bordo esterno del singolo ring - altrimenti si crea una
-		// scaletta): la label si sovrappone leggermente all'inizio
-		// dell'arco. Y ancorata a dove il ring "inizia" (ore 12, angolo 0)
-		// al proprio raggio medio, cosi' ogni label resta all'altezza del
-		// proprio anello.
 		const ringMidRadius = (newRadius + newInnerRadius) / 2;
 		const ringStartY = polarToCartesian(centerX, centerY, ringMidRadius, 0).y;
 
@@ -115,7 +108,6 @@ export const generateAngleDonutPaths = (
 	return { paths };
 };
 
-// Funzione che genera i path per una serie di un grafico a ciambella
 export const generateDonutPaths = (
 	serie: PieSerie,
 	ctx: ChartState & {
@@ -180,9 +172,7 @@ export const generateDonutPaths = (
 
 		const sliceValue = valueAngle - startAngle;
 		const bisectorAngle = sliceValue / 2 + startAngle;
-		// Meta' dello spessore dell'anello (tra innerRadius e radius), non
-		// radius/2: per un donut con innerRadius grande, radius/2 cade vicino
-		// al bordo interno invece che al centro della fascia colorata.
+
 		const labelRadius = (radius + innerRadius) / 2;
 		const bisectorPoint = polarToCartesian(
 			centerX,
@@ -208,7 +198,6 @@ export const generateDonutPaths = (
 	return { paths, dataPoints };
 };
 
-// Funzione che genera i path per una serie di un grafico a torta
 export const generatePiePaths = (
 	serie: PieSerie,
 	ctx: ChartState & { padding: number },

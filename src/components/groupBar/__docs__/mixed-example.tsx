@@ -49,8 +49,6 @@ const elements = [
 
 const dataPoints = ["13/03", "14/03", "15/03", "16/03"];
 
-// GroupBar con un gruppo stacked (A+B, stesso stackedName) e una barra
-// singola non-stacked (C) nella stessa categoria.
 const MixedExample: FC<GroupBarProps> = ({ showLabels = true }) => {
 	return (
 		<div

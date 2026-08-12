@@ -33,7 +33,7 @@ describe("Line fillGradient — area sfumata", () => {
 
 		const grad = container.querySelector("linearGradient");
 		expect(grad, "linearGradient presente").toBeTruthy();
-		// verticale
+
 		expect(grad?.getAttribute("y1")).toBe("0");
 		expect(grad?.getAttribute("y2")).toBe("1");
 
@@ -43,12 +43,11 @@ describe("Line fillGradient — area sfumata", () => {
 		expect(Number(stops[1].getAttribute("stop-opacity"))).toBe(0);
 		expect(stops[0].getAttribute("stop-color")).toBe("#6366f1");
 
-		// un path area riempito col gradiente
 		const areaPath = Array.from(container.querySelectorAll("path")).find((p) =>
 			(p.getAttribute("fill") ?? "").startsWith("url(#"),
 		);
 		expect(areaPath, "path area con fill=url()").toBeTruthy();
-		// path chiuso (area fino alla baseline)
+
 		expect(areaPath?.getAttribute("d")).toMatch(/Z$/);
 	});
 

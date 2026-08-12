@@ -40,9 +40,9 @@ describe("yDomain e2e — <YAxis min max> restringe l'asse", () => {
 		const nums = yAxisTexts(container);
 		const maxTick = Math.max(...nums);
 		const minTick = Math.min(...nums);
-		// il tick massimo e' 102 (max), non il flatMax auto (~200)
+
 		expect(maxTick).toBeCloseTo(102, 6);
-		// il minimo e' >= 98 (nessun tick sotto il dominio)
+
 		expect(minTick).toBeGreaterThanOrEqual(98 - 1e-6);
 	});
 });

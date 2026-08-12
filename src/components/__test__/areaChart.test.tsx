@@ -29,7 +29,6 @@ const makeChart = (values: number[]) =>
 		</Chart>,
 	);
 
-// baseline = y dell'ultima coppia prima di "Z" nel path area (M .. L xn base L x0 base Z)
 const areaBaseline = (d: string): number => {
 	const toks = d.trim().split(/\s+/);
 	const zi = toks.indexOf("Z");
@@ -49,9 +48,8 @@ describe("Area chart — fill solido diventa area vera", () => {
 		const area = areaOf(container);
 		expect(area, "path area con fill solido").toBeTruthy();
 		expect(area?.getAttribute("fill-opacity")).toBe("0.3");
-		expect(area?.getAttribute("d")).toMatch(/Z$/); // chiuso alla baseline
+		expect(area?.getAttribute("d")).toMatch(/Z$/);
 
-		// la linea (stroke) non ha piu' fill (niente riempimento nero di default)
 		const strokePath = Array.from(container.querySelectorAll("path")).find(
 			(p) => p.getAttribute("stroke") && p.getAttribute("fill") === "none",
 		);
@@ -59,8 +57,8 @@ describe("Area chart — fill solido diventa area vera", () => {
 	});
 
 	it("area negativa: la baseline e' la linea dello zero (piu' in alto del fondo)", async () => {
-		const pos = makeChart([40, 65, 50, 90]); // tutti positivi
-		const neg = makeChart([40, -30, 50, -20]); // misti -> grafico negativo
+		const pos = makeChart([40, 65, 50, 90]);
+		const neg = makeChart([40, -30, 50, -20]);
 		await waitFor(() =>
 			expect(pos.container.querySelector("path")).toBeTruthy(),
 		);
@@ -75,8 +73,6 @@ describe("Area chart — fill solido diventa area vera", () => {
 			areaOf(neg.container)?.getAttribute("d") ?? "",
 		);
 
-		// nel grafico negativo lo zero e' a meta' canvas -> baseline piu' in alto
-		// (y minore) rispetto al caso positivo dove la baseline e' il fondo.
 		expect(negBase).toBeLessThan(posBase);
 	});
 });

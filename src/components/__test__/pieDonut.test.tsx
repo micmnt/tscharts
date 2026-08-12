@@ -65,7 +65,6 @@ describe("Pie / Donut / AngleDonut", () => {
 			</Chart>,
 		);
 		await waitFor(() => expect(container.querySelector("path")).toBeTruthy());
-		// traccia + arco valore per ciascun dato
 		expect(container.querySelectorAll("path").length).toBe(data.length * 2);
 	});
 });

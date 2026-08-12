@@ -16,9 +16,6 @@ import Threshold from "../threshold/threshold";
 
 afterEach(cleanup);
 
-// Renderizza il grafico, aspetta che i path compaiano (il disegno avviene dopo
-// il dispatch INITIALIZE nell'effect) e verifica lo smoke: c'e' output SVG e
-// nessun path malformato (NaN/Infinity nell'attributo d).
 const expectRendersCleanly = async (ui: ReactElement) => {
 	const { container } = render(ui);
 

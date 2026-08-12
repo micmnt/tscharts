@@ -21,11 +21,8 @@ describe("generatePiePaths", () => {
 		};
 		const result = generatePiePaths(serie, baseCtx);
 
-		// centerX=100, centerY=height/2-1.5*padding=85, radius=(height-3*padding)/2=85.
-		// Fette uguali quindi gli angoli attesi (0-180, 180-360) sono noti senza
-		// doverli calcolare a mano: confronto diretto con la primitiva.
 		expect(result?.paths[0]).toBe(generatePieSlice(100, 85, 85, 0, 180));
-		// 360 clampato a 359.9 dalla funzione, per evitare un arco degenere.
+
 		expect(result?.paths[1]).toBe(generatePieSlice(100, 85, 85, 180, 359.9));
 	});
 
@@ -34,8 +31,8 @@ describe("generatePiePaths", () => {
 			name: "p1",
 			type: "pie",
 			data: [
-				{ name: "small", value: 5 }, // 5% * 360 = 18 gradi
-				{ name: "big", value: 95 }, // 342 gradi
+				{ name: "small", value: 5 },
+				{ name: "big", value: 95 },
 			],
 		};
 		const result = generatePiePaths(serie, baseCtx);
@@ -68,8 +65,6 @@ describe("generateDonutPaths", () => {
 		};
 		const result = generateDonutPaths(serie, baseCtx);
 
-		// centerX=100, centerY=height/2-padding=90, radius=(height-2*padding)/2=90,
-		// innerRadius=radius-radius/2=45 (nessun innerRadius custom in ctx).
 		expect(result?.paths[0]).toBe(generateDonutSlice(100, 90, 90, 45, 0, 180));
 		expect(result?.paths[1]).toBe(
 			generateDonutSlice(100, 90, 90, 45, 180, 359.9),
@@ -123,8 +118,6 @@ describe("generateAngleDonutPaths", () => {
 			angle: 270,
 		});
 
-		// radius=90, ringThickness=15 (innerRadius custom): ring0 ->
-		// newRadius=90, newInnerRadius=75.
 		expect(result?.paths[0]?.path).toBe(
 			generateDonutSlice(100, 90, 90, 75, 0, 270),
 		);
@@ -184,9 +177,6 @@ describe("generateAngleDonutPaths", () => {
 		};
 		const result = generateAngleDonutPaths(serie, angleDonutCtx);
 
-		// x costante (vicino al centro, K7): stessa larghezza label per ogni
-		// anello. y diverso: ogni anello e' ancorato al proprio raggio medio,
-		// non sovrapposto al primo.
 		expect(result?.paths[0]?.labelElement).toEqual({
 			x: 41,
 			y: 0,

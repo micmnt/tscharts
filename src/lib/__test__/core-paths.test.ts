@@ -63,8 +63,7 @@ describe("generateDataPaths", () => {
 			{ ...baseCtx, elements: [lineSerie], trimZeros: true },
 			"line",
 		);
-		// Il punto centrale (valore 0 trattato come null) sparisce dal path:
-		// restano due segmenti separati, il secondo riparte con "M" (non "L").
+
 		expect(result?.paths).toEqual(["M 15 55", "M 75 10"]);
 	});
 });
@@ -84,9 +83,9 @@ describe("generateNegativeDataPaths", () => {
 			{ ...baseCtx, elements: [negSerie], negative: true, chartXEnd: 60 },
 			"bar",
 		);
-		// Punto 0 (-10): la barra scende SOTTO lo zero (V 63.33... > zeroY 50)
+
 		expect(result?.paths[0]).toBe("M 5 50 V 63.333333333333336 H 15 V 50 Z");
-		// Punto 1 (30): la barra sale SOPRA lo zero (V 10 < zeroY 50)
+
 		expect(result?.paths[1]).toBe("M 35 50 V 10 H 45 V 50 Z");
 	});
 
@@ -108,9 +107,8 @@ describe("generateNegativeDataPaths", () => {
 		const zeroY = baseCtx.chartYMiddle;
 		const [pointA, pointB] = result?.dataPoints.get("n1") ?? [];
 
-		// Valore negativo (-25): label SOTTO zeroY.
 		expect(pointA?.[1]).toBeGreaterThan(zeroY);
-		// Valore positivo (20): label SOPRA zeroY.
+
 		expect(pointB?.[1]).toBeLessThan(zeroY);
 
 		expect(pointA).toEqual([10, 67.5]);
@@ -142,8 +140,7 @@ describe("generateStackedDataPaths", () => {
 		const r2 = generateStackedDataPaths(s2, ctx);
 
 		expect(r1?.paths[0]).toBe("M 5 100 V 74.28571428571428 H 15 V 100 Z");
-		// s2 (sopra s1) inizia dal bordo superiore di s1 (74.2857...): stesso
-		// valore, non e' una coincidenza, prova l'accumulo corretto.
+
 		expect(r2?.paths[0]).toBe(
 			"M 5 74.28571428571428 V 61.42857142857142 H 15 V 74.28571428571428 Z",
 		);
@@ -170,11 +167,8 @@ describe("generateGroupDataPaths", () => {
 		const x1 = r1?.dataPoints.get("g1")?.[0]?.[0];
 		const x2 = r2?.dataPoints.get("g2")?.[0]?.[0];
 
-		// 10 (non piu' 7.5): dopo K10 la base e' chartXStart+padding/2, non
-		// +padding/4, allineata alle altre funzioni generate*DataPaths.
 		expect(x1).toBeCloseTo(10);
-		// 22.5 (non piu' 35.83... pre-K8, ne' 20 pre-K10): incremento diretto
-		// barWidth+gap (K8) su base padding/2 (K10).
+
 		expect(x2).toBeCloseTo(22.5);
 		expect(x1).not.toBe(x2);
 	});
@@ -200,8 +194,7 @@ describe("generateStackedGroupDataPaths", () => {
 		const r2 = generateStackedGroupDataPaths(sg2, ctx);
 
 		expect(r1?.paths[0]).toBe("M 5 100 V 64 H 15 V 100 Z");
-		// sg2 continua da dove finisce sg1 (64), stessa logica di accumulo
-		// di generateStackedDataPaths ma applicata dentro lo slot del gruppo.
+
 		expect(r2?.paths[0]).toBe("M 5 64 V 10 H 15 V 64 Z");
 	});
 
@@ -229,12 +222,6 @@ describe("generateStackedGroupDataPaths", () => {
 		const rA1 = generateStackedGroupDataPaths(a1, ctx);
 		const rB1 = generateStackedGroupDataPaths(b1, ctx);
 
-		// group-a e group-b sono solo 2 gruppi: b1 deve finire nel 2° slot
-		// (indice 1), non nel 3° (indice 2) come accadeva prima del fix,
-		// quando group-a "consumava" due slot invece di uno perche' aveva
-		// due serie. 12.5 (dopo K8, incremento diretto barWidth+gap) e' lo
-		// stesso scarto misurato in uno scenario pulito a 2 gruppi da 1
-		// serie ciascuno (nessun bug possibile li').
 		const a1X = Number(rA1?.paths[0]?.split(" ")[1]);
 		const b1X = Number(rB1?.paths[0]?.split(" ")[1]);
 		const groupSlotWidth = b1X - a1X;
@@ -269,8 +256,6 @@ describe("getGroupBarSlotCount", () => {
 			data: [{ date: "x", value: 5 }],
 		};
 
-		// group-a (2 serie) + group-b (1 serie) + c1 (non-stacked) = 3 slot,
-		// non 4.
 		expect(getGroupBarSlotCount([a1, a2, b1, c1])).toBe(3);
 	});
 
@@ -289,8 +274,7 @@ describe("generateHorizontalDataPaths", () => {
 			"M 40 35 H 72 V 45 H 40 Z",
 			"M 40 65 H 56 V 75 H 40 Z",
 		]);
-		// Il primo punto (valore 10) e' troppo corto per contenere una label:
-		// sentinel [-1, -1], stessa MIN_BAR_HEIGHT_FOR_LABEL vista in B4.
+
 		expect(result?.dataPoints.get("s1")?.[0]).toEqual([-1, -1]);
 	});
 });
@@ -339,9 +323,6 @@ describe("generateYAxis", () => {
 		};
 		const result = generateYAxis(barSerie, ctx);
 
-		// zeroY (chartYMiddle=50) e halfHeight (zeroY-padding=40): stesso valore
-		// -> stessa distanza da zeroY su entrambi i lati (40 e' sia il +max che
-		// un -max coerente), 20/-20 simmetrici, 0 esattamente su zeroY.
 		expect(result?.valueLabels).toEqual([
 			{ value: -40, x: 0, y: 90 },
 			{ value: 40, x: 0, y: 10 },
@@ -370,7 +351,6 @@ describe("generateYAxis", () => {
 
 		const gridlineY = yAxis?.valueLabels.find((l) => l.value === 40)?.y;
 
-		// Il path e' "M x zeroY V topY H ... Z": topY e' dopo il comando "V".
 		const barTopY = Number(bar?.paths[0]?.split(" ")[4]);
 
 		expect(gridlineY).toBe(barTopY);
@@ -398,9 +378,6 @@ describe("generateYAxis", () => {
 		const yAxisA = generateYAxis(serieA, ctx);
 		const yAxisB = generateYAxis(serieB, ctx);
 
-		// Senza il fix, la threshold intercalata tra le due serie fa contare
-		// serieB come "pari" invece di "dispari": entrambe finirebbero a
-		// sinistra invece che su lati opposti.
 		expect(yAxisA?.isOpposite).toBe(false);
 		expect(yAxisB?.isOpposite).toBe(true);
 	});
@@ -446,8 +423,6 @@ describe("getGroupBarSlotIndex", () => {
 			data: [{ date: "x", value: 15 }],
 		};
 
-		// Senza il fix, "l1" (non group-bar) veniva contata come proprio slot
-		// dentro serieGroupIndex, spostando b1 dallo slot 1 allo slot 2.
 		expect(getGroupBarSlotIndex([a1, line, b1], b1)).toBe(1);
 	});
 });
@@ -483,12 +458,9 @@ describe("generateGroupDataPaths / generateStackedGroupDataPaths: coerenza tra s
 		const rD = generateGroupDataPaths(d, ctx);
 
 		const xA = rA?.dataPoints.get("a")?.[0]?.[0] as number;
-		const xB = Number(rB?.paths[0]?.split(" ")[1]) + 5; // barWidth/2 = 5
+		const xB = Number(rB?.paths[0]?.split(" ")[1]) + 5;
 		const xD = rD?.dataPoints.get("d")?.[0]?.[0] as number;
 
-		// 3 slot totali (a, stack(b+c), d): lo scarto tra slot consecutivi deve
-		// essere costante. Prima del fix xD saltava di uno slot in piu' perche'
-		// generateGroupDataPaths contava c come proprio slot.
 		expect(xB - xA).toBeCloseTo(xD - xB, 5);
 	});
 

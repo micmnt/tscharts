@@ -10,14 +10,14 @@ describe("movingAverage", () => {
 			2,
 		);
 		expect(out.map((p) => p.value)).toEqual([10, 15, 25, 35]);
-		expect(out.map((p) => p.date)).toEqual(["a", "b", "c", "d"]); // date invariate
+		expect(out.map((p) => p.date)).toEqual(["a", "b", "c", "d"]);
 	});
 
 	it("window <= 1 restituisce i dati invariati (copia)", () => {
 		const data = [P("a", 3), P("b", 7)];
 		const out = movingAverage(data, 1);
 		expect(out).toEqual(data);
-		expect(out).not.toBe(data); // nuova reference (puro)
+		expect(out).not.toBe(data);
 	});
 });
 
@@ -57,7 +57,7 @@ describe("bin", () => {
 	it("size fisso: conta i valori per intervallo, max incluso nell'ultimo", () => {
 		const data = [0, 5, 9, 10, 12, 19, 20].map((v, i) => P(String(i), v));
 		const out = bin(data, { size: 10 });
-		// intervalli [0,10) [10,20) [20,30): 0,5,9 -> 3 ; 10,12,19 -> 3 ; 20 -> 1
+
 		expect(out.map((p) => p.value)).toEqual([3, 3, 1]);
 		expect(out[0].date).toBe("0–10");
 	});
@@ -66,7 +66,7 @@ describe("bin", () => {
 		const data = [1, 2, 3, 4, 5, 6, 7, 8].map((v, i) => P(String(i), v));
 		const out = bin(data, { count: 2 });
 		expect(out.length).toBe(2);
-		// somma dei conteggi = numero punti
+
 		expect(out.reduce((s, p) => s + p.value, 0)).toBe(8);
 	});
 

@@ -20,7 +20,6 @@ export const Simple: Story = {
 	},
 };
 
-// Tooltip con le righe guida (showGrid): seguono il mouse insieme al tooltip.
 export const WithGrid: Story = {
 	args: {
 		name: "tempi migliori",

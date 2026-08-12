@@ -48,26 +48,26 @@ describe("yDomain — dominio Y controllabile (min/max)", () => {
 	it("default: valori 98-102 schiacciati in alto (dominio [0, max-auto])", () => {
 		const y = ys();
 		const spread = Math.max(...y) - Math.min(...y);
-		// 4 di ampiezza su un dominio ~0-200 -> spread piccolo rispetto all'altezza
+
 		expect(spread).toBeLessThan(20);
 	});
 
 	it("min=98 max=102: la line si distribuisce su tutta l'altezza", () => {
 		const y = ys({ yMin: 98, yMax: 102 });
-		// value 98 -> base (chartYEnd), 102 -> top (padding)
-		expect(y[0]).toBeCloseTo(chartYEnd, 6); // 98
-		expect(y[2]).toBeCloseTo(padding, 6); // 102
-		expect(y[1]).toBeCloseTo((chartYEnd + padding) / 2, 6); // 100 = metà
+
+		expect(y[0]).toBeCloseTo(chartYEnd, 6);
+		expect(y[2]).toBeCloseTo(padding, 6);
+		expect(y[1]).toBeCloseTo((chartYEnd + padding) / 2, 6);
 		const spread = Math.max(...y) - Math.min(...y);
-		expect(spread).toBeCloseTo(chartYEnd - padding, 6); // usa tutta l'altezza
+		expect(spread).toBeCloseTo(chartYEnd - padding, 6);
 	});
 
 	it("clamp: valori oltre max finiscono sul bordo alto", () => {
 		const { serie, ctx } = makeCtx({ yMin: 98, yMax: 100 });
-		// il terzo punto (102) e' sopra max=100 -> clampato a padding (top)
+
 		const dp = generateDataPaths(serie, ctx, "line")?.dataPoints.get("s") ?? [];
 		const y = dp.map((p: number[]) => p[1]);
-		expect(y[2]).toBeCloseTo(padding, 6); // 102 clampato a max=100 -> top
-		expect(y[1]).toBeCloseTo(padding, 6); // 100 = max -> top
+		expect(y[2]).toBeCloseTo(padding, 6);
+		expect(y[1]).toBeCloseTo(padding, 6);
 	});
 });

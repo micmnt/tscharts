@@ -44,8 +44,6 @@ describe("calculateFlatValue", () => {
 	});
 
 	it("per valori negativi 'arrotonda' verso lo zero (Math.ceil), non in modulo", () => {
-		// Comportamento reale della funzione: Math.ceil su un numero negativo
-		// arrotonda verso lo zero, non allontana dal valore assoluto.
 		expect(calculateFlatValue(-234)).toBe(-200);
 	});
 
@@ -65,7 +63,7 @@ describe("normalizeBarRadius", () => {
 	});
 
 	it("ritorna il radius intero se lo spazio disponibile e' sufficiente (bordo incluso)", () => {
-		expect(normalizeBarRadius(10, 5)).toBe(10); // dimension === radius/2: non scatta il dimezzamento
+		expect(normalizeBarRadius(10, 5)).toBe(10);
 		expect(normalizeBarRadius(10, 10)).toBe(10);
 	});
 });
@@ -110,10 +108,6 @@ describe("trimZerosAndNullLinePath", () => {
 	});
 
 	it("rimuove il placeholder '*' se il gap e' finale (nessun path valido dopo)", () => {
-		// Prima del fix (task #20), il placeholder "*" sarebbe rimasto
-		// nell'array e sarebbe finito letteralmente nell'attributo `d`
-		// dell'SVG (sintassi non valida). Ora un gap finale viene rimosso
-		// del tutto invece di lasciare un placeholder orfano.
 		const paths = ["L 1 1", "", ""];
 		expect(trimZerosAndNullLinePath(paths)).toEqual(["L 1 1"]);
 	});

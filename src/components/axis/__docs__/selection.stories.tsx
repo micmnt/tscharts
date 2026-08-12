@@ -42,8 +42,6 @@ export default meta;
 
 type Story = StoryObj<typeof SelectionExample>;
 
-// selectedValue/selectedColor evidenziano la categoria; onLabelClick logga in
-// console il click sulla label (apri la console).
 export const Selection: Story = {
 	args: {
 		selectedValue: "15/03",

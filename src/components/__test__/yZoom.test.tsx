@@ -7,11 +7,7 @@ import YAxis from "../axis/yAxis";
 import Chart from "../chart/chart";
 import Line from "../line/line";
 
-// jsdom non implementa la geometria SVG: mock di createSVGPoint/getScreenCTM con
-// mapping identita' (svgPoint = coordinate client), cosi' convertToSVGPoint
-// funziona e la rotella puo' calcolare il valore sotto il cursore.
 beforeAll(() => {
-	// biome-ignore lint/suspicious/noExplicitAny: mock jsdom
 	(SVGSVGElement.prototype as any).createSVGPoint = () => {
 		const pt = {
 			x: 0,
@@ -22,7 +18,7 @@ beforeAll(() => {
 		};
 		return pt;
 	};
-	// biome-ignore lint/suspicious/noExplicitAny: mock jsdom
+
 	(SVGSVGElement.prototype as any).getScreenCTM = () => ({
 		inverse: () => ({}),
 	});
@@ -62,10 +58,8 @@ describe("S3 — zoom interattivo Y (rotella)", () => {
 		const svg = container.querySelector("svg") as SVGSVGElement;
 		const before = dotYs(container);
 
-		// rotella verso l'alto (deltaY < 0) = zoom IN attorno al centro
 		fireEvent.wheel(svg, { clientX: 250, clientY: 200, deltaY: -240 });
 
-		// onZoomChange chiamato con un dominio piu' STRETTO del base [0, ~100]
 		expect(onZoomChange).toHaveBeenCalled();
 		const zoomed = onZoomChange.mock.calls.at(-1)?.[0] as [number, number];
 		expect(zoomed[1] - zoomed[0]).toBeLessThan(100);
@@ -74,13 +68,11 @@ describe("S3 — zoom interattivo Y (rotella)", () => {
 			zoomed.map((n) => n.toFixed(1)).join(" .. "),
 		);
 
-		// i punti si sono riposizionati
 		await waitFor(() => {
 			const after = dotYs(container);
 			expect(after).not.toEqual(before);
 		});
 
-		// doppio click -> reset
 		fireEvent.doubleClick(svg);
 		expect(onZoomChange.mock.calls.at(-1)?.[0]).toBeNull();
 
@@ -117,9 +109,6 @@ describe("S3 — zoom interattivo Y (rotella)", () => {
 		expect(Number.isInteger(zoomed[1])).toBe(true);
 	});
 
-	// Regressione: piu' eventi rotella arrivano nello STESSO tick, prima che React
-	// ri-renderizzi. Il 2o evento deve ripartire dal dominio del 1o (accumulo), non
-	// da quello stantio del context -> altrimenti "a volte zooma a volte no".
 	it("eventi rotella rapidi si accumulano (nessuno step perso)", async () => {
 		const onZoomChange = vi.fn();
 		const { container } = render(
@@ -147,12 +136,9 @@ describe("S3 — zoom interattivo Y (rotella)", () => {
 
 		const d1 = onZoomChange.mock.calls[0]?.[0] as [number, number];
 		const d2 = onZoomChange.mock.calls[1]?.[0] as [number, number];
-		expect(d2[1] - d2[0]).toBeLessThan(d1[1] - d1[0]); // 2o zooma oltre il 1o
+		expect(d2[1] - d2[0]).toBeLessThan(d1[1] - d1[0]);
 	});
 
-	// Regressione: con snap, delta piccoli (trackpad) producono zoom minimi che,
-	// arrotondati sul singolo step, tornerebbero allo stesso dominio (stallo).
-	// L'accumulo continuo (snap solo sull'output) deve farlo comunque progredire.
 	it("con zoomSnap i delta piccoli non vengono ingoiati", async () => {
 		const onZoomChange = vi.fn();
 		const { container } = render(
@@ -173,7 +159,7 @@ describe("S3 — zoom interattivo Y (rotella)", () => {
 
 		const smallWheel = () =>
 			new WheelEvent("wheel", {
-				deltaY: -8, // tacca piccola tipo trackpad
+				deltaY: -8,
 				clientX: 250,
 				clientY: 200,
 				bubbles: true,
@@ -185,7 +171,7 @@ describe("S3 — zoom interattivo Y (rotella)", () => {
 
 		const first = onZoomChange.mock.calls[0]?.[0] as [number, number];
 		const last = onZoomChange.mock.calls.at(-1)?.[0] as [number, number];
-		// progredisce oltre il primo step (niente stallo) e resta snappato a interi
+
 		expect(last[1] - last[0]).toBeLessThan(first[1] - first[0]);
 		expect(Number.isInteger(last[0])).toBe(true);
 		expect(Number.isInteger(last[1])).toBe(true);

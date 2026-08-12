@@ -15,7 +15,7 @@ export const Simple: Story = {
 		name: "tempi migliori",
 		stacked: false,
 		showLabels: false,
-		// barWidth su <Chart>, onBarClick prop piatta di <Bar>.
+
 		barWidth: 40,
 		onBarClick: (value: unknown) => console.log("[onBarClick]", value),
 	},

@@ -35,11 +35,8 @@ export default meta;
 
 type Story = StoryObj<typeof YZoomExample>;
 
-// Rotella del mouse sul grafico = zoom sull'asse Y attorno al cursore; doppio
-// click = reset. Il dominio corrente e' mostrato sopra il grafico (onZoomChange).
 export const Wheel: Story = {};
 
-// zoomStep piu' alto = zoom piu' aggressivo; zoomSnap=1 = dominio a interi.
 export const StepAndSnap: Story = {
 	args: { zoomStep: 1.4, zoomSnap: 1 },
 };

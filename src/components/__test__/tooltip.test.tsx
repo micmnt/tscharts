@@ -9,9 +9,7 @@ import Bar from "../bar/bar";
 import Chart from "../chart/chart";
 import Tooltip from "../tooltip/tooltip";
 
-// jsdom non implementa la geometria SVG: mock identita' per convertToSVGPoint.
 beforeAll(() => {
-	// biome-ignore lint/suspicious/noExplicitAny: mock jsdom
 	(SVGSVGElement.prototype as any).createSVGPoint = () => {
 		const pt = {
 			x: 0,
@@ -22,7 +20,6 @@ beforeAll(() => {
 		};
 		return pt;
 	};
-	// biome-ignore lint/suspicious/noExplicitAny: mock jsdom
 	(SVGSVGElement.prototype as any).getScreenCTM = () => ({
 		inverse: () => ({}),
 	});
@@ -57,7 +54,6 @@ describe("Tooltip", () => {
 			</Chart>,
 		);
 		await waitFor(() => expect(tooltipEl(container)).toBeTruthy());
-		// a riposo: display none
 		expect(tooltipEl(container)?.style.display).toBe("none");
 
 		const svg = container.querySelector("svg") as SVGSVGElement;
@@ -66,7 +62,6 @@ describe("Tooltip", () => {
 		await waitFor(() =>
 			expect(tooltipEl(container)?.style.display).toBe("block"),
 		);
-		// il contenuto mostra il nome della serie
 		expect(tooltipEl(container)?.textContent).toContain("vendite");
 	});
 });

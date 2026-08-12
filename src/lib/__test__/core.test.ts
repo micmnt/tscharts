@@ -65,8 +65,6 @@ describe("generateArcBarPath: confine isLargeArc", () => {
 
 describe("generateArcBarPath: innerRadius", () => {
 	it("con innerRadius troncato a 0 NON genera un donut: 0 e' falsy, ricade nel ramo pie", () => {
-		// Comportamento attuale: chi vuole un foro di dimensione 0 ottiene
-		// invece uno spicchio pieno, perche' `if (innerRadius)` e' false per 0.
 		const withZero = generateArcBarPath(0, 0, 10, 0, 0, 90);
 		const withoutInner = generateArcBarPath(0, 0, 10, undefined, 0, 90);
 		expect(withZero).toBe(withoutInner);

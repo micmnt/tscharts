@@ -2,11 +2,6 @@ import type { FC } from "react";
 import Chart from "../../chart/chart";
 import Line from "../line";
 
-// Una "sparkline" NON e' un componente a parte: e' una COMPOSIZIONE dei
-// primitivi esistenti — un <Chart> compatto, senza assi/legenda/tooltip, con
-// padding piccolo (via tema) e una <Line fillGradient> per l'area sfumata.
-// Coerente con la filosofia della libreria: l'utente compone il grafico.
-
 type SparkRow = {
 	label: string;
 	value: string;
@@ -44,8 +39,6 @@ const rows: SparkRow[] = [
 	},
 ];
 
-// La sparkline riutilizzabile: e' solo il preset di composizione, che il
-// CONSUMER puo' scriversi da se' (la libreria fornisce i mattoni).
 const Sparkline: FC<{ data: SparkRow["data"]; color: string }> = ({
 	data,
 	color,

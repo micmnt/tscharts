@@ -50,9 +50,6 @@ const AngleDonut = (props: AngleDonutProps) => {
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
-	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
-	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
-	// singoli campi e' sicuro e piu' semplice da mantenere corretto.
 	const result = useMemo(() => {
 		if (!ctx || !theme || !serieElement) return null;
 		return generateAngleDonutPaths(serieElement, {
@@ -116,10 +113,6 @@ const AngleDonut = (props: AngleDonutProps) => {
 	const returnValues = [...shadowSlices, ...slices];
 
 	if (customLabel && isDefined(customLabel as string)) {
-		// Un foreignObject per anello, ancorato alla geometria reale di
-		// QUEL ring (paths[i].labelElement) - non un container unico
-		// condiviso da tutti gli anelli, che per anelli sottili finirebbe
-		// scollegato dal ring che dovrebbe descrivere.
 		const labels = serieData.map((serieEl, serieElIndex) => {
 			const ringLabelElement = paths[serieElIndex]?.labelElement;
 

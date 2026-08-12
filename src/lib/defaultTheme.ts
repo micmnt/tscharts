@@ -1,10 +1,5 @@
 import type { ThemeState } from "../types";
 
-// Congela in profondita' l'oggetto (e i suoi sotto-oggetti/array): defaultTheme
-// e' il tema condiviso usato come fallback da tutti i grafici che non passano un
-// `theme` custom. Senza freeze, un consumer che facesse `defaultTheme.padding =
-// 40` muterebbe il default globale per ogni grafico. Il freeze e' solo runtime:
-// il tipo resta ThemeState per comodita' d'uso interno.
 const deepFreeze = <T>(obj: T): T => {
 	for (const value of Object.values(obj as Record<string, unknown>)) {
 		if (value && typeof value === "object") deepFreeze(value);
@@ -51,12 +46,6 @@ const defaultTheme: ThemeState = deepFreeze({
 	seriesColors,
 });
 
-// Fonde un tema parziale sopra una base completa, preservando i campi non
-// specificati. Merge esplicito per-chiave (non un deepMerge ricorsivo generico):
-// ThemeState e' piccolo e stabile, cosi' resta type-safe e il comportamento
-// sugli array e' prevedibile (seriesColors viene sostituito in blocco, mai
-// concatenato). Usato da <Chart> per applicare la prop `theme` sopra
-// defaultTheme.
 export const mergeTheme = (
 	base: ThemeState,
 	override?: Partial<ThemeState>,

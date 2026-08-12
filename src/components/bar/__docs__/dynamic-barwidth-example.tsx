@@ -22,10 +22,6 @@ const elements = [
 
 const dataPoints = ["13/03", "14/03", "15/03", "16/03"];
 
-// `barWidth` e' un control: cambiandolo a runtime le barre si allargano E le
-// label dell'asse X restano centrate sotto le barre. Dalla v1.0 la larghezza
-// delle barre e' una prop di <Chart> (M1) — config di layout condivisa, letta
-// anche dall'asse — propagata in modo reattivo (R13), non solo al mount.
 type DynamicBarWidthProps = {
 	barWidth?: number;
 };

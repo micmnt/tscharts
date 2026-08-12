@@ -16,7 +16,6 @@ const groupSerie = (name: string, base: number): Serie => ({
 	data: dataPoints.map((d, i) => ({ date: d, value: base + i * 4 })),
 });
 
-// Conta le barre (path con un fill pieno, non gli assi/griglia che hanno stroke).
 const barCount = (c: HTMLElement) =>
 	Array.from(c.querySelectorAll("path")).filter((p) => {
 		const fill = p.getAttribute("fill");
@@ -54,7 +53,7 @@ describe("GroupBar", () => {
 		);
 		const barsTwo = barCount(two.container);
 
-		expect(barsOne).toBe(dataPoints.length); // 3 barre
-		expect(barsTwo).toBe(dataPoints.length * 2); // 6 barre
+		expect(barsOne).toBe(dataPoints.length);
+		expect(barsTwo).toBe(dataPoints.length * 2);
 	});
 });

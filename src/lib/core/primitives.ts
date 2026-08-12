@@ -1,6 +1,5 @@
 import { normalizeBarRadius } from "../utils";
 
-// Funzione che prende in ingresso il valore massimo di una serie, il valore di un elemento della serie e la dimensione effettiva del grafico e ritorna la posizione sul grafico del valore
 export const getValuePosition = (
 	maxValue: number,
 	value: number,
@@ -9,12 +8,10 @@ export const getValuePosition = (
 	return (chartDimension * value) / maxValue;
 };
 
-// Funzione che prende in ingresso un valore e genera una linea verticale nel grafico
 export const generateVerticalLine = (x: number, y: number, startY: number) => {
 	return `M ${x} ${startY} V ${y}`;
 };
 
-// Funzione che genera il valore d di un path svg per una barra verticale
 export const generateVerticalBarPath = (
 	x: number,
 	y: number,
@@ -84,12 +81,10 @@ export const generateVerticalBarPath = (
 	return `M ${x} ${startY} V ${y} H ${x + barWidth} V ${startY} Z`;
 };
 
-// Funzione che genera la spezzata dal punto precedente alle coordinate passate come parametro
 export const generateLine = (x: number, y: number) => {
 	return `L ${x} ${y}`;
 };
 
-// Funzione che genera il valore d di un path svg per uno spicchio di grafico a torta
 export const generatePieSlice = (
 	centerX: number,
 	centerY: number,
@@ -112,7 +107,6 @@ export const generatePieSlice = (
 	return `${startRadius} ${arc} ${endRadius}`;
 };
 
-// Funzione che genera il valore d di un path svg per uno spicchio di grafico a ciambella
 export const generateDonutSlice = (
 	centerX: number,
 	centerY: number,
@@ -133,7 +127,6 @@ export const generateDonutSlice = (
 	return arc;
 };
 
-// Funzione che genera il valore d di un path svg per una barra ad arco
 export const generateArcBarPath = (
 	centerX: number,
 	centerY: number,
@@ -170,7 +163,6 @@ export const generateArcBarPath = (
 	return `M ${startPoint.x} ${startPoint.y} A ${radius} ${radius} 0 ${isLargeArc} 1 ${endPoint.x} ${endPoint.y}`;
 };
 
-// Funzione che formatta le labels per l'asse x dei grafici
 export const formatLabels = (
 	labels: string[],
 	formatFn: (l: string) => string,
@@ -178,7 +170,6 @@ export const formatLabels = (
 	return labels.map((label) => formatFn(label));
 };
 
-// Funzione che trasforma un punto globale dello schermo in un punto nel grafico svg
 export const convertToSVGPoint = (
 	svgContainer: SVGSVGElement | null = null,
 	x = 0,
@@ -199,7 +190,6 @@ export const convertToSVGPoint = (
 	return null;
 };
 
-// Funzione che converte coordinate polari in coordinate cartesiane
 export const polarToCartesian = (
 	centerX: number,
 	centerY: number,
@@ -214,11 +204,6 @@ export const polarToCartesian = (
 	};
 };
 
-// Funzione che calcola la posizione del tooltip nell'svg partendo dalla posizione del mouse
-// Funzione pura (R7): riceve le dimensioni del tooltip come numeri invece di
-// leggerle dal DOM. Il foreignObject del tooltip ha width/height fissi (i suoi
-// props), quindi coincidono con le clientWidth/clientHeight che prima venivano
-// misurate. Il tooltip la chiama da solo con le proprie dimensioni note.
 export const calculateTooltipPosition = (
 	svgPoint: { x: number; y: number },
 	chartXStart: number,

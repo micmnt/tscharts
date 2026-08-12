@@ -66,7 +66,6 @@ describe("Bar — interazioni (SVG)", () => {
 			expect(container.querySelector('[role="button"]')).toBeTruthy(),
 		);
 		const bar = container.querySelectorAll('[role="button"]')[1];
-		// pointerdown sulla barra (b=40) + move verso l'alto (clientY minore) + up
 		fireEvent.pointerDown(bar, { clientY: 300 });
 		window.dispatchEvent(new MouseEvent("pointermove", { clientY: 250 }));
 		window.dispatchEvent(new MouseEvent("pointerup", { clientY: 250 }));
@@ -74,6 +73,6 @@ describe("Bar — interazioni (SVG)", () => {
 		const payload = onBarDrag.mock.calls.at(-1)?.[0];
 		expect(payload.index).toBe(1);
 		expect(payload.previousValue).toBe(40);
-		expect(payload.value).toBeGreaterThan(40); // trascinato verso l'alto
+		expect(payload.value).toBeGreaterThan(40);
 	});
 });

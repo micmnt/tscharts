@@ -44,7 +44,6 @@ describe("Legend", () => {
 		);
 		expect(names).toContain("vendite");
 		expect(names).toContain("costi");
-		// un pallino colore per voce
 		expect(container.querySelectorAll(".legendItemCircle").length).toBe(
 			names.length,
 		);

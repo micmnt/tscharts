@@ -10,8 +10,6 @@ import Chart from "../chart/chart";
 import Threshold from "../threshold/threshold";
 
 const dataPoints = ["a", "b", "c"];
-// valori barra (10/40/25) e soglia 33: 33 non e' un valore barra ne' un tick
-// tondo, quindi la sua comparsa come testo prova la label della soglia.
 const elements: Serie[] = [
 	{
 		name: "vendite",
@@ -37,7 +35,6 @@ describe("Threshold", () => {
 			</Chart>,
 		);
 		await waitFor(() => expect(container.querySelector("path")).toBeTruthy());
-		// la label della soglia (33) e' presente
 		expect(container.textContent).toContain("33");
 	});
 });

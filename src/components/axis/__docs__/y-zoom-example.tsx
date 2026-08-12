@@ -24,10 +24,6 @@ const elements = [
 
 const dataPoints = ["00", "04", "08", "12", "16", "20"];
 
-// Zoom interattivo: passa il mouse sul grafico e usa la ROTELLA per zoomare
-// sull'asse Y attorno al cursore. Doppio click per resettare. `onZoomChange`
-// notifica il dominio corrente (qui lo mostro sopra il grafico). `zoomStep`
-// regola l'aggressivita', `zoomSnap` arrotonda gli estremi.
 type YZoomExampleProps = {
 	zoomStep?: number;
 	zoomSnap?: number;

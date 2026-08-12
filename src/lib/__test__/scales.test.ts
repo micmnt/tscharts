@@ -17,8 +17,8 @@ describe("createBandScale", () => {
 			count: 4,
 			firstOffset: 10,
 		});
-		expect(s.step).toBe(100); // (500-100)/4
-		expect(s.base).toBe(110); // 100 + 10
+		expect(s.step).toBe(100);
+		expect(s.base).toBe(110);
 		expect(s.position(0)).toBe(110);
 		expect(s.position(1)).toBe(210);
 		expect(s.position(3)).toBe(410);
@@ -37,12 +37,12 @@ describe("createBandScale", () => {
 			count: 4,
 			firstOffset: 10,
 		});
-		// esattamente sul centro
+
 		expect(s.invert(210)).toBe(1);
-		// entro mezza cella -> stesso indice
+
 		expect(s.invert(210 + 49)).toBe(1);
 		expect(s.invert(210 - 49)).toBe(1);
-		// oltre mezza cella -> indice adiacente
+
 		expect(s.invert(210 + 51)).toBe(2);
 	});
 
@@ -61,19 +61,18 @@ describe("createBandScale", () => {
 	it("count 0 non divide per zero (step finito)", () => {
 		const s = createBandScale({ start: 0, end: 400, count: 0 });
 		expect(Number.isFinite(s.step)).toBe(true);
-		expect(s.step).toBe(400); // (400-0)/(0||1)
+		expect(s.step).toBe(400);
 	});
 });
 
 describe("createTimeScale", () => {
-	// dominio: 0 -> 1000 ms; range: 100 -> 500 px
 	const s = createTimeScale({ domain: [0, 1000], range: [100, 500] });
 
 	it("position mappa linearmente dominio -> range", () => {
-		expect(s.position(0)).toBe(100); // estremo sinistro
-		expect(s.position(1000)).toBe(500); // estremo destro
-		expect(s.position(500)).toBe(300); // metà tempo -> metà range
-		expect(s.position(250)).toBe(200); // proporzionale
+		expect(s.position(0)).toBe(100);
+		expect(s.position(1000)).toBe(500);
+		expect(s.position(500)).toBe(300);
+		expect(s.position(250)).toBe(200);
 	});
 
 	it("invert è l'inverso di position", () => {
@@ -83,13 +82,12 @@ describe("createTimeScale", () => {
 	});
 
 	it("spaziatura proporzionale al tempo, non all'indice (il punto chiave)", () => {
-		// tre istanti a campionamento IRREGOLARE: 0, 900, 1000
 		const xs = [0, 900, 1000].map((t) => s.position(t));
-		// il gap 0->900 (grande) deve essere molto più largo del gap 900->1000
+
 		const gap1 = xs[1] - xs[0];
 		const gap2 = xs[2] - xs[1];
-		expect(gap1).toBeCloseTo(360, 9); // 900/1000 * 400
-		expect(gap2).toBeCloseTo(40, 9); // 100/1000 * 400
+		expect(gap1).toBeCloseTo(360, 9);
+		expect(gap2).toBeCloseTo(40, 9);
 		expect(gap1).toBeGreaterThan(gap2 * 5);
 	});
 
@@ -102,7 +100,7 @@ describe("createTimeScale", () => {
 	it("dominio degenere (date uguali) non divide per zero", () => {
 		const d = createTimeScale({ domain: [500, 500], range: [0, 400] });
 		expect(Number.isFinite(d.position(500))).toBe(true);
-		expect(d.position(500)).toBe(0); // span=1 -> tutto su r0
+		expect(d.position(500)).toBe(0);
 	});
 });
 
@@ -115,8 +113,8 @@ describe("getChartTimeScale", () => {
 			padding: 20,
 		});
 		expect(scale).not.toBeNull();
-		expect(scale?.position(0)).toBe(70); // 50 + 20
-		expect(scale?.position(100)).toBe(430); // 450 - 20
+		expect(scale?.position(0)).toBe(70);
+		expect(scale?.position(100)).toBe(430);
 	});
 
 	it("ritorna null senza timeDomain (scaleType != time)", () => {
@@ -130,9 +128,9 @@ describe("createLinearScale", () => {
 	const s = createLinearScale({ domain: [0, 200], range: [400, 20] });
 
 	it("scale mappa linearmente dominio -> range (invertito per l'asse Y)", () => {
-		expect(s.scale(0)).toBe(400); // base in basso
-		expect(s.scale(200)).toBe(20); // max in alto
-		expect(s.scale(100)).toBe(210); // metà
+		expect(s.scale(0)).toBe(400);
+		expect(s.scale(200)).toBe(20);
+		expect(s.scale(100)).toBe(210);
 	});
 
 	it("invert è l'inverso di scale", () => {
@@ -163,21 +161,21 @@ describe("getChartYScale", () => {
 		const y = getChartYScale({ max, chartYEnd, padding });
 		for (const v of [0, 12.5, 120, 187.4, 250]) {
 			const legacy = chartYEnd - getValuePosition(max, v, chartYEnd - padding);
-			expect(y.scale(v)).toBe(legacy); // uguaglianza ESATTA, non approssimata
+			expect(y.scale(v)).toBe(legacy);
 		}
 	});
 
 	it("min/max custom restringono il dominio (S1b-B)", () => {
 		const y = getChartYScale({ min: 98, max: 102, chartYEnd, padding });
-		expect(y.scale(98)).toBe(chartYEnd); // base del dominio in basso
-		expect(y.scale(102)).toBe(padding); // top del dominio in alto
-		expect(y.scale(100)).toBeCloseTo((chartYEnd + padding) / 2, 6); // metà
+		expect(y.scale(98)).toBe(chartYEnd);
+		expect(y.scale(102)).toBe(padding);
+		expect(y.scale(100)).toBeCloseTo((chartYEnd + padding) / 2, 6);
 	});
 
 	it("clampa i valori fuori dominio ai bordi", () => {
 		const y = getChartYScale({ min: 0, max: 100, chartYEnd, padding });
-		expect(y.scale(150)).toBe(y.scale(100)); // sopra max -> bordo alto
-		expect(y.scale(-30)).toBe(y.scale(0)); // sotto min -> bordo basso
+		expect(y.scale(150)).toBe(y.scale(100));
+		expect(y.scale(-30)).toBe(y.scale(0));
 	});
 
 	it("invert è l'inverso di scale (entro il dominio)", () => {
@@ -198,21 +196,20 @@ describe("computeWheelZoom", () => {
 			value: 50,
 			deltaY: -100,
 		});
-		expect(max - min).toBeLessThan(100); // span ridotto
+		expect(max - min).toBeLessThan(100);
 		expect(min).toBeLessThan(50);
-		expect(max).toBeGreaterThan(50); // 50 resta dentro
+		expect(max).toBeGreaterThan(50);
 	});
 
 	it("zoom out (deltaY > 0) allarga, clampato al baseSpan", () => {
-		// parto gia' stretto e zoomo out oltre il base -> torna al base
 		const [min, max] = computeWheelZoom({
 			domain: [40, 60],
 			baseDomain: base,
 			value: 50,
-			deltaY: 100000, // enorme -> span vorrebbe superare il base
+			deltaY: 100000,
 		});
 		expect(min).toBeCloseTo(0, 6);
-		expect(max).toBeCloseTo(100, 6); // clampato al dominio base pieno
+		expect(max).toBeCloseTo(100, 6);
 	});
 
 	it("clampa lo span minimo (max zoom-in)", () => {
@@ -220,14 +217,13 @@ describe("computeWheelZoom", () => {
 			domain: [0, 100],
 			baseDomain: base,
 			value: 50,
-			deltaY: -100000, // zoom-in enorme
+			deltaY: -100000,
 			minSpanRatio: 0.02,
 		});
-		expect(max - min).toBeCloseTo(2, 6); // 2% di 100
+		expect(max - min).toBeCloseTo(2, 6);
 	});
 
 	it("ancora il valore sotto il cursore alla stessa frazione (zoom focale)", () => {
-		// value al 25% del dominio [0,100] -> resta al 25% del nuovo dominio
 		const [min, max] = computeWheelZoom({
 			domain: [0, 100],
 			baseDomain: base,
@@ -238,7 +234,6 @@ describe("computeWheelZoom", () => {
 	});
 
 	it("non pana fuori dal dominio base (clamp ai bordi)", () => {
-		// valore vicino al bordo alto: il nuovo dominio non supera baseMax
 		const [min, max] = computeWheelZoom({
 			domain: [0, 100],
 			baseDomain: base,
@@ -254,13 +249,13 @@ describe("computeWheelZoom", () => {
 			domain: [0, 100] as const,
 			baseDomain: base,
 			value: 50,
-			deltaY: -100, // una tacca in zoom-in
+			deltaY: -100,
 		};
 		const soft = computeWheelZoom({ ...args, zoomStep: 1.05 });
 		const hard = computeWheelZoom({ ...args, zoomStep: 1.5 });
 		const softSpan = soft[1] - soft[0];
 		const hardSpan = hard[1] - hard[0];
-		// una tacca: soft ~= /1.05 (~95), hard ~= /1.5 (~67) -> hard piu' stretto
+
 		expect(hardSpan).toBeLessThan(softSpan);
 		expect(softSpan).toBeCloseTo(100 / 1.05, 4);
 		expect(hardSpan).toBeCloseTo(100 / 1.5, 4);
@@ -271,13 +266,13 @@ describe("computeWheelZoom", () => {
 			domain: [5.4, 60.5],
 			baseDomain: [0, 100],
 			value: 33,
-			deltaY: 0, // nessun cambio di span, solo snap
+			deltaY: 0,
 			snap: 1,
 		});
 		expect(Number.isInteger(min)).toBe(true);
 		expect(Number.isInteger(max)).toBe(true);
 		expect(min).toBe(5);
-		expect(max).toBe(61); // 60.5 -> 61 (round), dentro base
+		expect(max).toBe(61);
 	});
 
 	it("snap non degenera il dominio (mantiene almeno un multiplo)", () => {
@@ -288,6 +283,6 @@ describe("computeWheelZoom", () => {
 			deltaY: 0,
 			snap: 5,
 		});
-		expect(max).toBeGreaterThan(min); // non collassa a span 0
+		expect(max).toBeGreaterThan(min);
 	});
 });

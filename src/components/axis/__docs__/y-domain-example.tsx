@@ -6,9 +6,6 @@ import Tooltip from "../../tooltip/tooltip";
 import XAxis from "../xAxis";
 import YAxis from "../yAxis";
 
-// Valori in una banda stretta (98-102): col dominio automatico [0, max] la line
-// e' schiacciata in cima e le variazioni sono invisibili. Con <YAxis min max>
-// si "entra" nell'intervallo e le oscillazioni diventano leggibili.
 const elements = [
 	{
 		name: "saturazione",

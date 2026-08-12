@@ -23,10 +23,7 @@ const genScatter = (n: number): Pt[] => {
 const months = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu"];
 const baseBars = [40, 65, 50, 80, 60, 72];
 
-// Esempio del renderer canvas (ibrido): le marche dense (scatter/barre) sono
-// disegnate su un unico <canvas>, mentre assi/legenda/tooltip restano SVG.
 export const CanvasExample = ({ variant }: { variant: "scatter" | "bars" }) => {
-	// ~2000 punti: in SVG sarebbero ~2000 <circle>; su canvas e' un solo nodo.
 	const scatter = useMemo(() => genScatter(2000), []);
 	const [barValues, setBarValues] = useState(baseBars);
 	const [log, setLog] = useState(

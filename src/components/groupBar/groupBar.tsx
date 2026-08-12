@@ -1,10 +1,7 @@
-/* Types Imports */
-
-/* React Imports */
 import { useMemo } from "react";
-/* Hooks Imports */
+
 import { useSerie } from "../../hooks/useSerie";
-/* Core Imports */
+
 import {
 	generateGroupDataPaths,
 	generateStackedGroupDataPaths,
@@ -18,7 +15,7 @@ export type GroupBarProps = {
 	stacked?: boolean;
 	showLabels?: boolean;
 	topLabelSerie?: string;
-	// Props piatte (v1.0): sostituiscono il vecchio oggetto `config`.
+
 	radius?: number;
 	topLeftRadius?: number;
 	topRightRadius?: number;
@@ -59,8 +56,6 @@ const GroupBar = (props: GroupBarProps) => {
 	const labelColor = props.labelColor ?? "white";
 	const topLabelColor = props.topLabelColor ?? "black";
 
-	// barWidth/barGroupGap sono config di layout condivisa: arrivano da <Chart>
-	// attraverso globalConfig.
 	const barWidth = ctx?.globalConfig?.barWidth ?? padding;
 	const barGroupGap = ctx?.globalConfig?.barGroupGap ?? padding / 4;
 
@@ -74,9 +69,6 @@ const GroupBar = (props: GroupBarProps) => {
 			? foundTopLabelSerieElement
 			: undefined;
 
-	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
-	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
-	// singoli campi e' sicuro e piu' semplice da mantenere corretto.
 	const result = useMemo(() => {
 		if (!ctx || !theme || !serieElement) return null;
 

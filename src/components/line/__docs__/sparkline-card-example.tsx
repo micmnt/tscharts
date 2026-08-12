@@ -2,8 +2,6 @@ import type { FC } from "react";
 import Chart from "../../chart/chart";
 import Line from "../line";
 
-// Sparkline dentro una card KPI: sempre pura composizione (Chart compatto senza
-// assi + Line fillGradient), qui a piena larghezza in fondo alla card.
 const data = [18, 22, 19, 26, 24, 31, 28, 35, 33, 41].map((v, i) => ({
 	date: String(i),
 	value: v,

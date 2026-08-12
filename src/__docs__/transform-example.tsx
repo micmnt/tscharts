@@ -8,11 +8,6 @@ import Line from "../components/line/line";
 import Tooltip from "../components/tooltip/tooltip";
 import { aggregate, bin, cumulative, movingAverage } from "../transform";
 
-// Le trasformazioni sono funzioni pure applicate A MONTE di `elements`: si
-// trasformano i dati e si passano al grafico come una normale serie (resta
-// composizione). Import da "tscharts/transform" (entry separato, non pesa sul
-// base).
-
 const centered = {
 	display: "flex",
 	justifyContent: "center",
@@ -20,12 +15,10 @@ const centered = {
 	height: "100%",
 } as const;
 
-// dati giornalieri "rumorosi" per movingAverage
 const noisy = [42, 55, 40, 61, 47, 66, 52, 70, 58, 74, 63, 80, 69, 86].map(
 	(value, i) => ({ date: `g${i + 1}`, value }),
 );
 
-// dati mensili per cumulative / aggregate (giornalieri -> mensili)
 const daily = [
 	{ date: "2024-01-05", value: 12 },
 	{ date: "2024-01-19", value: 8 },
@@ -35,7 +28,6 @@ const daily = [
 	{ date: "2024-03-27", value: 14 },
 ];
 
-// valori per l'istogramma
 const samples = [
 	3, 7, 8, 12, 13, 14, 18, 19, 21, 22, 22, 24, 27, 28, 31, 33, 34, 39, 41, 45,
 ].map((value, i) => ({ date: String(i), value }));
@@ -79,7 +71,7 @@ const TransformExample: FC<TransformExampleProps> = ({
 
 	if (fn === "cumulative") {
 		const cum = cumulative(daily);
-		const dataPoints = daily.map((p) => p.date.slice(5)); // MM-DD
+		const dataPoints = daily.map((p) => p.date.slice(5));
 		return (
 			<div style={centered}>
 				<Chart
@@ -103,7 +95,6 @@ const TransformExample: FC<TransformExampleProps> = ({
 	}
 
 	if (fn === "aggregate") {
-		// giornaliero -> mensile (somma), chiave = YYYY-MM
 		const monthly = aggregate(daily, { by: (p) => p.date.slice(0, 7) });
 		const dataPoints = monthly.map((p) => p.date);
 		return (
@@ -124,7 +115,6 @@ const TransformExample: FC<TransformExampleProps> = ({
 		);
 	}
 
-	// bin: istogramma dei valori
 	const hist = bin(samples, { size: 10 });
 	const dataPoints = hist.map((p) => p.date);
 	return (

@@ -1,11 +1,7 @@
-/* Types Imports */
-
-/* React Imports */
 import { type CSSProperties, useId, useMemo, useRef } from "react";
-/* Context Imports */
+
 import { ChartProvider } from "../../contexts/chartContext";
 
-/* Core Imports */
 import { flattenChildren } from "../../lib/children";
 import {
 	computeTimeDomain,
@@ -18,12 +14,10 @@ import defaultTheme, { mergeTheme } from "../../lib/defaultTheme";
 import { warnDev } from "../../lib/utils";
 import type { Serie, ThemeState, TimeSerie } from "../../types";
 
-/* Styles Imports */
 import "../../styles.css";
 
-/* Utils Imports */
 import Svg from "../../components/svg/svg";
-/* Components Imports */
+
 import XAxis from "../axis/xAxis";
 import YAxis from "../axis/yAxis";
 import Bar from "../bar/bar";
@@ -38,21 +32,12 @@ export type ChartProps = {
 	name?: string;
 	flatMax?: boolean;
 	ariaLabel?: string;
-	// Config di layout delle barre, condivisa da tutte le serie. Vive qui, non
-	// sulla singola Bar/GroupBar: e' il grafico a decidere larghezza/spaziatura/
-	// offset comune.
+
 	barWidth?: number;
 	barGroupGap?: number;
 	barOffset?: number;
-	// Override parziale del tema: viene fuso (deep-merge per-chiave) sopra il
-	// defaultTheme, quindi si puo' specificare solo cio' che cambia (es. solo
-	// `seriesColors` o solo `axis.color`) senza perdere gli altri valori.
+
 	theme?: Partial<ThemeState>;
-	// Motore di rendering delle marche dense (Line/dot). "svg" (default) rende
-	// ogni marca come nodo SVG; "canvas" le disegna su un unico <canvas> (via
-	// Path2D) per reggere dataset grandi (scatter di migliaia di punti). Con
-	// "svg" il canvas e' COMPLETAMENTE escluso (nessun <canvas>, nessun overhead).
-	// Fase 1: agisce su <Line>; assi/legenda/tooltip restano sempre SVG.
 	renderer?: "svg" | "canvas";
 };
 
@@ -73,44 +58,25 @@ const Chart = (props: ChartProps) => {
 		renderer = "svg",
 	} = props;
 
-	// Config di layout condivisa, inoltrata a Svg -> computeGlobalConfig (M1).
-	// Memoizzata per stabilizzare la reference (evita di rieseguire il calcolo
-	// del globalConfig quando nessuna di queste props cambia).
 	const layoutConfig = useMemo(
 		() => ({ barWidth, barGroupGap, barOffset }),
 		[barWidth, barGroupGap, barOffset],
 	);
 
-	// Il tema effettivo passato al provider: default + eventuale override
-	// parziale del consumer. Memoizzato per non ricreare la reference (e quindi
-	// non far ri-renderizzare tutti i consumer del ThemeContext) ad ogni render.
 	const mergedTheme = useMemo(() => mergeTheme(defaultTheme, theme), [theme]);
 
 	const chartContainerRef = useRef<HTMLDivElement>(null);
 
-	// Id univoco e stabile per grafico, sincrono e SSR-safe (useId). Il suffisso
-	// `-${name}` e' solo cosmetico (id leggibile nel DOM inspector); l'unicita'
-	// tra istanze e' garantita da useId. Finisce negli id DOM tipo
-	// `cts-tooltip-${chartID}`, letti solo via getElementById (mai querySelector),
-	// quindi i caratteri speciali di useId non danno problemi.
 	const reactId = useId();
 	const chartID = `${reactId}-${name}`;
 
-	// Appiattisco i children (scende in Fragment e .map) prima di ispezionarli,
-	// cosi' assi generati dinamicamente vengono contati correttamente (R6).
 	const flatChildren = flattenChildren(children);
 
-	// Assi Y renderizzati (per conteggio e per il controllo R12 sotto),
-	// riconosciuti per riferimento al componente <YAxis>.
 	const yAxisElements = flatChildren.filter(
 		(childEl) => childEl.type === YAxis,
 	);
 	const yAxisCount = yAxisElements.length;
 
-	// Avviso in dev (R12): una serie bar/line la cui chiave d'asse
-	// (axisName ?? name) non corrisponde a nessun <Axis type="yAxis"> viene
-	// disegnata su una scala isolata non mostrata da alcun asse -> grafico
-	// fuorviante (era il caso della line "obiettivo" a 225 invece di 150).
 	const yAxisNames = yAxisElements
 		.map((childEl) => childEl.props?.name)
 		.filter((name): name is string => Boolean(name));
@@ -120,22 +86,12 @@ const Chart = (props: ChartProps) => {
 		);
 	}
 
-	// Deduco l'orientamento del grafico dai componenti Bar/Line che disegnano
-	// dati (non da Axis, la cui prop `horizontal` e' solo di rendering e non
-	// determina l'orientamento del grafico). Confronto per riferimento diretto
-	// al componente (non per nome stringa) per restare robusti anche sotto
-	// minificazione aggressiva nel bundle del consumer. Un Chart e' o
-	// orizzontale o verticale nel suo insieme: tutte le serie condividono lo
-	// stesso sistema di coordinate, quindi non ha senso mescolare orientamenti.
 	const horizontal = flatChildren.some(
 		(childEl) =>
 			(childEl.type === Bar || childEl.type === Line) &&
 			childEl.props?.horizontal === true,
 	);
 
-	// Solo "line"/"bar": scope volutamente piu' stretto di isTimeSerie (che
-	// includerebbe anche "bar-stacked"/"group-bar"), preservo il comportamento
-	// originale invariato.
 	const timeSeriesElements = elements.filter(
 		(el): el is TimeSerie => el.type === "line" || el.type === "bar",
 	);
@@ -145,14 +101,10 @@ const Chart = (props: ChartProps) => {
 		),
 	);
 
-	// Controllo se nelle serie da graficare ci sono elementi con valore negativo
 	const negative = timeSeriesElements
 		.flatMap((timeSerieEl) => timeSerieEl.data)
 		?.some((el) => el.value < 0);
 
-	// Asse X temporale (S2b): rilevo <XAxis scaleType="time">, leggo parseDate e
-	// calcolo il dominio tempo dalle sole serie line. Questi finiscono nel
-	// ChartState e da li' raggiungono generatore line, asse e hover.
 	const xAxisChild = flatChildren.find((childEl) => childEl.type === XAxis);
 	const scaleType: "time" | undefined =
 		xAxisChild?.props?.scaleType === "time" ? "time" : undefined;
@@ -164,15 +116,9 @@ const Chart = (props: ChartProps) => {
 	const timeDomainMin = rawTimeDomain?.[0];
 	const timeDomainMax = rawTimeDomain?.[1];
 
-	// Dominio Y controllabile (S1b): min/max letti dal primo <YAxis> (scope
-	// single-axis). Override del dominio auto [0, max]; finiscono nel ChartState
-	// e da li' raggiungono generatore e asse.
 	const yMin = yAxisElements[0]?.props?.min as number | undefined;
 	const yMax = yAxisElements[0]?.props?.max as number | undefined;
 
-	// Zoom interattivo Y (S3): abilitazione + callback dal primo <YAxis>. Il
-	// dominio base (di partenza/reset) e' [yMin ?? 0, yMax ?? autoMax], dove
-	// autoMax e' il massimo auto-calcolato (stesso valore usato dai generatori).
 	const zoomable = yAxisElements[0]?.props?.zoomable === true;
 	const onZoomChange = yAxisElements[0]?.props?.onZoomChange as
 		| ((domain: [number, number] | null) => void)
@@ -185,8 +131,7 @@ const Chart = (props: ChartProps) => {
 		() => (zoomable ? [yBaseMin, yBaseMax] : undefined),
 		[zoomable, yBaseMin, yBaseMax],
 	);
-	// Reference stabile: cambia solo quando cambiano gli estremi, non a ogni
-	// render (computeTimeDomain ritorna un nuovo array ogni volta).
+
 	const timeDomain = useMemo<readonly [number, number] | undefined>(
 		() =>
 			timeDomainMin !== undefined && timeDomainMax !== undefined

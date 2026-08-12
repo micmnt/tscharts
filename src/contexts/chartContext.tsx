@@ -1,6 +1,3 @@
-/* Types Imports */
-
-/* React Imports */
 import {
 	createContext,
 	type Dispatch,
@@ -10,7 +7,7 @@ import {
 	useMemo,
 	useReducer,
 } from "react";
-/* Theme Imports */
+
 import defaultTheme from "../lib/defaultTheme";
 import type {
 	ChartInteractiveState,
@@ -27,13 +24,7 @@ type ChartProviderProps = {
 };
 
 export const ChartThemeContext = createContext<ThemeState | null>(null);
-// Context separati per non ri-renderizzare chi non serve:
-// - ChartStructuralContext: dati che cambiano di rado (dimensioni, elementi...).
-// - ChartInteractiveContext: hoveredElement, cambia solo al cambio categoria.
-// - ChartMouseContext (R17): posizione del mouse + visibilita' tooltip, cambia
-//   a ogni pixel. Fornito da <Svg> con state LOCALE (non dal reducer), cosi'
-//   ChartProvider non gira a ogni movimento; lo consuma solo il Tooltip.
-// Il dispatch resta condiviso: e' gia' stabile per riferimento (useReducer).
+
 export const ChartStructuralContext =
 	createContext<ChartStructuralState | null>(null);
 export const ChartInteractiveContext =
@@ -41,10 +32,7 @@ export const ChartInteractiveContext =
 export const ChartMouseContext = createContext<ChartMouseState | null>(null);
 export const ChartDispatchContext = createContext<Dispatch<{
 	type: string;
-	// Partial: quasi tutte le azioni dispatchano solo il sottoinsieme di campi
-	// che cambiano (es. SET_HOVER_ELEMENT solo hoveredElement). Con le dimensioni
-	// ora non-opzionali (R9), un payload tipizzato ChartState pieno costringerebbe
-	// ogni dispatch a fornire tutte le dimensioni.
+
 	payload: Partial<ChartState>;
 }> | null>(null);
 
@@ -86,10 +74,6 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 		initialState.yBaseDomain,
 	]);
 
-	// Slice memoizzate: cambiano riferimento solo quando cambia uno dei loro
-	// campi, non ad ogni dispatch qualsiasi (es. un SET_TOOLTIP_POSITION non
-	// tocca nessuno dei campi di `structural`, quindi la sua reference resta
-	// stabile e i consumer di ChartStructuralContext non si ri-renderizzano).
 	const structural: ChartStructuralState = useMemo(
 		() => ({
 			elements: chart.elements,
@@ -110,9 +94,7 @@ export function ChartProvider(props: Readonly<ChartProviderProps>) {
 			scaleType: chart.scaleType,
 			parseDate: chart.parseDate,
 			timeDomain: chart.timeDomain,
-			// yMin/yMax EFFETTIVI: lo zoom interattivo (zoomDomain) vince sul
-			// dominio statico da props (S3). I generatori leggono ctx.yMin/yMax e
-			// seguono lo zoom senza modifiche.
+
 			yMin: chart.zoomDomain ? chart.zoomDomain[0] : chart.yMin,
 			yMax: chart.zoomDomain ? chart.zoomDomain[1] : chart.yMax,
 			zoomable: chart.zoomable,
@@ -174,25 +156,17 @@ function chartReducer(
 ): ChartState {
 	switch (action.type) {
 		case "INITIALIZE": {
-			// Spread del payload sopra chart: chart (ChartState) fornisce tutti i
-			// campi required, il payload (Partial) sovrascrive solo quelli
-			// dell'INITIALIZE (dimensioni, svgRef, chartID). Evita di riassegnare
-			// dimensioni `number | undefined` a un ChartState con dimensioni
-			// non-opzionali (R9).
 			return { ...chart, ...action.payload };
 		}
 		case "UPDATE_GLOBAL_CONFIG": {
 			const { globalConfig } = action.payload;
-			// no-op se la reference non e' cambiata: evita re-render inutili.
+
 			if (chart.globalConfig === globalConfig) return chart;
 			return { ...chart, globalConfig };
 		}
 		case "SET_HOVER_ELEMENT": {
 			const { hoveredElement } = action.payload ?? {};
-			// Guard (R17): il mousemove dispatcha questa azione a ogni pixel, ma la
-			// categoria in hover cambia di rado. Se e' la stessa, ritorno lo stesso
-			// stato -> useReducer fa bail-out (nessun re-render di ChartProvider ne'
-			// dei consumatori di hoveredElement, cioe' Line/Axis).
+
 			if (
 				chart.hoveredElement?.elementIndex === hoveredElement?.elementIndex &&
 				chart.hoveredElement?.label === hoveredElement?.label
@@ -209,9 +183,7 @@ function chartReducer(
 			if (chart.hasTooltip === hasTooltip) return chart;
 			return { ...chart, hasTooltip };
 		}
-		// Zoom interattivo Y (S3): SET_ZOOM imposta il dominio corrente (rotella),
-		// CLEAR_ZOOM lo azzera (doppio click -> torna a yBaseDomain). Distinti da
-		// SYNC_PROPS di proposito: lo zoom NON si resetta a ogni sync dei props.
+
 		case "SET_ZOOM": {
 			const { zoomDomain } = action.payload ?? {};
 			if (chart.zoomDomain === zoomDomain) return chart;
@@ -237,7 +209,6 @@ function chartReducer(
 				yBaseDomain,
 			} = action.payload;
 
-			// zoomDomain NON e' qui: e' stato interattivo, non deriva dai props.
 			return {
 				...chart,
 				elements,

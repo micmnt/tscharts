@@ -27,7 +27,6 @@ describe("renderer canvas (increment 1) — invariante e modalita'", () => {
 		);
 		await waitFor(() => expect(container.querySelector("path")).toBeTruthy());
 		expect(container.querySelector("canvas")).toBeNull();
-		// Line SVG presente: N dot + il path linea
 		expect(container.querySelectorAll("circle").length).toBe(N);
 		expect(container.querySelector("path")).toBeTruthy();
 	});
@@ -40,11 +39,8 @@ describe("renderer canvas (increment 1) — invariante e modalita'", () => {
 				<Line name="s" showDots />
 			</Chart>,
 		);
-		// il canvas viene montato
 		await waitFor(() => expect(container.querySelector("canvas")).toBeTruthy());
-		// l'svg (assi) resta presente sopra
 		expect(container.querySelector("svg")).toBeTruthy();
-		// ma le marche della Line sono sul bitmap, non nel DOM: niente <circle>
 		expect(container.querySelectorAll("circle").length).toBe(0);
 	});
 
@@ -58,7 +54,6 @@ describe("renderer canvas (increment 1) — invariante e modalita'", () => {
 		await waitFor(() => expect(container.querySelector("canvas")).toBeTruthy());
 		const canvas = container.querySelector("canvas") as HTMLCanvasElement;
 		const svg = container.querySelector("svg") as SVGSVGElement;
-		// l'svg e' avvolto in un layer con zIndex 1; il canvas resta auto (< 1)
 		expect((svg.parentElement as HTMLElement).style.zIndex).toBe("1");
 		expect(canvas.style.zIndex === "" || Number(canvas.style.zIndex) < 1).toBe(
 			true,

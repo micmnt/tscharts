@@ -1,10 +1,5 @@
 import type { TimeSerie } from "../../types";
 
-// Etichette di valore posizionate sui punti dati, condivise da Bar e GroupBar
-// (R16): stesso blocco <text> usato sia per le label interne (showLabels) sia
-// per quelle sopra le barre (topLabelSerie), che prima erano duplicati quasi
-// identici in entrambi i componenti. I punti con x === -1 sono "nascosti"
-// (barra troppo bassa per contenere la label) e vengono saltati.
 export const SerieValueLabels = ({
 	points,
 	serie,

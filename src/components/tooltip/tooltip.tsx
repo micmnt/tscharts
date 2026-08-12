@@ -1,7 +1,5 @@
-/* Types Imports */
 import type { ReactNode } from "react";
 
-/* Context Imports */
 import {
 	useChartsInteractive,
 	useChartsMouse,
@@ -11,10 +9,8 @@ import {
 import { calculateTooltipPosition } from "../../lib/core";
 import type { PieSerieEl, Serie, ThemeState, TimeSerieEl } from "../../types";
 
-/* Styles Imports */
 import "../../styles.css";
 
-/* Utils Imports */
 import {
 	isDefined,
 	isPieSerie,
@@ -32,9 +28,7 @@ export type TooltipProps = {
 	title?: (val: string) => string;
 	reverseOrder?: boolean;
 	showGrid?: boolean;
-	// false (default): il tooltip segue la colonna piu' vicina (prossimita').
-	// true: appare solo quando il mouse e' effettivamente sopra la barra/gruppo.
-	// Non si applica ai grafici horizontal (l'hover li' e' gestito da Axis).
+
 	intersect?: boolean;
 	hideSeries?: string[];
 	footer?: (series: Serie[], hoveredElementIndex: number) => ReactNode;
@@ -71,7 +65,6 @@ const getElementValueByType = (element: Serie, dataIndex: number) => {
 	return null;
 };
 
-// Funzione che genera i valori del tooltip per una timeSerie
 const generateTimeSerieContent = (
 	timeSeriesElements: Serie[],
 	allElements: Serie[],
@@ -83,12 +76,10 @@ const generateTimeSerieContent = (
 		props: (TimeSerieEl | PieSerieEl) & { name: string; elementIndex?: number },
 	) => ReactNode,
 ) => {
-	// Ordino l'array di valori in base all'ordinamento scelto
 	const orderedTimeSeriesElements = reverseOrder
 		? [...timeSeriesElements].reverse()
 		: timeSeriesElements;
 
-	// Filtro le serie che non voglio graficare nel tooltip
 	const seriesToShow =
 		(hideSeries ?? []).length > 0
 			? orderedTimeSeriesElements.filter(
@@ -110,9 +101,6 @@ const generateTimeSerieContent = (
 			});
 		}
 
-		// Indice nell'intero ctx.elements (non nell'array gia' filtrato): deve
-		// combaciare con quello usato da Bar/Line/ecc. per scegliere il colore,
-		// altrimenti soglie/pie/donut intercalate sfasano la palette.
 		const serieIndex = allElements.findIndex((el) => el.name === element.name);
 
 		return (
@@ -134,7 +122,6 @@ const generateTimeSerieContent = (
 	});
 };
 
-// Funzione che genera i valori del tooltip per una pieSerie
 const generatePieSerieContent = (
 	pieSeriesElements: PieSerieEl[],
 	theme: ThemeState | null,
@@ -143,7 +130,6 @@ const generatePieSerieContent = (
 		props: (TimeSerieEl | PieSerieEl) & { name: string },
 	) => ReactNode,
 ) => {
-	// Filtro le serie che non voglio graficare nel tooltip
 	const seriesToShow =
 		(hideSeries ?? []).length > 0
 			? pieSeriesElements.filter((serie) => !hideSeries?.includes(serie.name))
@@ -170,7 +156,6 @@ const generatePieSerieContent = (
 	});
 };
 
-// Funzione che genera il footer del tooltip
 const generateFooter = (
 	elements: Serie[],
 	hoveredElement: { elementIndex: number; label: string } | null,
@@ -185,7 +170,6 @@ const generateFooter = (
 	return <div className="tooltipFooter">{showTotal ? tooltipTotal : null}</div>;
 };
 
-// Funzione che genera i valori dei totali dei singoli elementi di una Serie stacked
 const computeStackedSeriesElementsTotal = (
 	timeSeriesElements: Serie[],
 	hoveredElement: { elementIndex: number; label: string } | null,
@@ -245,23 +229,14 @@ const Tooltip = (props: TooltipProps) => {
 
 	const { hoveredElement: _hoveredElement } = interactive ?? {};
 
-	// mousePosition e visibilita' arrivano dal ChartMouseContext locale (R17),
-	// non piu' dallo slice interattivo del reducer.
 	const { mousePosition: _mousePosition, tooltipVisible } = mouse ?? {};
 
 	if (!elements) return null;
 
-	// Usato per il totale cumulato (cumulatedSeriesValue) e per decidere il
-	// ramo di rendering: le soglie restano escluse, sommarle in un totale
-	// "di tutte le serie" per default sarebbe un effetto collaterale non
-	// voluto.
 	const timeSeriesElements = elements.filter(
 		(el) => el.type !== "threshold" && !isPieSerie(el),
 	);
 
-	// Usato per le righe del tooltip mostrate all'utente: include anche le
-	// soglie (getElementValueByType le gestisce gia'), altrimenti il loro
-	// valore non compare mai nel tooltip.
 	const tooltipRowElements = elements.filter((el) => !isPieSerie(el));
 
 	const pieSeriesElements = elements.find(isPieSerie)?.data ?? [];
@@ -271,8 +246,6 @@ const Tooltip = (props: TooltipProps) => {
 		label: string;
 	};
 
-	// Puo' essere null prima del primo movimento del mouse (R17): niente cast
-	// che lo nasconda, cosi' il type-checker obbliga a guardarlo dove serve.
 	const mousePosition: Position | null = _mousePosition ?? null;
 
 	const tooltipTitle = title
@@ -292,12 +265,8 @@ const Tooltip = (props: TooltipProps) => {
 		cumulatedSeriesValue !== null &&
 		Object.keys(cumulatedSeriesValue)?.length > 0;
 
-	// Altezza effettiva del foreignObject (fissa): usata sia per il render sia
-	// per calcolare la posizione, cosi' i due valori coincidono sempre.
 	const tooltipHeight = height ? height : showTotal ? 200 : 160;
 
-	// La posizione la calcola il Tooltip stesso (R7) da mousePosition e dalle
-	// proprie dimensioni note, senza misurare il DOM.
 	const tooltipPosition = calculateTooltipPosition(
 		mousePosition ?? { x: 0, y: 0 },
 		chartXStart,

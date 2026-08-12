@@ -9,10 +9,6 @@ import type {
 export const isDefined = (value: number | string | undefined | null) =>
 	value !== null && value !== undefined;
 
-// Unico punto da cui i componenti segnalano una configurazione probabilmente
-// sbagliata (serie non trovata, componente fuori da <Chart>...): solo in
-// sviluppo, cosi' i bundler dei consumer possono eliminarlo dal build di
-// produzione (dead-code elimination su process.env.NODE_ENV).
 export const warnDev = (message: string) => {
 	if (process.env.NODE_ENV !== "production") {
 		console.warn(`[tscharts] ${message}`);
@@ -78,21 +74,18 @@ export const getFirstValorizedElementIndex = (
 
 export const trimZerosAndNullLinePath = (paths: string[]) => {
 	const validPaths = [];
-	// variabile che indica se sono in una sequenza di elementi vuoti
+
 	let inEmptySequence = false;
 	for (const pathIndex in paths) {
 		if (paths[pathIndex] === "") {
-			// Se non sono in una sequenza di elementi vuoti e l'elemento è vuoto inserisco un placeholder e inizio la sequenza di elementi vuoti
 			if (!inEmptySequence) {
 				validPaths.push("*");
 				inEmptySequence = true;
 			}
 		} else {
-			// Se l'elemento non è nullo ma l'ultimo elemento dei path validi è un placeholder di una sequenza di elementi vuoti
 			if (validPaths.slice(-1)?.[0] === "*") {
-				// rimuovo il placeholder
 				validPaths.pop();
-				// creo un path con il comando di move con le stesse coordinate del comando di line e lo inserisco nella stessa posizione del placeholder
+
 				const movePath = paths[pathIndex]?.replace("L", "M");
 				validPaths.push(movePath);
 			} else {
@@ -102,9 +95,6 @@ export const trimZerosAndNullLinePath = (paths: string[]) => {
 		}
 	}
 
-	// Se la sequenza vuota finale non e' mai stata chiusa da un path valido
-	// successivo, il placeholder "*" resterebbe nell'array e finirebbe
-	// letteralmente nell'attributo `d` dell'SVG (sintassi non valida).
 	if (validPaths.slice(-1)?.[0] === "*") {
 		validPaths.pop();
 	}

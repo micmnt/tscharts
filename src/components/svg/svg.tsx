@@ -1,4 +1,3 @@
-/* Types Imports */
 import {
 	type CSSProperties,
 	type JSX,
@@ -12,7 +11,7 @@ import {
 	useRef,
 	useState,
 } from "react";
-/* Context Imports */
+
 import {
 	ChartMouseContext,
 	useChartsDispatch,
@@ -20,7 +19,7 @@ import {
 	useChartsTheme,
 } from "../../contexts/chartContext";
 import { flattenChildren } from "../../lib/children";
-/* Core Imports */
+
 import {
 	computeWheelZoom,
 	convertToSVGPoint,
@@ -50,15 +49,13 @@ export type SVGProps = {
 	leftAxisCount?: number;
 	rightAxisCount?: number;
 	ariaLabel?: string;
-	// Config di layout delle barre passata da <Chart>: barWidth/barGroupGap/barOffset.
+
 	layoutConfig?: ChartLayoutConfig;
-	// Zoom interattivo Y (S3): callback col dominio corrente (null al reset).
+
 	onZoomChange?: (domain: [number, number] | null) => void;
-	// Config del passo di zoom (S3b): fattore per tacca e snap degli estremi.
+
 	zoomStep?: number;
 	zoomSnap?: number;
-	// Motore di rendering (increment 1 canvas): "canvas" monta un <CanvasSurface>
-	// dietro l'<svg>. Default "svg" -> nessun canvas montato (invariante).
 	renderer?: "svg" | "canvas";
 };
 
@@ -69,15 +66,11 @@ const getDefaultAriaLabel = (elements?: Serie[]) => {
 	return `Grafico con ${elements.length} serie: ${seriesNames}`;
 };
 
-// Funzione che calcola l'altezza della legenda
 const getLegendHeight = (children: JSX.Element[]) => {
-	/* Verifico che esista un elemento Legend (per riferimento al componente: da
-	   v1.0 legendType e' opzionale, quindi non e' piu' un marcatore affidabile). */
 	const legend = children.find((childEl) => childEl.type === Legend);
 
 	if (!legend) return 0;
 
-	/* Se l'elemento Legend esiste prendo la sua altezza */
 	const legendHeight = legend.props?.height
 		? legend?.props?.height
 		: DEFAULT_LEGEND_HEIGHT;
@@ -109,28 +102,17 @@ const Svg = (props: SVGProps) => {
 
 	const { padding } = theme ?? {};
 
-	// Posizione del mouse e visibilita' del tooltip: state LOCALE (R17), non nel
-	// reducer -> a ogni pixel si ri-renderizza solo questo Svg (cheap, calcoli
-	// memoizzati sotto) e il Tooltip che consuma ChartMouseContext, non
-	// ChartProvider ne' Line/Axis.
 	const [mousePosition, setMousePosition] = useState<{
 		x: number;
 		y: number;
 	} | null>(null);
 	const [tooltipVisible, setTooltipVisible] = useState(false);
 
-	// Value del ChartMouseContext: reference stabile finche' mouse/visibilita'
-	// non cambiano, cosi' un re-render di Svg per altri motivi non ri-renderizza
-	// il Tooltip inutilmente.
 	const mouseValue = useMemo(
 		() => ({ mousePosition, tooltipVisible }),
 		[mousePosition, tooltipVisible],
 	);
 
-	// Appiattito (scende in Fragment e .map) prima dell'ispezione: legenda e
-	// config generati dinamicamente vengono comunque trovati (R6). Memoizzati su
-	// children: Svg si ri-renderizza a ogni movimento del mouse (R17) ma questi
-	// calcoli non rigirano se i children non cambiano.
 	const flatChildren = useMemo(() => flattenChildren(children), [children]);
 
 	const legendHeight = useMemo(
@@ -138,8 +120,6 @@ const Svg = (props: SVGProps) => {
 		[flatChildren],
 	);
 
-	// globalConfig (layout barre) reattivo ai cambi delle props di <Chart>,
-	// stabilizzato su una dep-key coi valori primitivi (evita nuove reference).
 	const rawGlobalConfig = useMemo(
 		() => computeGlobalConfig(layoutConfig),
 		[layoutConfig],
@@ -161,7 +141,6 @@ const Svg = (props: SVGProps) => {
 	}
 	const globalConfig = globalConfigStore.current.value;
 
-	// Funzione che inizializza le dimensioni del grafico svg
 	const initializeChart = useCallback(() => {
 		if (
 			dispatch &&
@@ -179,11 +158,7 @@ const Svg = (props: SVGProps) => {
 				rightAxisCount as number,
 				legendHeight,
 			);
-			// Con un container non ancora misurato (clientHeight 0) chartYEnd
-			// sarebbe negativo (R18): non propago dimensioni invalide al context,
-			// altrimenti gli elementi verrebbero disegnati con height negativa. Il
-			// ResizeObserver richiama initializeChart quando il container ha
-			// dimensioni reali.
+
 			if (chartYEnd <= 0 || chartXEnd <= 0) return;
 			dispatch({
 				type: "INITIALIZE",
@@ -211,10 +186,6 @@ const Svg = (props: SVGProps) => {
 	useEffect(() => {
 		initializeChart();
 
-		// ResizeObserver sul container: reagisce anche ai cambi di layout (es.
-		// una sidebar che collassa), non solo al resize della finestra (R5).
-		// Fallback a window.resize dove ResizeObserver non e' disponibile
-		// (SSR / jsdom).
 		const container = containerRef.current;
 		if (!container || typeof ResizeObserver === "undefined") {
 			window.addEventListener("resize", initializeChart);
@@ -226,9 +197,6 @@ const Svg = (props: SVGProps) => {
 		return () => observer.disconnect();
 	}, [initializeChart, containerRef]);
 
-	// Propaga globalConfig al context quando cambia (R13): separato da
-	// INITIALIZE (che gestisce solo le dimensioni) cosi' i cambi runtime dei
-	// config si riflettono su Axis/hover senza aspettare un mount/resize.
 	useEffect(() => {
 		if (dispatch) {
 			dispatch({
@@ -238,9 +206,6 @@ const Svg = (props: SVGProps) => {
 		}
 	}, [dispatch, globalConfig]);
 
-	// Il <Tooltip> tra i children (R7): axis.tsx usa la sua presenza per gli
-	// hover-rect; qui ne leggiamo anche la prop `intersect` (R15) per decidere
-	// come agganciare l'hover.
 	const tooltipChild = useMemo(
 		() => flatChildren.find((child) => child.type === Tooltip),
 		[flatChildren],
@@ -262,13 +227,9 @@ const Svg = (props: SVGProps) => {
 		horizontal: ctxHorizontal,
 	} = ctx ?? {};
 
-	// Serie di riferimento per il calcolo dell'hover: deve avere data come
-	// TimeSerieEl[] (bar/line/bar-stacked/group-bar), non un valore singolo
-	// come threshold o un array di forma diversa come pie.
 	const hoverableSerie = ctxElements?.find(isTimeSerie);
 
 	const handleMouseLeave = () => {
-		// Nasconde il tooltip (R17): state locale, nessun dispatch al reducer.
 		setTooltipVisible(false);
 	};
 
@@ -287,24 +248,11 @@ const Svg = (props: SVGProps) => {
 					y: 0,
 				};
 
-				// Posizione del mouse: state LOCALE (R17), non nel reducer. Il
-				// Tooltip la consuma via ChartMouseContext e calcola la propria
-				// posizione. Un solo convertToSVGPoint per movimento.
 				setMousePosition(svgPoint);
 
-				// Calcolo l'elemento in hover dalla posizione X del mouse. Solo per
-				// grafici NON orizzontali: nei grafici horizontal e' Axis (nel suo
-				// ramo xAxis horizontal) a gestire l'hover correttamente in base
-				// alla posizione Y, tramite i propri onMouseEnter sulle righe -
-				// ricalcolarlo qui duplicherebbe quella logica e, siccome mousemove
-				// scatta ad ogni pixel, sovrascriverebbe il valore corretto con uno
-				// sbagliato calcolato sull'asse sbagliato.
 				if (!ctxHorizontal && hoverableSerie) {
 					const serieData = hoverableSerie.data;
 
-					// Asse tempo (S2b): i punti non sono equispaziati, quindi l'indice
-					// e' il punto DATO piu' vicino nel tempo (non un round su band).
-					// Stessa getChartTimeScale usata da generatore line e asse.
 					const timeScale =
 						ctx?.scaleType === "time"
 							? getChartTimeScale({
@@ -334,8 +282,7 @@ const Svg = (props: SVGProps) => {
 							}
 						});
 						center = timeScale.position(times[hoveredIndex] ?? 0);
-						// tolleranza intersect: meta' distanza pixel dal vicino piu'
-						// prossimo (i punti tempo non sono equispaziati).
+
 						const neighborGaps = [
 							times[hoveredIndex - 1],
 							times[hoveredIndex + 1],
@@ -346,11 +293,6 @@ const Svg = (props: SVGProps) => {
 							? Math.min(...neighborGaps) / 2
 							: (padding ?? 0);
 					} else {
-						// Stessa fonte di verita' della centratura label (xAxis.tsx): per
-						// i GroupBar l'aggancio dell'hover tiene conto della larghezza
-						// dell'intero gruppo, non di una singola barra (R5). Stessa
-						// BandScale "centro categoria" di xAxis.tsx: invert per l'indice,
-						// position per il centro -> hover e label non divergono (S2a).
 						const xSpace = getCategorySpacing(
 							ctxElements ?? [],
 							ctxGlobalConfig,
@@ -363,8 +305,7 @@ const Svg = (props: SVGProps) => {
 							firstOffset: xSpace,
 						});
 						hoveredIndex = xScale.invert(svgPoint.x);
-						// intersect=true (R15): l'hover si attiva solo se il mouse e'
-						// dentro i bounds dell'elemento (xSpace - padding/2).
+
 						center = xScale.position(hoveredIndex);
 						halfWidth = xSpace - (padding ?? 0) / 2;
 					}
@@ -393,8 +334,6 @@ const Svg = (props: SVGProps) => {
 						}
 					}
 				} else {
-					// Grafici horizontal / senza serie hoverabile: intersect non si
-					// applica, il tooltip resta visibile durante l'hover come prima.
 					setTooltipVisible(true);
 				}
 			}
@@ -417,26 +356,8 @@ const Svg = (props: SVGProps) => {
 		],
 	);
 
-	// Zoom rotella (S3): accumulatore CONTINUO del dominio (non snappato),
-	// aggiornato in modo sincrono a ogni evento rotella. E' la fonte di verita'
-	// interattiva; il context riceve il dominio *snappato* solo per il display.
-	// Serve a rendere lo zoom solido in due casi in cui prima "a volte zoomava e
-	// a volte no":
-	//  (a) piu' eventi rotella arrivano PRIMA del re-render di React: leggendo
-	//      ctx.zoomDomain (ancora stantio) il 2o+ evento ripartirebbe dal dominio
-	//      vecchio e lo step andrebbe perso. Qui ogni evento legge/scrive il ref
-	//      in modo sincrono, quindi gli eventi si accumulano correttamente;
-	//  (b) lo snap applicato ad ogni singolo step "ingoia" i delta piccoli
-	//      (trackpad -> zoom minimo -> arrotonda allo stesso dominio): tenendo
-	//      l'accumulo continuo e snappando solo l'output, lo zoom non si blocca.
 	const zoomAccRef = useRef<[number, number] | null>(null);
-	// Reset dell'accumulatore quando il dominio viene azzerato dall'esterno
-	// (doppio click / reset): il context torna senza zoomDomain, l'accumulo pure.
 	if (!ctx?.zoomDomain) zoomAccRef.current = null;
-	// Parametri correnti letti dal listener (agganciato una sola volta): un ref
-	// aggiornato a ogni render evita di ri-agganciare il listener nativo (che, tra
-	// una detach e la successiva attach, potrebbe perdere un evento) e le closure
-	// stantie.
 	const zoomParamsRef = useRef<{
 		baseDomain?: readonly [number, number];
 		chartYEnd?: number;
@@ -456,10 +377,6 @@ const Svg = (props: SVGProps) => {
 		onZoomChange,
 	};
 
-	// Listener nativo con { passive: false } perche' React registra onWheel come
-	// passivo -> preventDefault non fermerebbe lo scroll della pagina. Agganciato
-	// UNA volta (dep solo su zoomable/dispatch): tutto il resto viene letto dai
-	// ref sopra, sempre aggiornati.
 	useEffect(() => {
 		const el = rootRef.current;
 		if (!el || !ctx?.zoomable || !dispatch) return;
@@ -474,7 +391,6 @@ const Svg = (props: SVGProps) => {
 				event.clientY,
 			);
 			if (!point) return;
-			// parte dall'accumulatore CONTINUO (non dallo snappato mostrato)
 			const current = zoomAccRef.current ?? p.baseDomain;
 			const value = getChartYScale({
 				min: current[0],
@@ -482,7 +398,6 @@ const Svg = (props: SVGProps) => {
 				chartYEnd: p.chartYEnd ?? 0,
 				padding: p.padding ?? 0,
 			}).invert(point.y);
-			// accumulo continuo, SENZA snap: non si blocca mai
 			const next = computeWheelZoom({
 				domain: current,
 				baseDomain: p.baseDomain,
@@ -490,8 +405,7 @@ const Svg = (props: SVGProps) => {
 				deltaY: event.deltaY,
 				zoomStep: p.zoomStep,
 			});
-			zoomAccRef.current = next; // sincrono: il prossimo evento riparte da qui
-			// snap solo sull'output mostrato / notificato
+			zoomAccRef.current = next;
 			const display =
 				p.zoomSnap && p.zoomSnap > 0
 					? snapDomain(next, p.zoomSnap, p.baseDomain)
@@ -511,12 +425,6 @@ const Svg = (props: SVGProps) => {
 		onZoomChange?.(null);
 	}, [ctx?.zoomable, ctx?.zoomDomain, dispatch, onZoomChange]);
 
-	// NB: NON si puo' gatare su chartYEnd > 0 qui: il container prende la sua
-	// altezza dall'<svg> che sta dentro, quindi se Svg ritornasse null il
-	// container collasserebbe a clientHeight 0 e chartYEnd resterebbe negativo
-	// per sempre (deadlock). Le dimensioni negative sono evitate alla radice:
-	// initializeChart non propaga chartYEnd <= 0 al context (R18), quindi qui
-	// chartYEnd e' 0 (stato iniziale) finche' il container non e' misurato.
 	if (!height) return null;
 
 	const viewBox = `0 0 ${width} ${height + legendHeight}`;
@@ -534,19 +442,13 @@ const Svg = (props: SVGProps) => {
 			role="img"
 			aria-label={ariaLabel ?? getDefaultAriaLabel(ctxElements)}
 		>
-			{/* Lo stato del mouse e' fornito ai children via context locale (R17):
-			    quando cambia, si ri-renderizza solo chi lo consuma (il Tooltip). */}
+			{}
 			<ChartMouseContext.Provider value={mouseValue}>
 				{children}
 			</ChartMouseContext.Provider>
 		</svg>
 	);
 
-	// Modalita' canvas (increment 1): un <CanvasSurface> dietro l'<svg>, stessa
-	// dimensione. Le marche (Line) registrano draw-op e rendono null nell'svg;
-	// assi/legenda/tooltip restano nell'svg sopra e gestiscono gli eventi.
-	// In "svg" (default) NIENTE di tutto questo: l'svg viene ritornato tale e
-	// quale (invariante: SVG esclude completamente il canvas).
 	if (renderer === "canvas") {
 		return (
 			<CanvasSurface width={width ?? 0} height={(height ?? 0) + legendHeight}>

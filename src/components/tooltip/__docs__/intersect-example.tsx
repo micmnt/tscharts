@@ -22,8 +22,6 @@ const elements = [
 
 const dataPoints = ["13/03", "14/03", "15/03", "16/03"];
 
-// `intersect` come control: false (default) = tooltip a prossimita' (segue la
-// colonna piu' vicina); true = compare solo quando il mouse e' sopra la barra.
 type IntersectExampleProps = {
 	intersect?: boolean;
 };

@@ -1,9 +1,5 @@
-/* Types Imports */
-
-/* Hooks Imports */
 import { useSerie } from "../../hooks/useSerie";
 
-/* Core Imports */
 import {
 	getSerieAssociatedThresholds,
 	getTimeSerieMaxValue,
@@ -53,8 +49,6 @@ const Threshold = (props: ThresholdProps) => {
 
 	if (!ctx || !theme || !thresholdElement) return null;
 
-	// Destrutturato DOPO il null-check di ctx (R9): cosi' le dimensioni sono
-	// `number`, non `number | undefined` da `ctx ?? {}`, e non servono cast.
 	const { chartXStart, chartXEnd, chartYEnd, timeSeriesMaxValue, elements } =
 		ctx;
 
@@ -82,9 +76,6 @@ const Threshold = (props: ThresholdProps) => {
 
 	const zeroY = ctx.negative ? (ctx.chartYMiddle ?? 0) : chartYEnd;
 
-	// Stessa definizione di halfHeight usata in generateNegativeDataPaths e
-	// generateYAxis (core.ts): garantisce che la soglia si allinei sempre a
-	// barre/linee/gridline dello stesso valore.
 	const chartDimension = ctx.negative ? zeroY - padding : chartYEnd - padding;
 
 	const isNegative = thresholdValue < 0;

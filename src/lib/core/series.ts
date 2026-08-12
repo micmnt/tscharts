@@ -11,9 +11,6 @@ import {
 	warnDev,
 } from "../utils";
 
-// Converte la stringa `date` di un punto in ms epoch. `parseDate` (opzionale)
-// gestisce formati non-ISO (es. "13/03"); di default usa new Date(d).getTime().
-// Accetta sia number (ms) che Date come ritorno del parser (S2b).
 export const normalizeTime = (
 	date: string,
 	parseDate?: (d: string) => number | Date,
@@ -22,9 +19,6 @@ export const normalizeTime = (
 	return value instanceof Date ? value.getTime() : value;
 };
 
-// Dominio temporale [min, max] calcolato dalle SOLE serie line (decisione S2b:
-// la scala tempo agisce solo su line). Ritorna undefined se non ci sono istanti
-// validi. Avvisa in dev sui `date` che parseDate non riesce a interpretare.
 export const computeTimeDomain = (
 	elements: Serie[],
 	parseDate?: (date: string) => number | Date,
@@ -49,17 +43,6 @@ export const computeTimeDomain = (
 	return [Math.min(...times), Math.max(...times)];
 };
 
-// Serie "bar"/"line" singole la cui chiave d'asse (axisName ?? name) non
-// corrisponde ad alcun asse Y renderizzato: verrebbero disegnate su una scala
-// isolata, basata sul proprio max, che nessun asse mostra -> grafico
-// fuorviante (R12). Se non ci sono assi Y non si segnala nulla: un grafico
-// volutamente senza assi non e' un errore.
-//
-// Solo "bar" e "line": sono gli unici tipi la cui scala e' calcolata per
-// chiave d'asse (getSerieMaxValueForAxis(axisName ?? name)). Le "group-bar" e
-// le "bar-stacked" usano invece una scala AGGREGATA (max di tutte le serie del
-// gruppo / dello stack), quindi il loro name non e' una chiave d'asse e non va
-// confrontato con i nomi degli assi (altrimenti falso positivo).
 export const getSeriesMissingYAxis = (
 	elements: Serie[],
 	yAxisNames: string[],
@@ -72,7 +55,6 @@ export const getSeriesMissingYAxis = (
 	);
 };
 
-// Funzione che calcola il valore massimo di una serie
 export const getTimeSerieMaxValue = (serie: TimeSerieEl[] = []) => {
 	if (serie?.length > 0) {
 		return Math.max(
@@ -85,13 +67,12 @@ export const getTimeSerieMaxValue = (serie: TimeSerieEl[] = []) => {
 	return 0;
 };
 
-// Funzione che prende in ingresso le serie del grafico e ritorna le serie a linea e a barre presenti associate ad un determinato asse
 export const getSeriesByAxisName = (
 	elements: Serie[],
 	axisName: string,
 ): TimeSerieEl[][] => {
 	if (!elements || !axisName) return [];
-	// Prendo i valori delle serie presenti associate all'asse da graficare
+
 	const axisSeries = elements
 		.filter(
 			(el): el is TimeSerie =>
@@ -102,13 +83,12 @@ export const getSeriesByAxisName = (
 	return axisSeries;
 };
 
-// Funzione che prende in ingresso le serie del grafico e ritorna le soglie presenti associate ad un determinato asse
 export const getSerieAssociatedThresholds = (
 	elements: Serie[],
 	axisName: string,
 ) => {
 	if (!elements || !axisName) return [];
-	// Prendo i valori delle eventuali soglie presenti associate all'asse della serie da graficare
+
 	const seriesThresholds = elements
 		.filter(
 			(el): el is ThresholdSerie =>
@@ -119,12 +99,9 @@ export const getSerieAssociatedThresholds = (
 	return seriesThresholds;
 };
 
-// Funzione che normalizza ctx.elements[i].data in TimeSerieEl[]
 export const normalizeSerieElementsData = (elements: Serie[]) => {
 	if (!elements) return [];
 
-	// Prendo le serie che sono delle soglie, e le riporto alla stessa forma
-	// di data (TimeSerieEl[]) delle serie a linea/barre per poterle unire.
 	const thresholdsSeries = elements.filter(isThresholdSerie).map((el) => ({
 		...el,
 		data: [{ date: "null", value: el.data }],
@@ -135,11 +112,9 @@ export const normalizeSerieElementsData = (elements: Serie[]) => {
 	return [...lineOrBarSeries, ...thresholdsSeries];
 };
 
-// Funzione che calcola il massimo sommando i massimi delle serie da mostrare come colonne stacked
 export const calculateStackedSeriesMax = (series: TimeSerie[]) => {
-	// Prendo le labels per costruire una serie unificata
 	const serieLabels = series?.[0].data.map((el) => el.date) ?? [];
-	// Creo una serie dove per ogni label c'è la somma dei valori di tutte le serie per quella label
+
 	const unifiedSerie = serieLabels.map((label) => {
 		const seriesElements = series.flatMap((serie) =>
 			serie.data.find((el) => el.date === label),
@@ -155,22 +130,11 @@ export const calculateStackedSeriesMax = (series: TimeSerie[]) => {
 	return getTimeSerieMaxValue((unifiedSerie as TimeSerieEl[]) ?? []);
 };
 
-// Funzione condivisa dalle 6 varianti di generate*DataPaths: applica
-// l'arrotondamento "pulito" (flatMax) al valore massimo grezzo, se richiesto
-// dal tema/config del grafico. Stesso pattern `ctx.flatMax ? ... : ...`
-// ripetuto identico in tutte e 6 prima di questa estrazione (D3).
 export const getEffectiveMaxValue = (
 	flatMax: boolean | undefined,
 	rawMaxValue: number,
 ) => (flatMax ? calculateFlatValue(rawMaxValue) : rawMaxValue);
 
-// Funzione condivisa da generateDataPaths, generateNegativeDataPaths e
-// generateHorizontalDataPaths (le tre varianti "senza accumulo"): calcola
-// il valore massimo tra i punti della serie sullo stesso asse e le soglie
-// associate. Stesso blocco ripetuto identico in tutte e tre prima di questa
-// estrazione (D3). Le varianti stacked/group non lo usano: calcolano il
-// massimo diversamente (calculateStackedSeriesMax, somma tra serie del
-// gruppo), quindi non fa parte di questa condivisione.
 export const getSerieMaxValueForAxis = (
 	elements: Serie[],
 	serie: TimeSerie,

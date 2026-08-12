@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calculateTooltipPosition } from "../core";
 
-// chart 0..400 (x) e 0..300 (y); tooltip 150x160
 const chartXStart = 0;
 const chartXEnd = 400;
 const chartYEnd = 300;
@@ -58,8 +57,6 @@ describe("calculateTooltipPosition (pura, R7)", () => {
 	});
 
 	it("clampa x a 0 quando il calcolo andrebbe negativo", () => {
-		// mouse nella meta' destra (branch "-w-50") con tooltip largo: 200 - 250 -
-		// 50 = -100 -> clampato a 0.
 		const pos = calculateTooltipPosition(
 			{ x: 200, y: 50 },
 			chartXStart,

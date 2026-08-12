@@ -7,13 +7,9 @@ import Tooltip from "../components/tooltip/tooltip";
 import { useCanvasMark } from "../hooks/useCanvasMark";
 import { useChartMark } from "../hooks/useChartMark";
 
-// Rombo centrato in (x,y).
 const diamond = (x: number, y: number, r: number) =>
 	`M ${x} ${y - r} L ${x + r} ${y} L ${x} ${y + r} L ${x - r} ${y} Z`;
 
-// renderDot condiviso: rombo AL POSTO del pallino, alla posizione esatta del
-// punto; in hover si riempie e cresce. Sostituisce il dot della linea (niente
-// tondo dietro), gestito da <Line>.
 const diamondDot = ({ x, y, hovered, color }: LineDotProps) => (
 	<path
 		d={diamond(x, y, hovered ? 8 : 6)}
@@ -23,13 +19,9 @@ const diamondDot = ({ x, y, hovered, color }: LineDotProps) => (
 	/>
 );
 
-// ---- Marca custom CANVAS-accelerata: gli stessi rombi, ma disegnati su UN
-// canvas (draw-op) quando renderer="canvas", con fallback SVG. Regge migliaia di
-// punti. `useCanvasMark` e' no-op in SVG; `mark.isCanvas` decide il ramo. ----
 const CanvasDiamonds = ({ name }: { name: string }) => {
 	const mark = useChartMark(name);
 	const serie = mark?.serie;
-	// Su scala tempo l'input di x/point e' il timestamp (qui = Number(date)).
 	const xInput = (i: number) =>
 		mark?.scaleType === "time" ? Number(serie?.data[i].date) : i;
 	useCanvasMark(
@@ -49,7 +41,6 @@ const CanvasDiamonds = ({ name }: { name: string }) => {
 				}
 			: null,
 	);
-	// canvas: gia' disegnato sul bitmap; SVG: fallback (renderer="svg").
 	if (!mark || !serie || mark.isCanvas) return null;
 	return (
 		<>
@@ -61,8 +52,6 @@ const CanvasDiamonds = ({ name }: { name: string }) => {
 	);
 };
 
-// ---- Candlestick con DATI PROPRI (open/high/low/close). Usa solo il sistema di
-// coordinate; la serie "prezzo" in `elements` fornisce categorie e dominio. ----
 type Candle = { open: number; high: number; low: number; close: number };
 
 const Candlesticks = ({ name, ohlc }: { name: string; ohlc: Candle[] }) => {
@@ -81,7 +70,6 @@ const Candlesticks = ({ name, ohlc }: { name: string; ohlc: Candle[] }) => {
 				const bodyH = Math.max(1, Math.abs(yOpen - yClose));
 				return (
 					<g key={`candle-${i}-${c.open}-${c.close}`}>
-						{/* wick: minimo -> massimo */}
 						<line
 							x1={cx}
 							x2={cx}
@@ -90,7 +78,6 @@ const Candlesticks = ({ name, ohlc }: { name: string; ohlc: Candle[] }) => {
 							stroke={color}
 							strokeWidth={1.5}
 						/>
-						{/* corpo: open -> close */}
 						<rect
 							x={cx - half}
 							y={top}
@@ -119,8 +106,6 @@ const ohlc: Candle[] = closes.map((close, i) => {
 	return { open, high, low, close };
 });
 
-// Scatter denso (date numeriche): X su scala tempo con pochi tick, cosi' l'asse
-// resta leggibile anche con tanti punti.
 const scatter = (() => {
 	const out: { date: string; value: number }[] = [];
 	let v = 50;
@@ -149,14 +134,12 @@ const hData = [
 	{ date: "E", value: 63 },
 ];
 
-// Esempi di marche CUSTOM composte in <Chart> tramite useChartMark.
 export const CustomMarksExample = ({
 	variant,
 }: {
 	variant: "diamonds" | "candlestick" | "canvas" | "negative" | "horizontal";
 }) => {
 	if (variant === "canvas") {
-		// ~500 punti: la marca custom (rombi) e' disegnata sul canvas via draw-op.
 		return (
 			<Chart
 				width={720}
@@ -181,8 +164,6 @@ export const CustomMarksExample = ({
 	}
 
 	if (variant === "negative") {
-		// Linea NEGATIVA con rombi al posto dei pallini (renderDot): sostituiscono
-		// il dot, quindi in hover NON appare il cerchio. La linea resta.
 		return (
 			<Chart
 				width={640}
@@ -199,8 +180,6 @@ export const CustomMarksExample = ({
 	}
 
 	if (variant === "horizontal") {
-		// Linea ORIZZONTALE con rombi al posto dei pallini (renderDot): la linea
-		// resta e in hover non c'e' il cerchio.
 		return (
 			<Chart
 				width={640}
@@ -226,8 +205,6 @@ export const CustomMarksExample = ({
 				]}
 			>
 				<YAxis name="vendite" showName showLine />
-				{/* renderDot: la marca custom sostituisce il dot ALLA POSIZIONE
-				    ESATTA del punto; l'hover riempie il rombo (niente cerchio). */}
 				<Line name="vendite" showDots renderDot={diamondDot} />
 				<XAxis dataPoints={points} showLine />
 				<Legend />
@@ -243,7 +220,6 @@ export const CustomMarksExample = ({
 			elements={[{ name: "prezzo", type: "line", uom: "€", data: serieData }]}
 		>
 			<YAxis name="prezzo" min={20} max={95} showName showLine />
-			{/* la linea non serve: la teniamo nascosta, guida solo il dominio */}
 			<Line name="prezzo" hideLine />
 			<Candlesticks name="prezzo" ohlc={ohlc} />
 			<XAxis dataPoints={points} showLine />

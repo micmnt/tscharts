@@ -1,7 +1,6 @@
-/* React Imports */
 import { useMemo } from "react";
 import { useSerie } from "../../hooks/useSerie";
-/* Core Imports */
+
 import { generatePiePaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
 import { isPieSerie } from "../../lib/utils";
@@ -24,9 +23,6 @@ const Pie = (props: PieProps) => {
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
-	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
-	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
-	// singoli campi e' sicuro e piu' semplice da mantenere corretto.
 	const result = useMemo(() => {
 		if (!ctx || !theme || !serieElement) return null;
 		return generatePiePaths(serieElement, { ...ctx, padding });

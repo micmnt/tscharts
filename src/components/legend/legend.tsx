@@ -1,6 +1,3 @@
-/* Types Imports */
-
-/* Context Imports */
 import {
 	useChartsStructural,
 	useChartsTheme,
@@ -8,7 +5,6 @@ import {
 import { isPieSerie, warnDev } from "../../lib/utils";
 import type { ChartState, PieSerieEl, Serie, ThemeState } from "../../types";
 
-/* Styles Imports */
 import "../../styles.css";
 import type { ReactNode } from "react";
 
@@ -17,13 +13,12 @@ export type LegendProps = {
 	height?: number;
 	hideSeries?: string[];
 	customLabel?: (el: PieSerieEl | Serie) => ReactNode;
-	// Orientamento della legenda: default "horizontal" (v1.0, prima obbligatorio).
+
 	legendType?: "horizontal" | "vertical";
 };
 
 export const DEFAULT_LEGEND_HEIGHT = 60;
 
-// Funzione che genera la legenda per un grafico di tipo XY
 const generateXYChartLenged = (
 	timeSeriesElements: Serie[],
 	allElements: Serie[],
@@ -32,16 +27,12 @@ const generateXYChartLenged = (
 	customLabel: ((el: PieSerieEl | Serie) => ReactNode) | null,
 	hideSeries?: string[],
 ) => {
-	// Filtro le serie che non voglio graficare nel tooltip
 	const seriesToShow =
 		(hideSeries ?? []).length > 0
 			? timeSeriesElements.filter((serie) => !hideSeries?.includes(serie.name))
 			: timeSeriesElements;
 
 	return seriesToShow?.map((element) => {
-		// Indice nell'intero ctx.elements (non nell'array gia' filtrato): deve
-		// combaciare con quello usato da Bar/Line/ecc. per scegliere il colore,
-		// altrimenti pie/donut intercalate sfasano la palette.
 		const elementIndex = allElements.findIndex(
 			(el) => el.name === element.name,
 		);
@@ -67,7 +58,6 @@ const generateXYChartLenged = (
 	});
 };
 
-// Funzione che genera la legenda per un grafico a torta
 const generatePieChartLegend = (
 	pieSerieElements: PieSerieEl[],
 	theme: ThemeState | null,
@@ -75,7 +65,6 @@ const generatePieChartLegend = (
 	customLabel: ((el: PieSerieEl | Serie) => ReactNode) | null,
 	hideSeries?: string[],
 ) => {
-	// Filtro le serie che non voglio graficare nel tooltip
 	const seriesToShow =
 		(hideSeries ?? []).length > 0
 			? pieSerieElements.filter((serie) => !hideSeries?.includes(serie.name))

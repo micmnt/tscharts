@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { paintTexts } from "../canvas/paint";
 
-// Fake context 2D che registra le chiamate (paintTexts non usa Path2D, quindi
-// e' testabile in node senza canvas reale).
 const recorder = () => {
 	const calls: string[] = [];
 	const g = {
@@ -54,7 +52,7 @@ describe("paintTexts", () => {
 		);
 		expect(g.calls).toContain("t:10,20");
 		expect(g.calls).toContain(`r:${((45 * Math.PI) / 180).toFixed(4)}`);
-		expect(g.calls).toContain("f:B@0,0"); // disegnato all'origine traslata
+		expect(g.calls).toContain("f:B@0,0");
 	});
 
 	it("salta il testo vuoto", () => {

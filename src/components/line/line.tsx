@@ -1,5 +1,3 @@
-/* Types Imports */
-
 import { Fragment, type ReactNode, useCallback, useId, useMemo } from "react";
 import {
 	type CanvasDrawOp,
@@ -8,7 +6,7 @@ import {
 import { useChartsInteractive } from "../../contexts/chartContext";
 import { useCanvasMark } from "../../hooks/useCanvasMark";
 import { useSerie } from "../../hooks/useSerie";
-/* Canvas Imports */
+
 import {
 	fillPathGradient,
 	fillPathSolid,
@@ -16,7 +14,7 @@ import {
 	paintTexts,
 	strokePath,
 } from "../../lib/canvas/paint";
-/* Core Imports */
+
 import {
 	generateDataPaths,
 	generateHorizontalDataPaths,
@@ -42,18 +40,11 @@ export type LineProps = {
 	tiltLabelsAngle?: number;
 	fill?: string;
 	fillOpacity?: number;
-	// Riempie l'area sotto la linea con una sfumatura verticale dal colore
-	// (fill ?? colore serie) a trasparente — effetto area-chart/sparkline.
-	// Vale anche per i grafici negativi (area fino alla linea dello zero); non
-	// per gli orizzontali.
+
 	fillGradient?: boolean;
-	// Marca custom AL POSTO del <circle> del dot, alla posizione ESATTA del
-	// punto. Con showDots viene chiamata su tutti i punti; senza, solo su quello
-	// in hover (hovered: true). Rende SVG (ignorata in renderer="canvas").
 	renderDot?: (props: LineDotProps) => ReactNode;
 };
 
-// Props passate a renderDot: posizione esatta del dot + stato/stile.
 export type LineDotProps = {
 	x: number;
 	y: number;
@@ -86,7 +77,7 @@ const Line = (props: LineProps) => {
 	} = props;
 
 	const interactive = useChartsInteractive();
-	// id univoco e stabile per il <linearGradient> di questa linea (SSR-safe).
+
 	const gradientId = `line-gradient-${useId()}`;
 
 	const {
@@ -103,9 +94,6 @@ const Line = (props: LineProps) => {
 	const hoveredElement = interactive?.hoveredElement;
 	const elements = ctx?.elements;
 
-	// ctx (ChartStructuralContext) e' ora una reference stabile tra un
-	// mousemove e l'altro (vedi C2): dipendere dall'intero ctx invece che dai
-	// singoli campi e' sicuro e piu' semplice da mantenere corretto.
 	const result = useMemo(() => {
 		if (!ctx || !theme || !serieElement) return null;
 
@@ -132,9 +120,6 @@ const Line = (props: LineProps) => {
 		);
 	}, [ctx, theme, serieElement, padding, trimZeros, horizontal, lineOffset]);
 
-	// Derivazioni GUARDATE (sicure anche prima che i dati siano pronti): servono
-	// sia al ramo SVG sia alla draw-op canvas, che va costruita PRIMA degli
-	// early-return (regola degli hook).
 	const { paths, dataPoints } = result ?? {};
 
 	const linePath = paths?.filter((p) => p !== "").join() ?? "";
@@ -154,11 +139,6 @@ const Line = (props: LineProps) => {
 	const labelYSpacing = padding / 2 + labelYOffset;
 	const labelXSpacing = padding / 2 + labelXOffset;
 
-	// Area sotto la linea (fill solido o fillGradient): un path "chiuso" dai punti
-	// validi giu' fino alla baseline — chartYEnd nel caso normale, la linea dello
-	// zero (chartYMiddle) nei grafici negativi (l'area va dal tratto allo zero,
-	// gestendo i valori sia positivi che negativi). Non per horizontal. I punti
-	// invalidi (sentinella [0,-10] dai valori nulli/trimZeros) hanno y < 0.
 	const hasArea = (fill !== undefined || fillGradient) && !horizontal;
 	const areaBaseline = ctx?.negative
 		? (ctx?.chartYMiddle ?? ctx?.chartYEnd ?? 0)
@@ -178,11 +158,6 @@ const Line = (props: LineProps) => {
 					)} L ${validAreaPoints[validAreaPoints.length - 1][0]} ${areaBaseline} L ${validAreaPoints[0][0]} ${areaBaseline} Z`
 			: "";
 
-	// Dot: con showDots si disegnano tutti i punti; senza, SOLO quello sotto il
-	// cursore. Prima si renderizzava un <circle> per ogni punto anche a showDots
-	// off (r=0, invisibili) solo per far crescere a r=7 quello in hover: a 10k+
-	// punti erano migliaia di nodi DOM inutili (fino al crash). L'aspetto e'
-	// identico perche' i non-hover erano gia' invisibili.
 	const validDotPoints = (linePoints as [number, number][]).filter(
 		(el) => el.length > 0,
 	);
@@ -190,8 +165,6 @@ const Line = (props: LineProps) => {
 	const hoveredDotPoint =
 		hoveredDotIndex != null ? validDotPoints[hoveredDotIndex] : undefined;
 
-	// --- Canvas (increment 1): stessa geometria (linePath/areaPath/dot via
-	// Path2D) disegnata su UN nodo. useCanvasMark e' NO-OP in modalita' SVG. ---
 	const canvasLayer = useCanvasLayer();
 	const isCanvas = !!canvasLayer;
 	const areaYTop = validAreaPoints.length
@@ -229,11 +202,9 @@ const Line = (props: LineProps) => {
 					paintDots(g, [hoveredDotPoint], color, 7, 0, 7);
 				}
 			}
-			// Label di valore (showLabels tutte, highlightLabels solo l'hover), come
-			// i <text> SVG: allineamento e rotazione (tiltLabels) inclusi.
 			if (showLabels || highlightLabels) {
 				const align = horizontal || tiltLabels ? "start" : "center";
-				// Rotazione solo nel caso verticale tiltato (come lo SVG).
+
 				const rotate = !horizontal && tiltLabels ? tiltLabelsAngle : undefined;
 				const items = (linePoints as [number, number][])
 					.map((point, i) => {
@@ -291,7 +262,6 @@ const Line = (props: LineProps) => {
 	useCanvasMark(isCanvas && result ? drawOp : null);
 
 	if (!ctx || !theme || !elements || !serieElement || !result) return null;
-	// Canvas-mode: nessun output SVG (le marche sono sul bitmap).
 	if (isCanvas) return null;
 
 	return (
@@ -332,10 +302,6 @@ const Line = (props: LineProps) => {
 			{(showLabels || highlightLabels) &&
 				linePoints.map(
 					(point: [x: number, y: number], dataPointIndex: number) => {
-						// In un grafico horizontal i punti sono incollati a righe fisse
-						// vicine al bordo superiore del canvas: spostare la label sopra
-						// il punto (come nel caso verticale) la farebbe uscire dal
-						// canvas per la prima riga. La spostiamo di lato, verso destra.
 						const labelX = horizontal
 							? point[0] + labelXSpacing
 							: point[0] - labelXSpacing;
@@ -377,7 +343,6 @@ const Line = (props: LineProps) => {
 				validDotPoints.map(
 					(point: [x: number, y: number], dataPointIndex: number) => {
 						const hovered = hoveredElement?.elementIndex === dataPointIndex;
-						// renderDot: marca custom alla posizione esatta del dot.
 						if (renderDot) {
 							return (
 								<Fragment key={`${serieElement.name}-dot-${dataPointIndex}`}>

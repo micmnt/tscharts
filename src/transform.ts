@@ -1,14 +1,5 @@
-// Layer di trasformazione dati (T1): funzioni PURE `dati -> dati` da applicare
-// a monte di `elements`, prima di passarli a <Chart>. Entry point separato
-// (`tscharts/transform`) per non pesare sul bundle base: dipende solo da questo
-// tipo locale, nessun import runtime. Componibile: trasformi la serie e la
-// passi al grafico come una normale serie.
-
 export type Point = { date: string; value: number };
 
-// Media mobile: ogni punto diventa la media degli ultimi `window` punti (incluso
-// se stesso). I primi punti mediano su quelli disponibili (finestra piu' corta).
-// Le date restano invariate.
 export const movingAverage = (data: Point[], window: number): Point[] => {
 	if (window <= 1) return data.map((p) => ({ ...p }));
 	return data.map((p, i) => {
@@ -19,8 +10,6 @@ export const movingAverage = (data: Point[], window: number): Point[] => {
 	});
 };
 
-// Somma progressiva (cumulata): ogni punto e' la somma di tutti i precedenti +
-// se stesso.
 export const cumulative = (data: Point[]): Point[] => {
 	let sum = 0;
 	return data.map((p) => {
@@ -39,10 +28,6 @@ const reducers: Record<ReduceKind, (vals: number[]) => number> = {
 	count: (vals) => vals.length,
 };
 
-// Aggregazione: raggruppa i punti per la chiave restituita da `by` (fornita dal
-// consumer, es. `p => p.date.slice(0,7)` per mese) e riduce i valori del gruppo
-// (default somma). La `date` del punto risultante e' la chiave; l'ordine segue
-// la prima comparsa di ogni chiave.
 export const aggregate = (
 	data: Point[],
 	opts: { by: (point: Point) => string; reduce?: ReduceKind },
@@ -61,10 +46,6 @@ export const aggregate = (
 const formatEdge = (n: number) =>
 	Number.isInteger(n) ? String(n) : n.toFixed(2);
 
-// Istogramma: distribuisce i VALORI in intervalli e conta quanti punti cadono in
-// ciascuno. `size` = ampiezza fissa dell'intervallo; in alternativa `count` = N
-// intervalli equi tra min e max. Il valore risultante e' il conteggio, la `date`
-// e' l'etichetta dell'intervallo (es. "0–10"). Utile reso come barre.
 export const bin = (
 	data: Point[],
 	opts: { size?: number; count?: number },
@@ -82,7 +63,7 @@ export const bin = (
 		size = opts.size;
 		start = Math.floor(min / size) * size;
 		bins = Math.max(1, Math.ceil((max - start) / size));
-		if (start + bins * size <= max) bins += 1; // include il max
+		if (start + bins * size <= max) bins += 1;
 	} else {
 		bins = Math.max(1, Math.floor(opts.count ?? 10));
 		start = min;
@@ -93,7 +74,7 @@ export const bin = (
 	for (const v of values) {
 		let idx = Math.floor((v - start) / size);
 		if (idx < 0) idx = 0;
-		if (idx >= bins) idx = bins - 1; // il max cade nell'ultimo intervallo
+		if (idx >= bins) idx = bins - 1;
 		counts[idx] += 1;
 	}
 

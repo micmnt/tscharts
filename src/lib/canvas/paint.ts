@@ -1,10 +1,3 @@
-// Helper di disegno su canvas 2D. Nessuna dipendenza React: solo Canvas API.
-// I path riusano le STESSE stringhe SVG `d` prodotte dai generatori di lib/core
-// (via Path2D), quindi la geometria e' identica a quella del render SVG.
-
-// Dimensiona il backing store per il display HiDPI: il canvas ha `width/height`
-// in pixel fisici = css * devicePixelRatio, ma si disegna in pixel logici (il
-// chiamante applica setTransform(dpr,...)). Ritorna il dpr usato.
 export const setupHiDPI = (
 	canvas: HTMLCanvasElement,
 	cssWidth: number,
@@ -45,9 +38,6 @@ export const fillPathSolid = (
 	g.restore();
 };
 
-// Area sfumata verticale: come il <linearGradient> di <Line> (colore in alto ->
-// trasparente in basso). Lo scaling per `topOpacity` avviene via globalAlpha,
-// cosi' non serve un parser di colori (lo stop finale e' rgba(0,0,0,0)).
 export const fillPathGradient = (
 	g: CanvasRenderingContext2D,
 	d: string,
@@ -67,9 +57,6 @@ export const fillPathGradient = (
 	g.restore();
 };
 
-// Etichette di testo (label di valore Bar/Line): replica dei <text> SVG con
-// canvas fillText. Baseline "alphabetic" come SVG; l'allineamento e' per-item
-// (center di default; start per line horizontal/tilt). Salta testo vuoto.
 export const paintTexts = (
 	g: CanvasRenderingContext2D,
 	items: {
@@ -77,8 +64,6 @@ export const paintTexts = (
 		y: number;
 		text: string;
 		align?: CanvasTextAlign;
-		// Rotazione in gradi attorno al punto (x,y), come il transform rotate()
-		// dei <text> SVG con tiltLabels.
 		rotate?: number;
 	}[],
 	color: string,
@@ -105,8 +90,6 @@ export const paintTexts = (
 	g.restore();
 };
 
-// Dot come i <circle> di <Line>: fill semitrasparente (0.7) + bordo pieno. Il
-// punto in hover cresce a `hoveredRadius`. Salta i dot con raggio 0.
 export const paintDots = (
 	g: CanvasRenderingContext2D,
 	points: [number, number][],

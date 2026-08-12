@@ -110,12 +110,7 @@ const Example: FC<BarProps & { barWidth?: number }> = ({
 					showLabels={showLabels}
 					onBarClick={onBarClick}
 				/>
-				<XAxis
-					dataPoints={dataPoints}
-					showLine
-					showName
-					// name="Data di riferimento per i valori"
-				/>
+				<XAxis dataPoints={dataPoints} showLine showName />
 				<Legend legendType="horizontal" height={90} />
 			</Chart>
 		</div>

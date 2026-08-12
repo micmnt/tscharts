@@ -23,9 +23,7 @@ const elements = [
 	{
 		name: "obiettivo",
 		type: "line",
-		// Condivide l'asse Y "vendite": senza axisName la line userebbe una
-		// scala isolata (il proprio max) e finirebbe disallineata rispetto alle
-		// tacche dell'asse vendite.
+
 		axisName: "vendite",
 		uom: "€",
 		data: [
@@ -39,10 +37,6 @@ const elements = [
 
 const dataPoints = ["13/03", "14/03", "15/03", "16/03"];
 
-// Override parziale: cambio solo cio' che voglio. Padding, colori serie,
-// griglia tratteggiata e colori/dimensioni degli assi cambiano; tutto il resto
-// (yInterval, tooltip, threshold, line.size...) resta dal defaultTheme grazie
-// al deep-merge.
 export const customTheme: Partial<ThemeState> = {
 	padding: 32,
 	seriesColors: ["#6366f1", "#ec4899", "#14b8a6", "#f59e0b"],
@@ -52,9 +46,6 @@ export const customTheme: Partial<ThemeState> = {
 };
 
 type ThemedExampleProps = {
-	// Passato esplicitamente da ogni story (customTheme oppure {} per il
-	// default): niente default di parametro qui, altrimenti `theme={undefined}`
-	// ricadrebbe sul custom invece che sul tema di default.
 	theme: Partial<ThemeState>;
 };
 

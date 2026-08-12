@@ -1,4 +1,3 @@
-/* React Imports */
 import {
 	type MouseEvent as ReactMouseEvent,
 	type ReactNode,
@@ -9,7 +8,6 @@ import {
 	useRef,
 	useState,
 } from "react";
-/* Context Imports */
 import {
 	type CanvasDrawOp,
 	type CanvasHitRegion,
@@ -17,48 +15,26 @@ import {
 	CanvasLayerContext,
 } from "../../contexts/canvasContext";
 import { useChartsStructural } from "../../contexts/chartContext";
-/* Canvas / Core Imports */
 import { setupHiDPI } from "../../lib/canvas/paint";
 import { convertToSVGPoint } from "../../lib/core";
 
 type CanvasSurfaceProps = {
-	// Dimensioni in pixel logici: devono combaciare con l'<svg> sovrastante
-	// (width x (height + legenda)), cosi' i path calcolati dal core cadono sullo
-	// stesso pixel su entrambi gli strati.
 	width: number;
 	height: number;
-	// L'<svg> (assi/legenda/tooltip/hover) piu' i children (le marche, che in
-	// canvas-mode rendono null ma registrano una draw-op).
 	children: ReactNode;
 };
 
-// Strato canvas dell'ibrido: un <canvas> DIETRO l'<svg> (pointer-events:none),
-// stesso sistema di coordinate. Fa da provider del registry: le marche
-// registrano draw-op (e hit-region per il click/drag), qui si ridipinge tutto su
-// un solo bitmap (debounce rAF). Il render SVG resta sopra e cattura gli eventi
-// (hover matematico invariato); il click/drag delle barre canvas passa dagli
-// handler sul div wrapper (gli eventi dell'svg bollano qui) via isPointInPath.
 const CanvasSurface = (props: CanvasSurfaceProps) => {
 	const { width, height, children } = props;
 
 	const ctx = useChartsStructural();
 
 	const canvasRef = useRef<HTMLCanvasElement>(null);
-	// Registry delle draw-op, chiave -> funzione. Un Map preserva l'ordine di
-	// inserimento = ordine di registrazione = ordine dei children (gli effetti
-	// React girano in ordine d'albero) -> z-order coerente.
 	const opsRef = useRef<Map<string, CanvasDrawOp>>(new Map());
-	// Registry delle hit-region per marca (Bar): id -> array di zone cliccabili.
 	const hitsRef = useRef<Map<string, CanvasHitRegion[]>>(new Map());
-	// Context 2D dedicato all'hit-test (identita'), separato da quello di disegno
-	// che ha il transform dpr: isPointInPath vuole il punto nello stesso spazio
-	// del path (px logici). Creato lazy.
 	const hitCtxRef = useRef<CanvasRenderingContext2D | null>(null);
 	const rafRef = useRef<number | null>(null);
 	const dprRef = useRef(1);
-	// Se ci sono barre draggabili, il div mette touch-action:none per non far
-	// scrollare la pagina durante il drag da touch. Altrimenti (scatter, canvas
-	// non interattivo) resta scrollabile.
 	const [hasDraggable, setHasDraggable] = useState(false);
 
 	const syncDraggable = useCallback(() => {
@@ -88,7 +64,6 @@ const CanvasSurface = (props: CanvasSurfaceProps) => {
 		}
 	}, [width, height]);
 
-	// Coalizza le N registrazioni di un render in UN solo paint (un frame).
 	const schedule = useCallback(() => {
 		if (rafRef.current != null) return;
 		if (typeof requestAnimationFrame === "undefined") {
@@ -107,7 +82,6 @@ const CanvasSurface = (props: CanvasSurfaceProps) => {
 			const g = hitCtxRef.current;
 			if (!g) return null;
 			let found: CanvasHitRegion | null = null;
-			// Ordine di inserimento; l'ultima match e' quella disegnata sopra.
 			for (const regions of hitsRef.current.values()) {
 				for (const region of regions) {
 					if (!region.d) continue;
@@ -142,7 +116,6 @@ const CanvasSurface = (props: CanvasSurfaceProps) => {
 		[schedule, hitTest, syncDraggable],
 	);
 
-	// HiDPI: (ri)dimensiona il backing store e ridipinge al cambio dimensioni/dpr.
 	useEffect(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
@@ -158,8 +131,6 @@ const CanvasSurface = (props: CanvasSurfaceProps) => {
 		[],
 	);
 
-	// Hit-test dal div wrapper: gli eventi dell'<svg> (sopra) bollano qui. Mappo
-	// client -> punto svg (stesso spazio dei path) e cerco la barra colpita.
 	const pointOf = useCallback(
 		(clientX: number, clientY: number) => {
 			const svgRef = ctx?.svgRef;
@@ -189,8 +160,6 @@ const CanvasSurface = (props: CanvasSurfaceProps) => {
 
 	return (
 		<CanvasLayerContext.Provider value={layer}>
-			{/* Il div e' un proxy di hit-test verso il canvas; le barre cliccabili
-			    hanno i propri elementi focusabili (path role=button) resi da <Bar>. */}
 			<div
 				style={{
 					position: "relative",
@@ -212,9 +181,6 @@ const CanvasSurface = (props: CanvasSurfaceProps) => {
 						pointerEvents: "none",
 					}}
 				/>
-				{/* L'<svg> (assi, tooltip, hover) va SOPRA il canvas: il canvas e'
-				    posizionato (absolute) quindi senza questo layer si dipingerebbe
-				    sopra l'svg, coprendo il tooltip nell'area delle marche. */}
 				<div style={{ position: "relative", zIndex: 1 }}>{children}</div>
 			</div>
 		</CanvasLayerContext.Provider>

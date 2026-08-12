@@ -12,7 +12,6 @@ const dataPoints = ["a", "b", "c", "d"];
 const data = dataPoints.map((d, i) => ({ date: d, value: 20 + i * 20 }));
 const elements = [{ name: "s", type: "line" as const, uom: "", data }];
 
-// Marca custom di test: un <circle> per punto posizionato con x/y dell'hook.
 const CustomDots = ({ name }: { name: string }) => {
 	const mark = useChartMark(name);
 	if (!mark?.serie) return null;
@@ -55,7 +54,6 @@ describe("useChartMark", () => {
 		);
 		expect(customDots.length).toBe(data.length);
 		expect(lineDots.length).toBe(data.length);
-		// X e Y identici punto per punto: x/y sono allineati ai dot della Line.
 		const cxOf = (nodes: Element[]) =>
 			nodes.map((n) => Number(n.getAttribute("cx")));
 		const lineCy = cyOf(lineDots);
@@ -91,7 +89,6 @@ describe("useChartMark", () => {
 		expect(typeof mark.color).toBe("string");
 		expect(mark.scaleType).toBe("band");
 		expect(mark.horizontal).toBe(false);
-		// x crescente e dentro [chartXStart, chartXEnd]
 		const xs = data.map((_, i) => mark.x(i));
 		for (let i = 1; i < xs.length; i++)
 			expect(xs[i]).toBeGreaterThan(xs[i - 1]);
@@ -157,7 +154,6 @@ describe("useChartMark", () => {
 			container.querySelectorAll('[data-testid="custom"]'),
 		);
 		custom.forEach((c, i) => {
-			// X e Y: la marca (point) cade esattamente sul dot della Line negativa.
 			expect(Number(c.getAttribute("cx"))).toBeCloseTo(
 				Number(lineDots[i].getAttribute("cx")),
 				3,

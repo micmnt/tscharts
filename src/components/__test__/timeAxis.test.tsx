@@ -10,7 +10,6 @@ import Tooltip from "../tooltip/tooltip";
 
 const parseDate = (d: string) => new Date(d).getTime();
 
-// campionamento irregolare: 1 giorno, poi 29 giorni
 const dates = ["2024-01-01", "2024-01-02", "2024-01-31"];
 const elements = [
 	{
@@ -38,21 +37,18 @@ describe("asse tempo — tick e allineamento asse↔line", () => {
 		);
 		await waitFor(() => expect(container.querySelector("circle")).toBeTruthy());
 
-		// x dei tick dell'asse (label = data grezza)
 		const tickX = dates.map(
 			(d) => textsByContent(container, (t) => t === d)[0],
 		);
-		// cx dei pallini della line
+
 		const dotCx = Array.from(container.querySelectorAll("circle")).map((c) =>
 			Number(c.getAttribute("cx")),
 		);
 
-		// asse e line usano la STESSA scala tempo -> tick e punti allineati
 		dates.forEach((_, i) => {
 			expect(tickX[i]).toBeCloseTo(dotCx[i], 6);
 		});
 
-		// spaziatura proporzionale al tempo: gap 1->2 (29gg) >> gap 0->1 (1gg)
 		const gap01 = tickX[1] - tickX[0];
 		const gap12 = tickX[2] - tickX[1];
 		console.log(
@@ -67,7 +63,7 @@ describe("asse tempo — tick e allineamento asse↔line", () => {
 	});
 
 	it("ticks={N}: N tick equispaziati nel dominio", async () => {
-		const fmt = (t: number) => `T${t}`; // formatter identificabile
+		const fmt = (t: number) => `T${t}`;
 		const { container } = render(
 			<Chart width={640} height={400} elements={elements}>
 				<YAxis name="s" showLine />
@@ -89,7 +85,7 @@ describe("asse tempo — tick e allineamento asse↔line", () => {
 			(a, b) => a - b,
 		);
 		expect(tickX.length).toBe(3);
-		// equispaziati: i due gap sono uguali
+
 		expect(tickX[1] - tickX[0]).toBeCloseTo(tickX[2] - tickX[1], 6);
 	});
 });

@@ -22,9 +22,6 @@ const elements = [
 
 const dataPoints = ["13/03", "14/03", "15/03", "16/03"];
 
-// La selezione e' di proprieta' dell'asse (M2): `selectedValue`/`selectedColor`
-// evidenziano una categoria, `onLabelClick` rende le label cliccabili. Nessuna
-// di queste passa piu' dal config di Bar.
 type SelectionExampleProps = {
 	selectedValue?: string;
 	selectedColor?: string;
