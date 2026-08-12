@@ -53,8 +53,6 @@ function App() {
 
 `<Chart>` riceve `elements` (le serie dati) e dimensioni fisse (`width`/`height`); i figli (`XAxis`, `YAxis`, `Bar`, `Legend`, ...) leggono lo stato condiviso e si occupano ciascuno di una parte del grafico. Ogni serie in `elements` è collegata ai componenti tramite la prop `name`.
 
-> Aggiorni da una versione 0.x? Vedi [Migrazione a v1.0](#migrazione-a-v10).
-
 Per gli altri tipi di grafico (line, pie, donut, group-bar, threshold, angle-donut) ed esempi più avanzati (barre stacked, drag interattivo, assi multipli), vedi Storybook: https://tscharts.netlify.app
 
 ## Riferimento prop
@@ -68,7 +66,7 @@ Componente radice: fornisce il contesto condiviso (dimensioni, dati, tema) a tut
 | `elements` | `Serie[]` | — (richiesta) | Le serie da graficare. Ogni serie ha almeno `name`, `type`, `data` |
 | `width` | `number` | — (richiesta) | Larghezza dell'SVG in px |
 | `height` | `number` | — (richiesta) | Altezza dell'SVG in px |
-| `children` | `ReactNode` | — (richiesta) | I componenti figli del grafico (`Axis`, `Bar`, `Line`, ...) |
+| `children` | `ReactNode` | — (richiesta) | I componenti figli del grafico (`XAxis`, `YAxis`, `Bar`, `Line`, ...) |
 | `name` | `string` | `"chart"` | Nome usato per generare l'id univoco del grafico |
 | `flatMax` | `boolean` | `true` | Arrotonda per eccesso il valore massimo degli assi all'ordine di grandezza superiore (es. 1234 → 2000) invece di usarlo esatto |
 | `barWidth` | `number` | `padding` del tema | Larghezza delle barre in px, condivisa da tutte le serie bar/group-bar |
@@ -186,9 +184,6 @@ Asse delle categorie. Ospita anche selezione e click sulle label.
 | `ticks` | `"data" \| number` | `"data"` | `"data"` = un tick per punto dato alla sua posizione temporale; un numero = N tick equispaziati nel dominio. Solo con `scaleType="time"` |
 | `tickFormat` | `(time: number) => string` | data grezza / `toLocaleDateString` | Formatta l'etichetta di un tick temporale |
 
-> **Deprecato:** `<Axis type="xAxis|yAxis" …>` continua a funzionare (delega a
-> `<XAxis>`/`<YAxis>`) ma è deprecato e verrà rimosso nella 2.0.
-
 #### Asse temporale
 
 Di default l'asse X è **categorico** (`band`): i punti sono equidistanti, uno
@@ -235,7 +230,7 @@ Note:
 | `labelColor` / `topLabelColor` | `string` | `"white"` / `"black"` | Colore delle label interne/superiori |
 
 > Larghezza (`barWidth`) e offset (`barOffset`) delle barre sono props di
-> **`<Chart>`**. L'oggetto **`config`** è deprecato (rimozione nella 2.0).
+> **`<Chart>`**.
 
 ### `<GroupBar>`
 
@@ -253,7 +248,7 @@ Barre raggruppate (più serie affiancate per ogni punto sull'asse X). Props sost
 | `labelColor` / `topLabelColor` | `string` | `"white"` / `"black"` | Colore delle label |
 
 > Larghezza (`barWidth`) e spaziatura di gruppo (`barGroupGap`) sono props di
-> **`<Chart>`**. L'oggetto **`config`** è deprecato (rimozione nella 2.0).
+> **`<Chart>`**.
 
 ### `<Line>`
 
@@ -560,54 +555,3 @@ In breve: **`renderDot`** per marche *attaccate ai punti di una linea*;
 
 Vedi la story *Custom marks* (Diamonds via `renderDot`, Candlestick via
 `useChartMark`, CanvasAccelerated via `useCanvasMark`).
-
-## Migrazione a v1.0
-
-Le API vecchie restano quasi tutte funzionanti ma **deprecate** (avviso in
-console in sviluppo) e verranno rimosse nella **2.0**. Elenco completo nel
-[CHANGELOG](./CHANGELOG.md).
-
-**Assi** — `<Axis type>` → `<XAxis>` / `<YAxis>`:
-
-```diff
-- import { Axis } from "tscharts";
-+ import { XAxis, YAxis } from "tscharts";
-
-- <Axis type="yAxis" name="vendite" showLine showName />
-- <Axis type="xAxis" dataPoints={dataPoints} showLine />
-+ <YAxis name="vendite" showLine showName />
-+ <XAxis dataPoints={dataPoints} showLine />
-```
-
-**Larghezza/spaziatura barre** — dal `config` della serie a `<Chart>`:
-
-```diff
-- <Chart width={400} height={400} elements={elements}>
--   <Bar name="vendite" config={{ barWidth: 28 }} />
-+ <Chart width={400} height={400} elements={elements} barWidth={28}>
-+   <Bar name="vendite" />
-```
-
-**Props di Bar/GroupBar** — da `config={{…}}` a props piatte
-(`barClickAction` → `onBarClick`, `barDragAction` → `onBarDrag`):
-
-```diff
-- <Bar name="vendite" config={{ radius: 8, barClickAction: onClick }} />
-+ <Bar name="vendite" radius={8} onBarClick={onClick} />
-```
-
-**Selezione e click sulle label** — dal `config` di Bar all'asse:
-
-```diff
-- <Bar name="vendite" config={{ selectedValue: "14/03", barClickAction: onClick }} />
-+ <Bar name="vendite" />
-+ <XAxis dataPoints={dataPoints} selectedValue="14/03" onLabelClick={onClick} />
-```
-
-**Breaking senza retrocompatibilità:**
-
-- `type` è **obbligatorio** su ogni serie di `elements`.
-- Prop `<Line>`: `higlightLabels` → **`highlightLabels`**.
-- Import del CSS: `import "tscharts/style.css"` (non più `tscharts/dist/style.css`).
-- `labels` (label custom) è ora solo su serie `pie`/`donut`.
-- `<Chart style>` è tipizzata `CSSProperties`.

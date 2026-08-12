@@ -66,9 +66,3 @@ export type YAxisProps = AxisBaseProps & {
 	// (es. 1 = interi), per evitare valori con decimali.
 	zoomSnap?: number;
 };
-
-// Alias deprecato <Axis type="...">: union discriminata sul `type`, cosi' con
-// type="xAxis" si ottengono le props X e con type="yAxis" quelle Y.
-export type AxisProps =
-	| ({ type: "xAxis" } & XAxisProps)
-	| ({ type: "yAxis" } & YAxisProps);

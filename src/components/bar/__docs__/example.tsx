@@ -92,7 +92,6 @@ const Example: FC<BarProps & { barWidth?: number }> = ({
 	showLabels = false,
 	barWidth,
 	onBarClick,
-	config = {},
 }) => {
 	return (
 		<div
@@ -110,7 +109,6 @@ const Example: FC<BarProps & { barWidth?: number }> = ({
 					stacked={stacked}
 					showLabels={showLabels}
 					onBarClick={onBarClick}
-					config={config}
 				/>
 				<XAxis
 					dataPoints={dataPoints}

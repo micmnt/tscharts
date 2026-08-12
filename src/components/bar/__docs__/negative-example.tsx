@@ -34,7 +34,6 @@ const dataPoints = [
 const NegativeExample: FC<BarProps> = ({
 	name = "variazione",
 	showLabels = false,
-	config = {},
 }) => {
 	return (
 		<div
@@ -47,7 +46,7 @@ const NegativeExample: FC<BarProps> = ({
 		>
 			<Chart width={400} height={400} elements={elements}>
 				<YAxis name="variazione" showLine showName />
-				<Bar name={name} showLabels={showLabels} config={config} />
+				<Bar name={name} showLabels={showLabels} />
 				<XAxis dataPoints={dataPoints} showLine />
 			</Chart>
 		</div>

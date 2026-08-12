@@ -155,7 +155,6 @@ const StackedExample: FC<BarProps & { barWidth?: number }> = ({
 	stacked = false,
 	showLabels = false,
 	barWidth,
-	config = {},
 }) => {
 	return (
 		<div
@@ -168,18 +167,8 @@ const StackedExample: FC<BarProps & { barWidth?: number }> = ({
 		>
 			<Chart width={400} height={400} elements={elements} barWidth={barWidth}>
 				<YAxis name="tempi migliori" showLine />
-				<Bar
-					name={name}
-					stacked={stacked}
-					showLabels={showLabels}
-					config={config}
-				/>
-				<Bar
-					name="tempi peggiori"
-					stacked={stacked}
-					showLabels={showLabels}
-					config={config}
-				/>
+				<Bar name={name} stacked={stacked} showLabels={showLabels} />
+				<Bar name="tempi peggiori" stacked={stacked} showLabels={showLabels} />
 				<XAxis dataPoints={dataPoints} showLine />
 			</Chart>
 		</div>

@@ -11,7 +11,6 @@ import {
 /* Hooks Imports */
 import { useCanvasHit } from "../../hooks/useCanvasHit";
 import { useCanvasMark } from "../../hooks/useCanvasMark";
-import { useDeprecatedConfigWarning } from "../../hooks/useDeprecatedConfig";
 import { useSerie } from "../../hooks/useSerie";
 /* Canvas Imports */
 import { fillPathSolid, paintTexts } from "../../lib/canvas/paint";
@@ -55,34 +54,11 @@ export type BarProps = {
 	topLabelSize?: number;
 	topLabelColor?: string;
 	dragValueDecimals?: number;
-	// Click sulla singola barra (era config.barClickAction). Il click sulle label
-	// dell'asse e' invece <Axis onLabelClick> (M2).
+	// Click sulla singola barra. Il click sulle label dell'asse e'
+	// invece <XAxis onLabelClick>.
 	onBarClick?: (value: unknown) => void;
-	// Drag della singola barra (era config.barDragAction).
+	// Drag della singola barra.
 	onBarDrag?: (value: BarDragPayload) => void;
-	/**
-	 * @deprecated Usa le props piatte di <Bar> (radius, labelSize, onBarClick,
-	 * onBarDrag, ...). barWidth/barOffset vanno su <Chart> (M1),
-	 * selectedValue/selectedColor su <Axis> (M2). Rimozione nella 2.0.
-	 */
-	config?: {
-		selectedColor?: string;
-		selectedValue?: string;
-		barClickAction?: (value: unknown) => void;
-		barDragAction?: (value: BarDragPayload) => void;
-		dragValueDecimals?: number;
-		radius?: number;
-		topLeftRadius?: number;
-		topRightRadius?: number;
-		bottomRightRadius?: number;
-		bottomLeftRadius?: number;
-		barWidth?: number;
-		labelSize?: number;
-		topLabelSize?: number;
-		labelColor?: string;
-		topLabelColor?: string;
-		barOffset?: number;
-	};
 };
 
 // Testo di una label di valore (come SerieValueLabels): format(value) oppure il
@@ -98,28 +74,9 @@ const valueLabelText = (
 	return value == null ? "" : String(value);
 };
 
-// Chiavi "bar-local" del config deprecato (per l'avviso M4). Escluse quelle
-// gia' rilocate: barWidth/barOffset (M1 -> Chart), selectedValue/selectedColor
-// (M2 -> Axis), che avvisano in computeGlobalConfig.
-const BAR_LOCAL_CONFIG_KEYS = [
-	"radius",
-	"topLeftRadius",
-	"topRightRadius",
-	"bottomRightRadius",
-	"bottomLeftRadius",
-	"labelSize",
-	"labelColor",
-	"topLabelSize",
-	"topLabelColor",
-	"dragValueDecimals",
-	"barClickAction",
-	"barDragAction",
-] as const;
-
 const Bar = (props: BarProps) => {
 	const {
 		name,
-		config,
 		stacked = false,
 		showLabels = false,
 		topLabelSerie = "",
@@ -137,33 +94,21 @@ const Bar = (props: BarProps) => {
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
-	// v1.0: props piatte con fallback al `config` deprecato (la prop piatta vince).
-	useDeprecatedConfigWarning(
-		config,
-		BAR_LOCAL_CONFIG_KEYS,
-		"Bar",
-		"radius, labelSize, labelColor, onBarClick, onBarDrag",
-	);
+	const dragValueDecimals = props.dragValueDecimals ?? 2;
+	const radius = props.radius ?? 0;
+	const topLeftRadius = props.topLeftRadius ?? 0;
+	const topRightRadius = props.topRightRadius ?? 0;
+	const bottomRightRadius = props.bottomRightRadius ?? 0;
+	const bottomLeftRadius = props.bottomLeftRadius ?? 0;
+	const labelSize = props.labelSize ?? 12;
+	const topLabelSize = props.topLabelSize ?? 12;
+	const labelColor = props.labelColor ?? "white";
+	const topLabelColor = props.topLabelColor ?? "black";
+	const onBarClick = props.onBarClick;
+	const onBarDrag = props.onBarDrag;
 
-	const dragValueDecimals =
-		props.dragValueDecimals ?? config?.dragValueDecimals ?? 2;
-	const radius = props.radius ?? config?.radius ?? 0;
-	const topLeftRadius = props.topLeftRadius ?? config?.topLeftRadius ?? 0;
-	const topRightRadius = props.topRightRadius ?? config?.topRightRadius ?? 0;
-	const bottomRightRadius =
-		props.bottomRightRadius ?? config?.bottomRightRadius ?? 0;
-	const bottomLeftRadius =
-		props.bottomLeftRadius ?? config?.bottomLeftRadius ?? 0;
-	const labelSize = props.labelSize ?? config?.labelSize ?? 12;
-	const topLabelSize = props.topLabelSize ?? config?.topLabelSize ?? 12;
-	const labelColor = props.labelColor ?? config?.labelColor ?? "white";
-	const topLabelColor = props.topLabelColor ?? config?.topLabelColor ?? "black";
-	const onBarClick = props.onBarClick ?? config?.barClickAction;
-	const onBarDrag = props.onBarDrag ?? config?.barDragAction;
-
-	// barWidth/barOffset sono config di layout condivisa: dalla v1.0 arrivano da
-	// <Chart> attraverso globalConfig (M1), non piu' dal config della serie (che
-	// resta accettato ma deprecato: computeGlobalConfig lo inoltra qui).
+	// barWidth/barOffset sono config di layout condivisa: arrivano da <Chart>
+	// attraverso globalConfig.
 	const barWidth = ctx?.globalConfig?.barWidth ?? padding;
 	const barOffset = ctx?.globalConfig?.barOffset;
 

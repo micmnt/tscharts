@@ -10,7 +10,7 @@ import {
 	normalizeTime,
 } from "../../lib/core";
 /* Utils Imports */
-import { isFunction, isTimeSerie, warnDev } from "../../lib/utils";
+import { isTimeSerie, warnDev } from "../../lib/utils";
 /* Type Imports */
 import type { TimeSerieEl } from "../../types";
 import type { XAxisProps } from "./axisProps";
@@ -72,28 +72,15 @@ const XAxis = (props: XAxisProps) => {
 
 	const labelTextColor = labelColor ?? theme.axis?.labelColor;
 
-	// Selezione di proprieta' dell'asse (M2): la prop vince, il canale
-	// globalConfig (config.selectedValue/Color su Bar) resta fallback deprecato.
-	const selectionValue = selectedValue ?? globalConfig?.selectedValue;
-	const selectionColor = selectedColor ?? globalConfig?.selectedColor;
+	// Selezione di proprieta' dell'asse: evidenziazione di una categoria.
+	const selectionValue = selectedValue;
+	const selectionColor = selectedColor;
 
-	// Una label e' interattiva se c'e' onLabelClick (API nuova, ha precedenza)
-	// oppure il barClickAction del canale globalConfig (deprecato, dual-use ->
-	// deprecation rimandata a M4). Chiama la prop se presente, altrimenti il
-	// callback deprecato con il dato della serie (comportamento invariato).
-	const hasLabelClick =
-		Boolean(onLabelClick) || isFunction(globalConfig?.barClickAction);
+	// Una label e' interattiva quando c'e' onLabelClick.
+	const hasLabelClick = Boolean(onLabelClick);
 
-	const triggerLabelClick = (
-		label: string,
-		index: number,
-		serieEl: unknown,
-	) => {
-		if (onLabelClick) {
-			onLabelClick(label, index);
-		} else if (isFunction(globalConfig?.barClickAction)) {
-			globalConfig.barClickAction(serieEl);
-		}
+	const triggerLabelClick = (label: string, index: number) => {
+		onLabelClick?.(label, index);
 	};
 
 	// Nuova gestione per grafici orizzontali
@@ -150,7 +137,7 @@ const XAxis = (props: XAxisProps) => {
 						: "transparent";
 
 			const handleLabelClick = () => {
-				triggerLabelClick(label.value, labelIndex, serieData[labelIndex]);
+				triggerLabelClick(label.value, labelIndex);
 			};
 
 			const handleLabelHover = () => {
@@ -410,6 +397,16 @@ const XAxis = (props: XAxisProps) => {
 		const labelX = label.x - labelXOffset;
 		const labelY = label.y - labelYOffset;
 
+		const handleLabelClick = () => {
+			triggerLabelClick(label.value, labelIndex);
+		};
+		// Valori dinamici (non letterali) cosi' role non e' un literal statico su
+		// un <rect> (evita il falso positivo useSemanticElements).
+		const labelRole: "button" | undefined = hasLabelClick
+			? "button"
+			: undefined;
+		const labelTabIndex = hasLabelClick ? 0 : undefined;
+
 		return (
 			<Fragment key={`${label.value}-${labelIndex}`}>
 				<>
@@ -431,6 +428,28 @@ const XAxis = (props: XAxisProps) => {
 							style={{ pointerEvents: "none" }}
 						/>
 					) : null}
+					{/* Click sulla label (onLabelClick): rect dedicato nell'area della
+					    label SOTTO il plot, cosi' non copre le barre. */}
+					{hasLabelClick ? (
+						<rect
+							tabIndex={labelTabIndex}
+							role={labelRole}
+							aria-label={label.value}
+							onClick={handleLabelClick}
+							onKeyDown={(event) => {
+								if (event.key === "Enter" || event.key === " ") {
+									event.preventDefault();
+									handleLabelClick();
+								}
+							}}
+							x={hoverRectX > 0 ? hoverRectX : 0}
+							y={chartYEnd}
+							width={hoverRectWidth > 0 ? hoverRectWidth : 1}
+							height={40}
+							fill="transparent"
+							style={{ cursor: "pointer" }}
+						/>
+					) : null}
 				</>
 				{dataPoints.length > 20 && tiltLabels ? (
 					<text
@@ -442,6 +461,8 @@ const XAxis = (props: XAxisProps) => {
 						textAnchor="start"
 						x={labelX}
 						y={labelY}
+						// il click passa al rect sottostante (onLabelClick)
+						style={hasLabelClick ? { pointerEvents: "none" } : undefined}
 						transform={
 							tiltLabels
 								? `rotate(${tiltLabelsAngle}, ${label.x}, ${label.y})`
@@ -458,6 +479,8 @@ const XAxis = (props: XAxisProps) => {
 						fontSize={labelFontSize}
 						fontWeight={labelFontWeight}
 						fill={labelTextColor}
+						// il click passa al rect sottostante (onLabelClick)
+						style={hasLabelClick ? { pointerEvents: "none" } : undefined}
 					>
 						{label.value}
 					</text>

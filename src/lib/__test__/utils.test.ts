@@ -9,28 +9,20 @@ import {
 } from "../utils";
 
 describe("isDefined", () => {
-	it("ritorna true per valori definiti, inclusi i falsy come 0 e stringa vuota", () => {
+	it("true per valori definiti (inclusi i falsy 0/''), false per null/undefined", () => {
 		expect(isDefined(0)).toBe(true);
 		expect(isDefined("")).toBe(true);
-	});
-
-	it("ritorna false per null e undefined", () => {
 		expect(isDefined(null)).toBe(false);
 		expect(isDefined(undefined)).toBe(false);
 	});
 });
 
 describe("isFunction", () => {
-	it("ritorna true per una funzione", () => {
+	it("true solo per le funzioni, false per gli altri tipi", () => {
 		expect(isFunction(() => {})).toBe(true);
-	});
-
-	it("ritorna false per valori non funzione", () => {
-		expect(isFunction("stringa")).toBe(false);
-		expect(isFunction(42)).toBe(false);
-		expect(isFunction(null)).toBe(false);
-		expect(isFunction(undefined)).toBe(false);
-		expect(isFunction({})).toBe(false);
+		for (const v of ["stringa", 42, null, undefined, {}]) {
+			expect(isFunction(v)).toBe(false);
+		}
 	});
 });
 

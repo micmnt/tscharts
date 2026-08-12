@@ -6,6 +6,20 @@ e il progetto segue il [Semantic Versioning](https://semver.org/lang/it/).
 
 ## [1.3.0] - 2026-08-11
 
+### Removed (BREAKING)
+
+Rimosso il **layer deprecato** introdotto in 1.0 (mai pubblicato, quindi senza
+bump a 2.0). Le API già indicate come "rimozione nella 2.0" non esistono più:
+
+- **`<Axis type="xAxis|yAxis">`** (alias) → usa **`<XAxis>` / `<YAxis>`**.
+- **oggetto `config` su `<Bar>` / `<GroupBar>`** → props piatte (`radius`,
+  `labelSize`, ..., `onBarClick`, `onBarDrag`); `barWidth`/`barGroupGap`/
+  `barOffset` su **`<Chart>`**; `selectedValue`/`selectedColor`/`onLabelClick`
+  su **`<XAxis>`**. (Il `config` di `Donut`/`AngleDonut` **resta**: non era
+  deprecato.)
+- di conseguenza: hook interno `useDeprecatedConfig` e la lettura del `config`
+  deprecato delle serie in `computeGlobalConfig` (ora solo layout di `<Chart>`).
+
 ### Added
 
 - **Rendering su canvas** (`<Chart renderer="canvas">`): motore di rendering

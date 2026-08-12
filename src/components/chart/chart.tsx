@@ -38,10 +38,9 @@ export type ChartProps = {
 	name?: string;
 	flatMax?: boolean;
 	ariaLabel?: string;
-	// Config di layout delle barre, condivisa da tutte le serie (M1). Vive qui,
-	// non sul config della singola Bar/GroupBar: e' il grafico a decidere la
-	// larghezza/spaziatura/offset comune. Le stesse chiavi sul config della serie
-	// restano accettate ma deprecate (warnDev), con precedenza a queste props.
+	// Config di layout delle barre, condivisa da tutte le serie. Vive qui, non
+	// sulla singola Bar/GroupBar: e' il grafico a decidere larghezza/spaziatura/
+	// offset comune.
 	barWidth?: number;
 	barGroupGap?: number;
 	barOffset?: number;
@@ -101,11 +100,10 @@ const Chart = (props: ChartProps) => {
 	// cosi' assi generati dinamicamente vengono contati correttamente (R6).
 	const flatChildren = flattenChildren(children);
 
-	// Assi Y renderizzati (per conteggio e per il controllo R12 sotto). Riconosco
-	// sia <YAxis> (per riferimento al componente) sia il vecchio
-	// <Axis type="yAxis"> (per props.type, alias deprecato).
+	// Assi Y renderizzati (per conteggio e per il controllo R12 sotto),
+	// riconosciuti per riferimento al componente <YAxis>.
 	const yAxisElements = flatChildren.filter(
-		(childEl) => childEl.type === YAxis || childEl.props?.type === "yAxis",
+		(childEl) => childEl.type === YAxis,
 	);
 	const yAxisCount = yAxisElements.length;
 
@@ -152,13 +150,10 @@ const Chart = (props: ChartProps) => {
 		.flatMap((timeSerieEl) => timeSerieEl.data)
 		?.some((el) => el.value < 0);
 
-	// Asse X temporale (S2b): rilevo <XAxis scaleType="time"> (o l'alias
-	// deprecato <Axis type="xAxis" scaleType="time">), leggo parseDate e calcolo
-	// il dominio tempo dalle sole serie line. Questi finiscono nel ChartState e
-	// da li' raggiungono generatore line, asse e hover.
-	const xAxisChild = flatChildren.find(
-		(childEl) => childEl.type === XAxis || childEl.props?.type === "xAxis",
-	);
+	// Asse X temporale (S2b): rilevo <XAxis scaleType="time">, leggo parseDate e
+	// calcolo il dominio tempo dalle sole serie line. Questi finiscono nel
+	// ChartState e da li' raggiungono generatore line, asse e hover.
+	const xAxisChild = flatChildren.find((childEl) => childEl.type === XAxis);
 	const scaleType: "time" | undefined =
 		xAxisChild?.props?.scaleType === "time" ? "time" : undefined;
 	const parseDate = xAxisChild?.props?.parseDate as

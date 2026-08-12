@@ -37,8 +37,7 @@ const HorizontalExample: FC = () => {
 					dataPoints={dataPoints}
 					showLine
 					showLabels
-					// Click sulla label di proprieta' dell'asse (M2): riceve (label,
-					// index), non piu' via config.barClickAction su Bar.
+					// Click sulla label dell'asse: riceve (label, index).
 					onLabelClick={(label, index) =>
 						console.log("[onLabelClick]", label, index)
 					}

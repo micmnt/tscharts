@@ -50,8 +50,7 @@ export type SVGProps = {
 	leftAxisCount?: number;
 	rightAxisCount?: number;
 	ariaLabel?: string;
-	// Config di layout delle barre passata da <Chart> (M1): ha precedenza sul
-	// config (deprecato) dei children in computeGlobalConfig.
+	// Config di layout delle barre passata da <Chart>: barWidth/barGroupGap/barOffset.
 	layoutConfig?: ChartLayoutConfig;
 	// Zoom interattivo Y (S3): callback col dominio corrente (null al reset).
 	onZoomChange?: (domain: [number, number] | null) => void;
@@ -139,20 +138,16 @@ const Svg = (props: SVGProps) => {
 		[flatChildren],
 	);
 
-	// globalConfig reattivo ai cambi runtime dei config (R13): stabilizzato su
-	// una dep-key che considera solo i valori primitivi + la PRESENZA delle
-	// funzioni, non la loro identita' (decisione A di R3).
+	// globalConfig (layout barre) reattivo ai cambi delle props di <Chart>,
+	// stabilizzato su una dep-key coi valori primitivi (evita nuove reference).
 	const rawGlobalConfig = useMemo(
-		() => computeGlobalConfig(flatChildren, layoutConfig),
-		[flatChildren, layoutConfig],
+		() => computeGlobalConfig(layoutConfig),
+		[layoutConfig],
 	);
 	const globalConfigKey = JSON.stringify({
 		barWidth: rawGlobalConfig.barWidth,
 		barGroupGap: rawGlobalConfig.barGroupGap,
 		barOffset: rawGlobalConfig.barOffset,
-		selectedColor: rawGlobalConfig.selectedColor,
-		selectedValue: rawGlobalConfig.selectedValue,
-		hasBarClickAction: typeof rawGlobalConfig.barClickAction === "function",
 	});
 	const globalConfigStore = useRef({
 		key: globalConfigKey,

@@ -36,7 +36,6 @@ const dataPoints = ["13/03", "14/03", "15/03", "16/03"];
 const Example: FC<GroupBarProps> = ({
 	name = "prodotto A",
 	showLabels = false,
-	config = {},
 }) => {
 	return (
 		<div
@@ -49,8 +48,8 @@ const Example: FC<GroupBarProps> = ({
 		>
 			<Chart width={400} height={400} elements={elements}>
 				<YAxis name="vendite" showLine showName />
-				<GroupBar name={name} showLabels={showLabels} config={config} />
-				<GroupBar name="prodotto B" showLabels={showLabels} config={config} />
+				<GroupBar name={name} showLabels={showLabels} />
+				<GroupBar name="prodotto B" showLabels={showLabels} />
 				<XAxis dataPoints={dataPoints} showLine />
 			</Chart>
 		</div>

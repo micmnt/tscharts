@@ -51,10 +51,7 @@ const dataPoints = ["13/03", "14/03", "15/03", "16/03"];
 
 // GroupBar con un gruppo stacked (A+B, stesso stackedName) e una barra
 // singola non-stacked (C) nella stessa categoria.
-const MixedExample: FC<GroupBarProps> = ({
-	showLabels = true,
-	config = {},
-}) => {
+const MixedExample: FC<GroupBarProps> = ({ showLabels = true }) => {
 	return (
 		<div
 			style={{
@@ -66,19 +63,9 @@ const MixedExample: FC<GroupBarProps> = ({
 		>
 			<Chart width={450} height={400} elements={elements}>
 				<YAxis name="vendite" showLine showName />
-				<GroupBar
-					name="prodotto A"
-					stacked
-					showLabels={showLabels}
-					config={config}
-				/>
-				<GroupBar
-					name="prodotto B"
-					stacked
-					showLabels={showLabels}
-					config={config}
-				/>
-				<GroupBar name="prodotto C" showLabels={showLabels} config={config} />
+				<GroupBar name="prodotto A" stacked showLabels={showLabels} />
+				<GroupBar name="prodotto B" stacked showLabels={showLabels} />
+				<GroupBar name="prodotto C" showLabels={showLabels} />
 				<XAxis name="giorno" dataPoints={dataPoints} showLine showName />
 				<Tooltip />
 				<Legend legendType="horizontal" height={60} showDots />
