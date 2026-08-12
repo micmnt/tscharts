@@ -2,7 +2,7 @@ import { type ReactNode, useMemo } from "react";
 import { useSerie } from "../../hooks/useSerie";
 import { generateAngleDonutPaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isAngleDonutSerie, isDefined } from "../../lib/utils";
+import { isAngleDonutSerie, isDefined, warnDev } from "../../lib/utils";
 import type { AngleDonutSerieEl } from "../../types";
 
 export type AngleDonutProps = {
@@ -39,14 +39,7 @@ const AngleDonut = (props: AngleDonutProps) => {
 		customLabel = undefined,
 	} = config ?? {};
 
-	const {
-		ctx,
-		theme,
-		serie: serieElement,
-	} = useSerie(name, isAngleDonutSerie, {
-		component: "AngleDonut",
-		serieTypeLabel: "angle-donut",
-	});
+	const { ctx, theme, serie: serieElement } = useSerie(name, isAngleDonutSerie);
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
@@ -71,7 +64,18 @@ const AngleDonut = (props: AngleDonutProps) => {
 		showTrack,
 	]);
 
-	if (!ctx || !theme || !serieElement) return null;
+	if (!ctx || !theme) {
+		warnDev(
+			`<AngleDonut name="${name}" /> deve essere renderizzato dentro <Chart>.`,
+		);
+		return null;
+	}
+	if (!serieElement) {
+		warnDev(
+			`<AngleDonut name="${name}" />: nessuna serie di tipo angle-donut trovata con questo name.`,
+		);
+		return null;
+	}
 
 	if (!result) return null;
 

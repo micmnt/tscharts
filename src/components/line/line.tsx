@@ -21,7 +21,7 @@ import {
 	generateNegativeDataPaths,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isTimeSerie } from "../../lib/utils";
+import { isTimeSerie, warnDev } from "../../lib/utils";
 
 export type LineProps = {
 	name: string;
@@ -80,14 +80,7 @@ const Line = (props: LineProps) => {
 
 	const gradientId = `line-gradient-${useId()}`;
 
-	const {
-		ctx,
-		theme,
-		serie: serieElement,
-	} = useSerie(name, isTimeSerie, {
-		component: "Line",
-		serieTypeLabel: "bar/line/bar-stacked/group-bar",
-	});
+	const { ctx, theme, serie: serieElement } = useSerie(name, isTimeSerie);
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
@@ -261,7 +254,17 @@ const Line = (props: LineProps) => {
 	);
 	useCanvasMark(isCanvas && result ? drawOp : null);
 
-	if (!ctx || !theme || !elements || !serieElement || !result) return null;
+	if (!ctx || !theme) {
+		warnDev(`<Line name="${name}" /> deve essere renderizzato dentro <Chart>.`);
+		return null;
+	}
+	if (!serieElement) {
+		warnDev(
+			`<Line name="${name}" />: nessuna serie di tipo bar/line/bar-stacked/group-bar trovata con questo name.`,
+		);
+		return null;
+	}
+	if (!elements || !result) return null;
 	if (isCanvas) return null;
 
 	return (

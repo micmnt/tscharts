@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useSerie } from "../../hooks/useSerie";
 import { generateDonutPaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isDefined, isPieSerie } from "../../lib/utils";
+import { isDefined, isPieSerie, warnDev } from "../../lib/utils";
 
 export type DonutProps = {
 	name: string;
@@ -29,14 +29,7 @@ const Donut = (props: DonutProps) => {
 
 	const { innerRadius, centerElement } = config ?? {};
 
-	const {
-		ctx,
-		theme,
-		serie: serieElement,
-	} = useSerie(name, isPieSerie, {
-		component: "Donut",
-		serieTypeLabel: "pie/donut",
-	});
+	const { ctx, theme, serie: serieElement } = useSerie(name, isPieSerie);
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
@@ -50,7 +43,18 @@ const Donut = (props: DonutProps) => {
 		});
 	}, [ctx, theme, serieElement, padding, innerRadius, centerElement]);
 
-	if (!ctx || !theme || !serieElement) return null;
+	if (!ctx || !theme) {
+		warnDev(
+			`<Donut name="${name}" /> deve essere renderizzato dentro <Chart>.`,
+		);
+		return null;
+	}
+	if (!serieElement) {
+		warnDev(
+			`<Donut name="${name}" />: nessuna serie di tipo pie/donut trovata con questo name.`,
+		);
+		return null;
+	}
 
 	if (!result) return null;
 

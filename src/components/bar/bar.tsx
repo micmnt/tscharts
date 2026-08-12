@@ -22,7 +22,12 @@ import {
 	getTimeSerieMaxValue,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { calculateFlatValue, isFunction, isTimeSerie } from "../../lib/utils";
+import {
+	calculateFlatValue,
+	isFunction,
+	isTimeSerie,
+	warnDev,
+} from "../../lib/utils";
 import { SerieValueLabels } from "../shared/SerieValueLabels";
 
 export type BarDragPayload = {
@@ -77,14 +82,7 @@ const Bar = (props: BarProps) => {
 		horizontal = false,
 	} = props;
 
-	const {
-		ctx,
-		theme,
-		serie: serieElement,
-	} = useSerie(name, isTimeSerie, {
-		component: "Bar",
-		serieTypeLabel: "bar/line/bar-stacked/group-bar",
-	});
+	const { ctx, theme, serie: serieElement } = useSerie(name, isTimeSerie);
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
@@ -344,7 +342,16 @@ const Bar = (props: BarProps) => {
 	useCanvasMark(isCanvas && result ? drawOp : null);
 	useCanvasHit(isCanvas && result ? hitRegions : null);
 
-	if (!ctx || !theme || !serieElement) return null;
+	if (!ctx || !theme) {
+		warnDev(`<Bar name="${name}" /> deve essere renderizzato dentro <Chart>.`);
+		return null;
+	}
+	if (!serieElement) {
+		warnDev(
+			`<Bar name="${name}" />: nessuna serie di tipo bar/line/bar-stacked/group-bar trovata con questo name.`,
+		);
+		return null;
+	}
 	if (!result) return null;
 	if (!ctx.chartXEnd || !ctx.chartYEnd || !paths) return null;
 

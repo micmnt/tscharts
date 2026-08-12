@@ -11,6 +11,7 @@ import {
 	isDefined,
 	isThresholdSerie,
 	isTimeSerie,
+	warnDev,
 } from "../../lib/utils";
 
 export type ThresholdProps = {
@@ -38,16 +39,24 @@ const Threshold = (props: ThresholdProps) => {
 		ctx,
 		theme,
 		serie: thresholdElement,
-	} = useSerie(name, isThresholdSerie, {
-		component: "Threshold",
-		serieTypeLabel: "threshold",
-	});
+	} = useSerie(name, isThresholdSerie);
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
 	const size = props.size ?? theme?.threshold?.size;
 
-	if (!ctx || !theme || !thresholdElement) return null;
+	if (!ctx || !theme) {
+		warnDev(
+			`<Threshold name="${name}" /> deve essere renderizzato dentro <Chart>.`,
+		);
+		return null;
+	}
+	if (!thresholdElement) {
+		warnDev(
+			`<Threshold name="${name}" />: nessuna serie di tipo threshold trovata con questo name.`,
+		);
+		return null;
+	}
 
 	const { chartXStart, chartXEnd, chartYEnd, timeSeriesMaxValue, elements } =
 		ctx;

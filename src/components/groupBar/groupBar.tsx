@@ -7,7 +7,7 @@ import {
 	generateStackedGroupDataPaths,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
-import { isTimeSerie } from "../../lib/utils";
+import { isTimeSerie, warnDev } from "../../lib/utils";
 import { SerieValueLabels } from "../shared/SerieValueLabels";
 
 export type GroupBarProps = {
@@ -35,14 +35,7 @@ const GroupBar = (props: GroupBarProps) => {
 		stacked = false,
 	} = props;
 
-	const {
-		ctx,
-		theme,
-		serie: serieElement,
-	} = useSerie(name, isTimeSerie, {
-		component: "GroupBar",
-		serieTypeLabel: "bar/line/bar-stacked/group-bar",
-	});
+	const { ctx, theme, serie: serieElement } = useSerie(name, isTimeSerie);
 
 	const { padding = defaultTheme.padding } = theme ?? {};
 
@@ -102,7 +95,19 @@ const GroupBar = (props: GroupBarProps) => {
 		stacked,
 	]);
 
-	if (!ctx || !theme || !elements || !serieElement) return null;
+	if (!ctx || !theme) {
+		warnDev(
+			`<GroupBar name="${name}" /> deve essere renderizzato dentro <Chart>.`,
+		);
+		return null;
+	}
+	if (!serieElement) {
+		warnDev(
+			`<GroupBar name="${name}" />: nessuna serie di tipo bar/line/bar-stacked/group-bar trovata con questo name.`,
+		);
+		return null;
+	}
+	if (!elements) return null;
 
 	if (!result) return null;
 
