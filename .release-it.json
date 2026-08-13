@@ -1,0 +1,22 @@
+{
+	"$schema": "https://unpkg.com/release-it/schema/release-it.json",
+	"git": {
+		"commitMessage": "chore: release v${version}",
+		"tagName": "v${version}",
+		"tagAnnotation": "Release v${version}",
+		"requireBranch": "main",
+		"requireCleanWorkingDir": true,
+		"push": true
+	},
+	"github": {
+		"release": true,
+		"releaseName": "v${version}",
+		"releaseNotes": "awk '/^## \\[/{p=0} /^## \\[${version}\\]/{p=1} p' CHANGELOG.md"
+	},
+	"npm": {
+		"publish": true
+	},
+	"hooks": {
+		"before:init": ["npm run lint:ci", "npm run test", "npm run build"]
+	}
+}
