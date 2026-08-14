@@ -36,7 +36,7 @@ export const KpiComparison: StoryObj<typeof KpiExample> = {
 	name: "KPI Comparison (WIP)",
 	render: (args) => <KpiExample {...args} />,
 	args: {
-		innerRadius: 46,
+		innerRadius: 28,
 		gap: 3,
 		sliceRadius: 6,
 	},
