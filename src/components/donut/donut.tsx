@@ -3,11 +3,16 @@ import { useSerie } from "../../hooks/useSerie";
 import { generateDonutPaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
 import { isDefined, isPieSerie, warnDev } from "../../lib/utils";
+import { OutsideLabels } from "../shared/OutsideLabels";
 
 export type DonutProps = {
 	name: string;
 	config?: {
 		innerRadius?: number;
+		gap?: number;
+		sliceRadius?: number;
+		labelPosition?: "inside" | "outside";
+		leaderLine?: { length?: number; color?: string };
 		centerElement?: {
 			value?: string;
 			valueColor?: string;
@@ -20,6 +25,13 @@ export type DonutProps = {
 			labelColor?: string;
 			labelSize?: number;
 			labelDy?: number;
+			badge?: {
+				text: string;
+				color?: string;
+				background?: string;
+				size?: number;
+				trend?: "up" | "down";
+			};
 		};
 	};
 };
@@ -27,7 +39,14 @@ export type DonutProps = {
 const Donut = (props: DonutProps) => {
 	const { name, config } = props;
 
-	const { innerRadius, centerElement } = config ?? {};
+	const {
+		innerRadius,
+		gap,
+		sliceRadius,
+		labelPosition,
+		leaderLine,
+		centerElement,
+	} = config ?? {};
 
 	const { ctx, theme, serie: serieElement } = useSerie(name, isPieSerie);
 
@@ -39,9 +58,24 @@ const Donut = (props: DonutProps) => {
 			...ctx,
 			padding,
 			innerRadius,
+			gap,
+			sliceRadius,
+			labelPosition,
+			leaderLine,
 			centerElement,
 		});
-	}, [ctx, theme, serieElement, padding, innerRadius, centerElement]);
+	}, [
+		ctx,
+		theme,
+		serieElement,
+		padding,
+		innerRadius,
+		gap,
+		sliceRadius,
+		labelPosition,
+		leaderLine,
+		centerElement,
+	]);
 
 	if (!ctx || !theme) {
 		warnDev(
@@ -58,7 +92,7 @@ const Donut = (props: DonutProps) => {
 
 	if (!result) return null;
 
-	const { paths, dataPoints, centerPoint } = result;
+	const { paths, dataPoints, outsideLabels, centerPoint } = result;
 
 	const serieLabels = serieElement.labels ?? [];
 
@@ -77,7 +111,9 @@ const Donut = (props: DonutProps) => {
 		/>
 	));
 
-	const labels = serieLabels.map((label, labelIndex) => (
+	const leaderColor = leaderLine?.color ?? theme.axis?.labelColor ?? "#4f4f4f";
+
+	const insideLabels = serieLabels.map((label, labelIndex) => (
 		<text
 			textAnchor="middle"
 			fontSize={14}
@@ -90,6 +126,19 @@ const Donut = (props: DonutProps) => {
 			{label.value}
 		</text>
 	));
+
+	const labels =
+		labelPosition === "outside"
+			? [
+					<OutsideLabels
+						key="outside-labels"
+						labels={serieLabels}
+						layout={outsideLabels}
+						color={leaderColor}
+						keyPrefix={serieElement.name}
+					/>,
+				]
+			: insideLabels;
 
 	if (centerPoint && isDefined(centerElement?.value)) {
 		const centerTextValue = (
@@ -125,7 +174,61 @@ const Donut = (props: DonutProps) => {
 				{centerElement?.label}
 			</text>
 		);
-		return [...slices, centerTextValue, centerTextLabel, ...labels];
+
+		const badge = centerElement?.badge;
+		const trendArrow =
+			badge?.trend === "up" ? "↗" : badge?.trend === "down" ? "↘" : "";
+		const centerBadge = badge?.text ? (
+			<foreignObject
+				key="donut-center-badge"
+				x={centerPoint.x - 90}
+				y={
+					centerPoint.y +
+					(centerElement?.valueSize ?? 30) / 2 +
+					(centerElement?.labelSize ?? 20) +
+					4
+				}
+				width={180}
+				height={28}
+				style={{ pointerEvents: "none" }}
+			>
+				<div
+					style={{
+						display: "flex",
+						justifyContent: "center",
+						alignItems: "center",
+						height: "100%",
+					}}
+				>
+					<span
+						style={{
+							display: "inline-flex",
+							alignItems: "center",
+							gap: 4,
+							padding: "3px 10px",
+							borderRadius: 999,
+							fontSize: badge.size ?? 12,
+							fontWeight: 700,
+							lineHeight: 1,
+							whiteSpace: "nowrap",
+							color: badge.color ?? "#0a7f3f",
+							background: badge.background ?? "#d6f5e3",
+						}}
+					>
+						{trendArrow ? <span aria-hidden="true">{trendArrow}</span> : null}
+						{badge.text}
+					</span>
+				</div>
+			</foreignObject>
+		) : null;
+
+		return [
+			...slices,
+			centerTextValue,
+			centerTextLabel,
+			centerBadge,
+			...labels,
+		];
 	}
 
 	return [...slices, ...labels];

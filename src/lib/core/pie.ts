@@ -7,6 +7,74 @@ import {
 	polarToCartesian,
 } from "./primitives";
 
+const OUTSIDE_LEADER_LENGTH = 14;
+const OUTSIDE_HORIZONTAL_LEN = 18;
+const OUTSIDE_TEXT_GAP = 4;
+// Margine verticale riservato (oltre la leader line) quando le label sono esterne,
+// per non farle sforare il bordo dell'SVG. Riduce il raggio in modalita' outside.
+const OUTSIDE_LABEL_MARGIN = 12;
+
+// Layout di una label esterna: ancoraggio sul raggio esterno lungo la bisettrice
+// -> gomito -> tratto orizzontale, con lato (dx/sx) dal semicerchio. Condiviso da
+// donut e pie.
+const computeOutsideLabel = (
+	centerX: number,
+	centerY: number,
+	radius: number,
+	bisectorAngle: number,
+	leaderLength: number,
+) => {
+	const p1 = polarToCartesian(centerX, centerY, radius, bisectorAngle);
+	const p2 = polarToCartesian(
+		centerX,
+		centerY,
+		radius + leaderLength,
+		bisectorAngle,
+	);
+	const normalizedBisector = ((bisectorAngle % 360) + 360) % 360;
+	const isRight = normalizedBisector < 180;
+	const dir = isRight ? 1 : -1;
+	const p3 = { x: p2.x + dir * OUTSIDE_HORIZONTAL_LEN, y: p2.y };
+	return {
+		p1,
+		p2,
+		p3,
+		textX: p3.x + dir * OUTSIDE_TEXT_GAP,
+		textY: p3.y,
+		anchor: (isRight ? "start" : "end") as "start" | "end",
+	};
+};
+
+// Anti-collisione delle label esterne: per ciascun lato (dx = "start", sx = "end")
+// ordina per y e spinge verso il basso quelle troppo vicine, cosi' che due label
+// consecutive distino almeno `minGap`. Aggiorna anche il punto finale della leader
+// line (p3.y) perche' segua la label spostata. Funzione pura.
+export const resolveOutsideLabelCollisions = <
+	T extends {
+		textY: number;
+		anchor: "start" | "end";
+		p3: { x: number; y: number };
+	},
+>(
+	items: T[],
+	minGap = 16,
+): T[] => {
+	const spread = (side: T[]): T[] => {
+		const sorted = [...side].sort((a, b) => a.textY - b.textY);
+		for (let i = 1; i < sorted.length; i++) {
+			const minY = sorted[i - 1].textY + minGap;
+			if (sorted[i].textY < minY) {
+				sorted[i] = { ...sorted[i], textY: minY };
+			}
+		}
+		return sorted.map((it) => ({ ...it, p3: { ...it.p3, y: it.textY } }));
+	};
+
+	const right = items.filter((it) => it.anchor === "start");
+	const left = items.filter((it) => it.anchor === "end");
+	return [...spread(right), ...spread(left)];
+};
+
 export const generateAngleDonutPaths = (
 	serie: AngleDonutSerie,
 	ctx: ChartState & {
@@ -113,6 +181,10 @@ export const generateDonutPaths = (
 	ctx: ChartState & {
 		padding: number;
 		innerRadius?: number;
+		gap?: number;
+		sliceRadius?: number;
+		labelPosition?: "inside" | "outside";
+		leaderLine?: { length?: number; color?: string };
 		centerElement?: {
 			value?: string;
 			valueColor?: string;
@@ -141,10 +213,18 @@ export const generateDonutPaths = (
 
 	const { value: centerValue } = centerElement ?? {};
 
+	const labelPosition = ctx.labelPosition ?? "inside";
+	const leaderLength = ctx.leaderLine?.length ?? OUTSIDE_LEADER_LENGTH;
+	const outsideReserve =
+		labelPosition === "outside" ? leaderLength + OUTSIDE_LABEL_MARGIN : 0;
+
 	const centerX = width / 2;
 	const centerY = height / 2 - padding;
-	const radius = (height - 2 * padding) / 2;
+	const radius = (height - 2 * padding) / 2 - outsideReserve;
 	const innerRadius = radius - (ctx.innerRadius ?? radius / 2);
+	const halfGap = (ctx.gap ?? 0) / 2;
+	const sliceRadius = ctx.sliceRadius ?? 0;
+	const outsideLabels = new Map();
 
 	const startAngles = serieData.map(
 		(serieEl) => (Number(serieEl.value) * 360) / Number(donutTotalValue),
@@ -161,13 +241,21 @@ export const generateDonutPaths = (
 
 		const normalizedValueAngle = valueAngle >= 360 ? 359.9 : valueAngle;
 
+		const gappedStart = startAngle + halfGap;
+		const gappedEnd = normalizedValueAngle - halfGap;
+		const [sliceStart, sliceEnd] =
+			gappedEnd > gappedStart
+				? [gappedStart, gappedEnd]
+				: [startAngle, normalizedValueAngle];
+
 		const path = generateDonutSlice(
 			centerX,
 			centerY,
 			radius,
 			innerRadius,
-			startAngle,
-			normalizedValueAngle,
+			sliceStart,
+			sliceEnd,
+			sliceRadius,
 		);
 
 		const sliceValue = valueAngle - startAngle;
@@ -187,20 +275,37 @@ export const generateDonutPaths = (
 			dataPoints.set(serieEl.name, labelPoint);
 		}
 
+		if (labelPosition === "outside") {
+			outsideLabels.set(
+				serieEl.name,
+				computeOutsideLabel(
+					centerX,
+					centerY,
+					radius,
+					bisectorAngle,
+					leaderLength,
+				),
+			);
+		}
+
 		return path;
 	});
 
 	if (isDefined(centerValue)) {
 		const centerPoint = { x: centerX, y: centerY };
-		return { paths, dataPoints, centerPoint };
+		return { paths, dataPoints, outsideLabels, centerPoint };
 	}
 
-	return { paths, dataPoints };
+	return { paths, dataPoints, outsideLabels };
 };
 
 export const generatePiePaths = (
 	serie: PieSerie,
-	ctx: ChartState & { padding: number },
+	ctx: ChartState & {
+		padding: number;
+		labelPosition?: "inside" | "outside";
+		leaderLine?: { length?: number; color?: string };
+	},
 ) => {
 	const serieData = serie.data;
 
@@ -213,9 +318,15 @@ export const generatePiePaths = (
 
 	const { width, height, padding } = ctx;
 
+	const labelPosition = ctx.labelPosition ?? "inside";
+	const leaderLength = ctx.leaderLine?.length ?? OUTSIDE_LEADER_LENGTH;
+	const outsideReserve =
+		labelPosition === "outside" ? leaderLength + OUTSIDE_LABEL_MARGIN : 0;
+
 	const centerX = width / 2;
 	const centerY = height / 2 - 1.5 * padding;
-	const radius = (height - 3 * padding) / 2;
+	const radius = (height - 3 * padding) / 2 - outsideReserve;
+	const outsideLabels = new Map();
 
 	const startAngles = serieData.map(
 		(serieEl) => (Number(serieEl.value) * 360) / Number(pieTotalValue),
@@ -256,8 +367,21 @@ export const generatePiePaths = (
 			dataPoints.set(serieEl.name, labelPoint);
 		}
 
+		if (labelPosition === "outside") {
+			outsideLabels.set(
+				serieEl.name,
+				computeOutsideLabel(
+					centerX,
+					centerY,
+					radius,
+					bisectorAngle,
+					leaderLength,
+				),
+			);
+		}
+
 		return path;
 	});
 
-	return { paths, dataPoints };
+	return { paths, dataPoints, outsideLabels };
 };

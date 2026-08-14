@@ -4,13 +4,20 @@ import { useSerie } from "../../hooks/useSerie";
 import { generatePiePaths } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
 import { isPieSerie, warnDev } from "../../lib/utils";
+import { OutsideLabels } from "../shared/OutsideLabels";
 
 export type PieProps = {
 	name: string;
+	config?: {
+		labelPosition?: "inside" | "outside";
+		leaderLine?: { length?: number; color?: string };
+	};
 };
 
 const Pie = (props: PieProps) => {
-	const { name } = props;
+	const { name, config } = props;
+
+	const { labelPosition, leaderLine } = config ?? {};
 
 	const { ctx, theme, serie: serieElement } = useSerie(name, isPieSerie);
 
@@ -18,8 +25,13 @@ const Pie = (props: PieProps) => {
 
 	const result = useMemo(() => {
 		if (!ctx || !theme || !serieElement) return null;
-		return generatePiePaths(serieElement, { ...ctx, padding });
-	}, [ctx, theme, serieElement, padding]);
+		return generatePiePaths(serieElement, {
+			...ctx,
+			padding,
+			labelPosition,
+			leaderLine,
+		});
+	}, [ctx, theme, serieElement, padding, labelPosition, leaderLine]);
 
 	if (!ctx || !theme) {
 		warnDev(`<Pie name="${name}" /> deve essere renderizzato dentro <Chart>.`);
@@ -34,7 +46,7 @@ const Pie = (props: PieProps) => {
 
 	if (!result) return null;
 
-	const { paths, dataPoints } = result;
+	const { paths, dataPoints, outsideLabels } = result;
 
 	const serieLabels = serieElement.labels ?? [];
 
@@ -52,7 +64,10 @@ const Pie = (props: PieProps) => {
 			shapeRendering="geometricPrecision"
 		/>
 	));
-	const labels = serieLabels.map((label, labelIndex) => (
+
+	const leaderColor = leaderLine?.color ?? theme.axis?.labelColor ?? "#4f4f4f";
+
+	const insideLabels = serieLabels.map((label, labelIndex) => (
 		<text
 			textAnchor="middle"
 			fontSize={14}
@@ -65,6 +80,19 @@ const Pie = (props: PieProps) => {
 			{label.value}
 		</text>
 	));
+
+	const labels =
+		labelPosition === "outside"
+			? [
+					<OutsideLabels
+						key="outside-labels"
+						labels={serieLabels}
+						layout={outsideLabels}
+						color={leaderColor}
+						keyPrefix={serieElement.name}
+					/>,
+				]
+			: insideLabels;
 
 	return [...slices, ...labels];
 };

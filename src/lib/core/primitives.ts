@@ -107,6 +107,51 @@ export const generatePieSlice = (
 	return `${startRadius} ${arc} ${endRadius}`;
 };
 
+const roundedRingSectorPath = (
+	centerX: number,
+	centerY: number,
+	radius: number,
+	innerRadius: number,
+	startAngle: number,
+	endAngle: number,
+	cornerRadius: number,
+): string | null => {
+	const span = endAngle - startAngle;
+	if (span <= 0 || innerRadius <= 0) return null;
+
+	const DEG = 180 / Math.PI;
+	const k = Math.min(
+		cornerRadius,
+		(radius - innerRadius) / 2,
+		((span / 2) * radius) / DEG,
+		((span / 2) * innerRadius) / DEG,
+	);
+	if (k <= 0) return null;
+
+	const outerOffset = (k / radius) * DEG;
+	const innerOffset = (k / innerRadius) * DEG;
+	const p = (r: number, a: number) => polarToCartesian(centerX, centerY, r, a);
+
+	const a = p(radius - k, startAngle);
+	const b = p(radius, startAngle + outerOffset);
+	const c = p(radius, endAngle - outerOffset);
+	const d = p(radius - k, endAngle);
+	const e = p(innerRadius + k, endAngle);
+	const f = p(innerRadius, endAngle - innerOffset);
+	const g = p(innerRadius, startAngle + innerOffset);
+	const h = p(innerRadius + k, startAngle);
+	const cOS = p(radius, startAngle);
+	const cOE = p(radius, endAngle);
+	const cIE = p(innerRadius, endAngle);
+	const cIS = p(innerRadius, startAngle);
+	const largeOuter =
+		endAngle - outerOffset - (startAngle + outerOffset) <= 180 ? 0 : 1;
+	const largeInner =
+		endAngle - innerOffset - (startAngle + innerOffset) <= 180 ? 0 : 1;
+
+	return `M ${a.x} ${a.y} Q ${cOS.x} ${cOS.y} ${b.x} ${b.y} A ${radius} ${radius} 0 ${largeOuter} 1 ${c.x} ${c.y} Q ${cOE.x} ${cOE.y} ${d.x} ${d.y} L ${e.x} ${e.y} Q ${cIE.x} ${cIE.y} ${f.x} ${f.y} A ${innerRadius} ${innerRadius} 0 ${largeInner} 0 ${g.x} ${g.y} Q ${cIS.x} ${cIS.y} ${h.x} ${h.y} Z`;
+};
+
 export const generateDonutSlice = (
 	centerX: number,
 	centerY: number,
@@ -114,6 +159,7 @@ export const generateDonutSlice = (
 	innerRadius: number,
 	startAngle: number,
 	endAngle: number,
+	cornerRadius = 0,
 ) => {
 	const arc = generateArcBarPath(
 		centerX,
@@ -122,6 +168,7 @@ export const generateDonutSlice = (
 		innerRadius,
 		startAngle,
 		endAngle,
+		cornerRadius,
 	);
 
 	return arc;
@@ -134,6 +181,7 @@ export const generateArcBarPath = (
 	innerRadius: number | undefined,
 	startAngle: number,
 	endAngle: number,
+	cornerRadius = 0,
 ) => {
 	const startPoint = polarToCartesian(centerX, centerY, radius, startAngle);
 	const endPoint = polarToCartesian(centerX, centerY, radius, endAngle);
@@ -141,6 +189,19 @@ export const generateArcBarPath = (
 	const isLargeArc = endAngle - startAngle <= 180 ? 0 : 1;
 
 	if (innerRadius) {
+		if (cornerRadius > 0) {
+			const rounded = roundedRingSectorPath(
+				centerX,
+				centerY,
+				radius,
+				innerRadius,
+				startAngle,
+				endAngle,
+				cornerRadius,
+			);
+			if (rounded) return rounded;
+		}
+
 		const startInnerPoint = polarToCartesian(
 			centerX,
 			centerY,
