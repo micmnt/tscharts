@@ -28,12 +28,12 @@ export const Simple: Story = {
 	},
 };
 
-// Riproduzione progressiva del mockup "donut KPI". I Controls modificano solo la
-// CONFIGURAZIONE del donut (gap, sliceRadius, innerRadius); valori dei segmenti e
-// testi del centro sono fissi. Man mano che aggiungiamo le altre feature (badge,
-// label esterne — docs/roadmap/donut-kpi.md), questa storia mostrera' il risultato.
+// Riproduzione del mockup "donut KPI" (completa): gap, angoli arrotondati, badge
+// trend al centro e label esterne. I Controls modificano solo la CONFIGURAZIONE
+// del donut (gap, sliceRadius, innerRadius); valori dei segmenti e testi del
+// centro sono fissi.
 export const KpiComparison: StoryObj<typeof KpiExample> = {
-	name: "KPI Comparison (WIP)",
+	name: "KPI Comparison",
 	render: (args) => <KpiExample {...args} />,
 	args: {
 		innerRadius: 28,
