@@ -145,7 +145,7 @@ bump a 2.0). Le API già indicate come "rimozione nella 2.0" non esistono più:
 Primo rilascio stabile. Consolida l'API dei componenti e sposta ogni prop sul
 componente che la "possiede". Le API vecchie restano quasi tutte funzionanti ma
 **deprecate** (avviso in console in sviluppo) e verranno rimosse nella **2.0**.
-Guida alla migrazione nel [README](./README.md#migrazione-a-v10).
+Guida alla migrazione in [MIGRATION.md](./MIGRATION.md).
 
 ### Added
 

@@ -17,13 +17,13 @@ npm install tscharts
 Il pacchetto include un foglio di stile separato, necessario per la Legend e il Tooltip: va importato una volta, ad esempio nell'entry point dell'app.
 
 ```ts
-import "tscharts/dist/style.css";
+import "tscharts/style.css";
 ```
 
 ## Quick start
 
 ```tsx
-import { Axis, Bar, Chart, Legend } from "tscharts";
+import { Bar, Chart, Legend, XAxis, YAxis } from "tscharts";
 
 const elements = [
   {
@@ -41,22 +41,25 @@ const elements = [
 
 function App() {
   return (
-    <Chart width={400} height={400} elements={elements}>
-      <Axis type="yAxis" name="vendite" showLine showName />
+    <Chart width={400} height={400} elements={elements} barWidth={28}>
+      <YAxis name="vendite" showLine showName />
       <Bar name="vendite" />
-      <Axis
-        type="xAxis"
+      <XAxis
         dataPoints={["13/03", "14/03", "15/03", "16/03"]}
         showLine
         showName
       />
-      <Legend legendType="horizontal" height={90} />
+      <Legend height={90} />
     </Chart>
   );
 }
 ```
 
-`<Chart>` riceve `elements` (le serie dati) e dimensioni fisse (`width`/`height`); i figli (`Axis`, `Bar`, `Legend`, ...) leggono lo stato condiviso e si occupano ciascuno di una parte del grafico. Ogni serie in `elements` è collegata ai componenti tramite la prop `name`.
+`<Chart>` riceve `elements` (le serie dati) e dimensioni fisse (`width`/`height`); i figli (`XAxis`, `YAxis`, `Bar`, `Legend`, ...) leggono lo stato condiviso e si occupano ciascuno di una parte del grafico. Ogni serie in `elements` è collegata ai componenti tramite la prop `name`.
+
+## Vieni dalla 0.x?
+
+L'API è cambiata nella 1.0 (ogni prop si è spostata sul componente che la possiede) e le vecchie forme sono state rimosse nella 1.3. La pagina **Migrazione** nella sidebar elenca tutti i breaking change con il prima/dopo di ogni modifica.
 
 ## Documentazione dei singoli componenti
 

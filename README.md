@@ -55,6 +55,8 @@ function App() {
 
 Per gli altri tipi di grafico (line, pie, donut, group-bar, threshold, angle-donut) ed esempi più avanzati (barre stacked, drag interattivo, assi multipli), vedi Storybook: https://tscharts.netlify.app
 
+Se stai aggiornando da una **0.x**, i breaking change e il prima/dopo di ogni modifica sono in [MIGRATION.md](./MIGRATION.md).
+
 ## Riferimento prop
 
 ### `<Chart>`
