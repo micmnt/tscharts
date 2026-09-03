@@ -26,7 +26,7 @@ export const computeTimeDomain = (
 	const times: number[] = [];
 
 	for (const el of elements) {
-		if (el.type !== "line") continue;
+		if (!isTimeSerie(el)) continue;
 		for (const point of el.data) {
 			const time = normalizeTime(point.date, parseDate);
 			if (Number.isNaN(time)) {

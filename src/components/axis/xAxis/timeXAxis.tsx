@@ -5,7 +5,7 @@ import {
 	NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER,
 	normalizeTime,
 } from "../../../lib/core";
-import type { TimeSerieEl } from "../../../types";
+import { isTimeSerie } from "../../../lib/utils";
 import type { XAxisProps } from "../axisProps";
 import { useAxisBase } from "../useAxisBase";
 import { AxisLine, AxisTitle, GridLine } from "./parts";
@@ -45,12 +45,20 @@ const TimeXAxis = (props: XAxisProps) => {
 
 	if (!timeScale) return null;
 
-	const lineSerie = elements?.find((el) => el.type === "line");
-	const lineData = (lineSerie?.data ?? []) as TimeSerieEl[];
+	const labelByTime = new Map<number, string>();
+	for (const el of elements ?? []) {
+		if (!isTimeSerie(el)) continue;
+		for (const point of el.data) {
+			const time = normalizeTime(point.date, ctx.parseDate);
+			if (Number.isNaN(time) || labelByTime.has(time)) continue;
+			labelByTime.set(time, point.date);
+		}
+	}
+
 	const byData = ticks === "data";
 
 	const tickTimes = byData
-		? lineData.map((d) => normalizeTime(d.date, ctx.parseDate))
+		? [...labelByTime.keys()].sort((a, b) => a - b)
 		: timeScale.ticks(typeof ticks === "number" ? ticks : 6);
 
 	const tickY = ctx.negative
@@ -68,7 +76,7 @@ const TimeXAxis = (props: XAxisProps) => {
 						const value = tickFormat
 							? tickFormat(time)
 							: byData
-								? (lineData[tickIndex]?.date ?? String(time))
+								? (labelByTime.get(time) ?? String(time))
 								: new Date(time).toLocaleDateString();
 						return (
 							<Fragment key={`time-tick-${time}-${tickIndex}`}>

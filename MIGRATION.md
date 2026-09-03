@@ -261,9 +261,10 @@ il tema non era personalizzabile dall'esterno.
 auto-calcolato, e `<YAxis zoomable>` per lo zoom con la rotella (con
 `onZoomChange`, `zoomStep`, `zoomSnap`).
 
-**Asse X temporale.** `<XAxis scaleType="time">` posiziona i punti delle serie
-`line` in base alla data e non all'indice, così un campionamento irregolare si
-vede per quello che è. Il default `scaleType="band"` è invariato.
+**Asse X temporale.** `<XAxis scaleType="time">` posiziona le marche in base
+alla data e non all'indice, così un campionamento irregolare si vede per quello
+che è: vale per le linee e (dalla 1.4) per le barre, centrate sull'istante del
+dato. Il default `scaleType="band"` è invariato.
 
 **Area chart e sparkline.** `<Line fill fillOpacity>` riempie l'area fino alla
 baseline, `fillGradient` la sfuma. Nota: in 0.17.x `fill` chiudeva il tratto su

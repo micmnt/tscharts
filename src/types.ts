@@ -112,9 +112,17 @@ export type ChartStructuralState = Pick<
 
 export type ChartInteractiveState = Pick<ChartState, "hoveredElement">;
 
+export type ChartOverlayState = {
+	el: HTMLDivElement | null;
+	pointer: { x: number; y: number } | null;
+	width: number;
+	height: number;
+};
+
 export type ChartMouseState = {
 	mousePosition: { x: number; y: number } | null;
 	tooltipVisible: boolean;
+	overlay: ChartOverlayState;
 };
 
 export type ThemeState = {

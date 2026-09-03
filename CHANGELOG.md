@@ -4,6 +4,68 @@ Tutte le modifiche rilevanti a questo progetto sono documentate qui.
 Il formato si ispira a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e il progetto segue il [Semantic Versioning](https://semver.org/lang/it/).
 
+## [1.4.0] - 2026-09-02
+
+### Added
+
+- **Asse temporale anche per le barre**: `<XAxis scaleType="time">` posizionava
+  solo le serie `line`; ora vale per tutte le serie temporali — `bar`,
+  `bar-stacked` e `group-bar` incluse. Una barra viene **centrata**
+  sull'istante del suo dato (un gruppo di barre viene centrato nel suo insieme),
+  quindi un campionamento irregolare non viene più appiattito su categorie
+  equidistanti. Funziona anche sui grafici con valori negativi, che ora
+  rispettano la scala temporale (prima la ignoravano anche per le linee). La
+  larghezza resta quella di `<Chart barWidth>`: su date molto ravvicinate le
+  barre possono sovrapporsi. Vedi [README](./README.md#asse-temporale) e la
+  story *Axis/Time scale* → Bars. Invariato: i grafici **orizzontali**, dove
+  l'asse X porta i valori e non il tempo.
+- **`<Tooltip render>`**: render-prop che sostituisce **l'intero** riquadro del
+  tooltip (contenitore, titolo e footer inclusi), mentre la libreria continua a
+  decidere quando mostrarlo e dove metterlo. Riceve `{ label, index, series }`,
+  con ogni riga gia' risolta sul punto in hover — `name`, `value`, `formatted`
+  (col `format` della serie applicato), `color` e la `serie` di origine — nel
+  rispetto di `reverseOrder`/`hideSeries`. `customElement` resta per il caso piu'
+  piccolo (cambiare solo la riga). Senza `width` esplicita il riquadro prende la
+  larghezza del contenuto. Nuovi tipi esportati: `TooltipRenderProps`,
+  `TooltipSerieRow`. Vedi [README](./README.md#tooltip-custom) e la story
+  *Tooltip/Custom render*.
+
+### Fixed
+
+- **`<Tooltip customElement>` — warning di React sulle key**: i nodi restituiti
+  venivano emessi dentro una lista senza `key`, quindi in sviluppo comparivano
+  gli avvisi "unique key" a meno che non fosse l'utente a metterla.
+- **Tooltip tagliato ai bordi**: il tooltip era un `<foreignObject>` **dentro
+  l'`<svg>`**, quindi veniva ritagliato dal viewport dell'SVG appena sporgeva
+  (tipico con tooltip larghi o cursore vicino al bordo) e, avendo `width` e
+  `height` fissi, tagliava anche il proprio contenuto quando i nomi delle serie
+  andavano a capo. Ora e' un **overlay HTML** montato sul contenitore del
+  grafico: cresce in altezza quanto serve al contenuto, si ribalta dal lato dove
+  c'e' spazio e viene riportato dentro il contenitore, quindi resta sempre
+  intero. Il markup interno e le classi CSS (`.tooltipContainer`,
+  `.tooltipTitle`, ...) non cambiano; l'id `cts-tooltip-<chartId>` resta, ora
+  sul `<div>` dell'overlay. La prop **`height`** del tooltip diventa un'altezza
+  **minima** (prima era fissa); `width` e' invariata. Nota: il tooltip non fa
+  piu' parte dell'SVG, quindi non compare piu' nell'export/serializzazione
+  dell'`<svg>`.
+- **Lato del tooltip** deciso male: il ribaltamento destra/sinistra confrontava
+  la X del cursore con `(chartXEnd - chartXStart) / 2`, cioe' con la *larghezza*
+  dell'area invece che con la sua *coordinata mediana* — con un asse Y a sinistra
+  la soglia cadeva circa 75px prima del centro reale. Ora il lato dipende dallo
+  spazio effettivamente disponibile per il riquadro.
+
+### Changed
+
+- **Dominio temporale** calcolato sulle date di **tutte** le serie temporali
+  (prima solo `line`): un grafico a sole barre aveva dominio vuoto e ricadeva
+  sulla scala categorica.
+- **`ticks="data"`** dell'asse temporale mostra un tick per istante presente nel
+  grafico — unione delle date di tutte le serie, ordinate — invece dei soli
+  punti della prima serie `line`. Per un grafico con una sola serie il risultato
+  è identico a prima.
+- **`<Tooltip intersect>`** su scala temporale: l'area sensibile di una barra è
+  ora la barra stessa (`barWidth`), non metà della distanza dal dato vicino.
+
 ## [1.3.0] - 2026-08-11
 
 ### Removed (BREAKING)

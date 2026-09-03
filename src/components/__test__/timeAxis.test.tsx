@@ -4,6 +4,7 @@ import React from "react";
 import { describe, expect, it } from "vitest";
 import XAxis from "../axis/xAxis";
 import YAxis from "../axis/yAxis";
+import Bar from "../bar/bar";
 import Chart from "../chart/chart";
 import Line from "../line/line";
 import Tooltip from "../tooltip/tooltip";
@@ -87,5 +88,78 @@ describe("asse tempo — tick e allineamento asse↔line", () => {
 		expect(tickX.length).toBe(3);
 
 		expect(tickX[1] - tickX[0]).toBeCloseTo(tickX[2] - tickX[1], 6);
+	});
+});
+
+const barWidth = 20;
+
+const barElements = [
+	{
+		name: "s",
+		type: "bar" as const,
+		uom: "€",
+		data: dates.map((date, i) => ({ date, value: 100 + i * 20 })),
+	},
+];
+
+const barCentersOf = (c: HTMLElement) =>
+	Array.from(c.querySelectorAll("path"))
+		.map((p) => p.getAttribute("d") ?? "")
+		.filter((d) => /^M [\d.]+ [\d.]+ V [\d.]+ H [\d.]+ V [\d.]+ Z$/.test(d))
+		.map((d) => Number(d.split(" ")[1]) + barWidth / 2);
+
+describe("asse tempo — barre", () => {
+	it("le barre si posizionano nel tempo e restano centrate sui tick", async () => {
+		const { container } = render(
+			<Chart
+				width={640}
+				height={400}
+				elements={barElements}
+				barWidth={barWidth}
+			>
+				<YAxis name="s" showLine />
+				<Bar name="s" />
+				<XAxis scaleType="time" parseDate={parseDate} showLine showLabels />
+				<Tooltip />
+			</Chart>,
+		);
+		await waitFor(() =>
+			expect(barCentersOf(container).length).toBe(dates.length),
+		);
+
+		const tickX = dates.map(
+			(d) => textsByContent(container, (t) => t === d)[0],
+		);
+		const centers = barCentersOf(container);
+
+		dates.forEach((_, i) => {
+			expect(centers[i]).toBeCloseTo(tickX[i], 6);
+		});
+
+		const gap01 = centers[1] - centers[0];
+		const gap12 = centers[2] - centers[1];
+		expect(gap12).toBeGreaterThan(gap01 * 20);
+	});
+
+	it("senza scaleType le barre restano equidistanti (band)", async () => {
+		const { container } = render(
+			<Chart
+				width={640}
+				height={400}
+				elements={barElements}
+				barWidth={barWidth}
+			>
+				<YAxis name="s" showLine />
+				<Bar name="s" />
+				<XAxis dataPoints={dates} showLine showLabels />
+				<Tooltip />
+			</Chart>,
+		);
+		await waitFor(() =>
+			expect(barCentersOf(container).length).toBe(dates.length),
+		);
+
+		const centers = barCentersOf(container);
+		expect(centers[1] - centers[0]).toBeCloseTo(centers[2] - centers[1], 9);
 	});
 });

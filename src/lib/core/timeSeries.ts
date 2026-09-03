@@ -17,7 +17,12 @@ import {
 	generateVerticalBarPath,
 	getValuePosition,
 } from "./primitives";
-import { createBandScale, getChartTimeScale, getChartYScale } from "./scales";
+import {
+	type BandScale,
+	createBandScale,
+	getChartTimeScale,
+	getChartYScale,
+} from "./scales";
 import {
 	calculateStackedSeriesMax,
 	getEffectiveMaxValue,
@@ -34,6 +39,19 @@ const initSerieAccumulators = (serieName: string) => {
 	topLabelsPoints.set(serieName, []);
 
 	return { dataPoints, topLabelsPoints };
+};
+
+const createXPositioner = (
+	ctx: ChartState & { padding: number },
+	xScale: BandScale,
+	centerOffset: number,
+): ((index: number, date: string) => number) => {
+	const timeScale = ctx.scaleType === "time" ? getChartTimeScale(ctx) : null;
+
+	if (!timeScale) return (index) => xScale.position(index);
+
+	return (_index, date) =>
+		timeScale.position(normalizeTime(date, ctx.parseDate)) - centerOffset;
 };
 
 const getStackedBarStartValue = (
@@ -100,6 +118,9 @@ export const generateStackedDataPaths = (
 		firstOffset: padding / 2,
 	});
 
+	const barWidth = ctxBarWidth ?? padding;
+	const positionX = createXPositioner(ctx, xScale, barWidth / 2);
+
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, stackedMaxValue);
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
@@ -121,8 +142,7 @@ export const generateStackedDataPaths = (
 
 		const serieY = chartYEnd - value - prevPosition;
 
-		const barWidth = ctxBarWidth ?? padding;
-		const serieElX = xScale.position(serieElIndex);
+		const serieElX = positionX(serieElIndex, serieEl.date);
 
 		const point =
 			value < MIN_STACKED_BAR_HEIGHT_FOR_LABEL
@@ -216,6 +236,13 @@ export const generateNegativeDataPaths = (
 		firstOffset: type === "bar" ? padding / 2 : padding / 2 + xSpacing,
 	});
 
+	const barWidth = ctxBarWidth ?? padding;
+	const positionX = createXPositioner(
+		ctx,
+		xScale,
+		type === "bar" ? barWidth / 2 : 0,
+	);
+
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, serieMaxValue);
 
 	const zeroY = ctx.chartYMiddle ?? 0;
@@ -237,8 +264,7 @@ export const generateNegativeDataPaths = (
 			: null;
 
 		if (type === "bar") {
-			const barWidth = ctxBarWidth ?? padding;
-			const serieElX = xScale.position(serieElIndex);
+			const serieElX = positionX(serieElIndex, serieEl.date);
 
 			const point =
 				value < MIN_BAR_HEIGHT_FOR_LABEL
@@ -277,7 +303,7 @@ export const generateNegativeDataPaths = (
 				isNegative,
 			);
 		}
-		const serieElX = xScale.position(serieElIndex);
+		const serieElX = positionX(serieElIndex, serieEl.date);
 
 		const formattedX =
 			isDefined(serieElX) && !Number.isNaN(serieElX) ? serieElX : null;
@@ -362,8 +388,12 @@ export const generateDataPaths = (
 		firstOffset: type === "bar" ? padding / 2 : padding / 2 + xSpacing,
 	});
 
-	const timeScale =
-		type === "line" && ctx.scaleType === "time" ? getChartTimeScale(ctx) : null;
+	const barWidth = ctxBarWidth ?? padding;
+	const positionX = createXPositioner(
+		ctx,
+		xScale,
+		type === "bar" ? barWidth / 2 : 0,
+	);
 
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, serieMaxValue);
 
@@ -387,8 +417,7 @@ export const generateDataPaths = (
 			: getValuePosition(flatMaxValue, serieEl.value ?? 0, chartYEnd - padding);
 
 		if (type === "bar") {
-			const barWidth = ctxBarWidth ?? padding;
-			const serieElX = xScale.position(serieElIndex);
+			const serieElX = positionX(serieElIndex, serieEl.date);
 
 			const point =
 				value < MIN_BAR_HEIGHT_FOR_LABEL
@@ -420,9 +449,7 @@ export const generateDataPaths = (
 				bottomLeftRadius,
 			);
 		}
-		const serieElX = timeScale
-			? timeScale.position(normalizeTime(serieEl.date, ctx.parseDate))
-			: xScale.position(serieElIndex);
+		const serieElX = positionX(serieElIndex, serieEl.date);
 
 		const formattedX =
 			isDefined(serieElX) && !Number.isNaN(serieElX) ? serieElX : null;
@@ -466,6 +493,15 @@ export const getGroupBarSlotCount = (elements: Serie[]) =>
 export const getGroupBarSlotIndex = (elements: Serie[], serie: TimeSerie) =>
 	getGroupBarSlotKeys(elements).indexOf(serie.stackedName ?? serie.name);
 
+const getGroupWidth = (
+	elements: Serie[] | undefined,
+	barWidth: number,
+	barGap: number,
+) => {
+	const slotCount = getGroupBarSlotCount(elements ?? []);
+	return slotCount * barWidth + Math.max(0, slotCount - 1) * barGap;
+};
+
 export const getCategorySpacing = (
 	elements: Serie[],
 	globalConfig: GlobalConfig | undefined,
@@ -474,16 +510,13 @@ export const getCategorySpacing = (
 	const hasGroupBar = elements.some((el) => el.type === "group-bar");
 
 	if (hasGroupBar) {
-		const slotCount = getGroupBarSlotCount(elements);
 		const barWidth = globalConfig?.barWidth
 			? Number(globalConfig.barWidth)
 			: padding;
 		const barGroupGap = globalConfig?.barGroupGap
 			? Number(globalConfig.barGroupGap)
 			: padding / 4;
-		const groupWidth =
-			slotCount * barWidth + Math.max(0, slotCount - 1) * barGroupGap;
-		return padding / 2 + groupWidth / 2;
+		return padding / 2 + getGroupWidth(elements, barWidth, barGroupGap) / 2;
 	}
 
 	return globalConfig?.barWidth
@@ -542,6 +575,14 @@ export const generateGroupDataPaths = (
 		firstOffset: padding / 2,
 	});
 
+	const barWidth = ctxBarWidth ?? padding;
+	const barGap = ctxBarGroupGap ?? padding / 4;
+	const positionX = createXPositioner(
+		ctx,
+		xScale,
+		getGroupWidth(ctx.elements, barWidth, barGap) / 2,
+	);
+
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, serieMaxValue);
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
@@ -553,11 +594,8 @@ export const generateGroupDataPaths = (
 
 		const serieY = isDefined(serieEl.value) ? chartYEnd - value : null;
 
-		const barWidth = ctxBarWidth ?? padding;
-
-		const barGap = ctxBarGroupGap ?? padding / 4;
 		const serieElX =
-			xScale.position(serieElIndex) + (barWidth + barGap) * serieIndex;
+			positionX(serieElIndex, serieEl.date) + (barWidth + barGap) * serieIndex;
 
 		const point =
 			value < MIN_BAR_HEIGHT_FOR_LABEL
@@ -675,6 +713,14 @@ export const generateStackedGroupDataPaths = (
 		firstOffset: padding / 2,
 	});
 
+	const barWidth = ctxBarWidth ?? padding;
+	const barGap = ctxBarGroupGap ?? padding / 4;
+	const positionX = createXPositioner(
+		ctx,
+		xScale,
+		getGroupWidth(ctx.elements, barWidth, barGap) / 2,
+	);
+
 	const flatMaxValue = getEffectiveMaxValue(ctx.flatMax, stackedMaxValue);
 
 	const paths = timeSerieData?.map((serieEl, serieElIndex) => {
@@ -696,11 +742,9 @@ export const generateStackedGroupDataPaths = (
 
 		const serieY = chartYEnd - value - prevPosition;
 
-		const barWidth = ctxBarWidth ?? padding;
-
-		const barGap = ctxBarGroupGap ?? padding / 4;
 		const serieElX =
-			xScale.position(serieElIndex) + (barWidth + barGap) * serieGroupIndex;
+			positionX(serieElIndex, serieEl.date) +
+			(barWidth + barGap) * serieGroupIndex;
 
 		const point =
 			value < MIN_STACKED_BAR_HEIGHT_FOR_LABEL

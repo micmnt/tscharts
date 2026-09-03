@@ -1,4 +1,12 @@
-import type { ReactNode } from "react";
+import {
+	Fragment,
+	type ReactNode,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react";
+import { createPortal } from "react-dom";
 
 import {
 	useChartsInteractive,
@@ -24,6 +32,29 @@ type Position = {
 	y: number;
 };
 
+const useIsomorphicLayoutEffect =
+	typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+export type TooltipSerieRow = {
+	name: string;
+
+	value: number | null;
+
+	formatted: string;
+
+	color?: string;
+
+	serie: Serie;
+};
+
+export type TooltipRenderProps = {
+	label: string;
+
+	index: number;
+
+	series: TooltipSerieRow[];
+};
+
 export type TooltipProps = {
 	title?: (val: string) => string;
 	reverseOrder?: boolean;
@@ -42,6 +73,8 @@ export type TooltipProps = {
 	customElement?: (
 		props: (TimeSerieEl | PieSerieEl) & { name: string; elementIndex?: number },
 	) => ReactNode;
+
+	render?: (props: TooltipRenderProps) => ReactNode;
 };
 
 const getFormattedValue = (
@@ -65,96 +98,112 @@ const getElementValueByType = (element: Serie, dataIndex: number) => {
 	return null;
 };
 
-const generateTimeSerieContent = (
+const getSeriesToShow = <T extends { name: string }>(
+	items: T[],
+	reverseOrder: boolean,
+	hideSeries?: string[],
+) => {
+	const ordered = reverseOrder ? [...items].reverse() : items;
+
+	return (hideSeries ?? []).length > 0
+		? ordered.filter((item) => !hideSeries?.includes(item.name))
+		: ordered;
+};
+
+const buildTimeSerieRows = (
 	timeSeriesElements: Serie[],
 	allElements: Serie[],
 	theme: ThemeState | null,
-	hoveredElement: { elementIndex: number; label: string } | null,
+	hoveredElementIndex: number,
 	reverseOrder: boolean,
 	hideSeries?: string[],
-	customElement?: (
-		props: (TimeSerieEl | PieSerieEl) & { name: string; elementIndex?: number },
-	) => ReactNode,
-) => {
-	const orderedTimeSeriesElements = reverseOrder
-		? [...timeSeriesElements].reverse()
-		: timeSeriesElements;
+): TooltipSerieRow[] =>
+	getSeriesToShow(timeSeriesElements, reverseOrder, hideSeries).map(
+		(element) => {
+			const elementValue = getElementValueByType(element, hoveredElementIndex);
+			const serieIndex = allElements.findIndex(
+				(el) => el.name === element.name,
+			);
 
-	const seriesToShow =
-		(hideSeries ?? []).length > 0
-			? orderedTimeSeriesElements.filter(
-					(serie) => !hideSeries?.includes(serie.name),
-				)
-			: orderedTimeSeriesElements;
-
-	return seriesToShow.map((element) => {
-		const hoveredElementIndex = hoveredElement?.elementIndex ?? -1;
-
-		const elementValue = getElementValueByType(element, hoveredElementIndex);
-
-		if (customElement && hoveredElementIndex > -1) {
-			return customElement({
-				elementIndex: hoveredElementIndex,
+			return {
 				name: element.name,
-				...((isTimeSerie(element) ? element.data : [])[hoveredElementIndex] ??
-					{}),
-			});
-		}
+				value: isDefined(elementValue) ? elementValue : null,
+				formatted: isDefined(elementValue)
+					? getFormattedValue(elementValue, element.format)
+					: "-",
+				color:
+					element.color ??
+					theme?.seriesColors?.[serieIndex] ??
+					theme?.seriesColors?.[0],
+				serie: element,
+			};
+		},
+	);
 
-		const serieIndex = allElements.findIndex((el) => el.name === element.name);
-
-		return (
-			<div className="tooltipSerieContainer" key={`tooltip-${element.name}`}>
-				<div
-					className="tooltipCircle"
-					style={{
-						backgroundColor:
-							element.color ??
-							theme?.seriesColors?.[serieIndex] ??
-							theme?.seriesColors?.[0],
-					}}
-				/>
-				<span className="tooltipText">
-					{`${element.name}: ${isDefined(elementValue) ? getFormattedValue(elementValue, element.format) : "-"}`}
-				</span>
-			</div>
-		);
-	});
-};
-
-const generatePieSerieContent = (
+const buildPieSerieRows = (
+	pieSerie: Serie | undefined,
 	pieSeriesElements: PieSerieEl[],
 	theme: ThemeState | null,
 	hideSeries?: string[],
+): TooltipSerieRow[] =>
+	getSeriesToShow(pieSeriesElements, false, hideSeries).map(
+		(element, serieIndex) => ({
+			name: element.name,
+			value: isDefined(element.value) ? element.value : null,
+			formatted: isDefined(element.value)
+				? getFormattedValue(element.value, element.format)
+				: "-",
+			color: element.color ?? theme?.seriesColors?.[serieIndex],
+			serie: pieSerie as Serie,
+		}),
+	);
+
+const SerieRow = ({ row }: { row: TooltipSerieRow }) => (
+	<div className="tooltipSerieContainer">
+		<div className="tooltipCircle" style={{ backgroundColor: row.color }} />
+		<span className="tooltipText">{`${row.name}: ${row.formatted}`}</span>
+	</div>
+);
+
+const generateTimeSerieContent = (
+	rows: TooltipSerieRow[],
+	hoveredElementIndex: number,
+	customElement?: (
+		props: (TimeSerieEl | PieSerieEl) & { name: string; elementIndex?: number },
+	) => ReactNode,
+) =>
+	rows.map((row) => {
+		const content =
+			customElement && hoveredElementIndex > -1 ? (
+				customElement({
+					elementIndex: hoveredElementIndex,
+					name: row.name,
+					...((isTimeSerie(row.serie) ? row.serie.data : [])[
+						hoveredElementIndex
+					] ?? {}),
+				})
+			) : (
+				<SerieRow row={row} />
+			);
+
+		return <Fragment key={`tooltip-${row.name}`}>{content}</Fragment>;
+	});
+
+const generatePieSerieContent = (
+	rows: TooltipSerieRow[],
 	customElement?: (
 		props: (TimeSerieEl | PieSerieEl) & { name: string },
 	) => ReactNode,
-) => {
-	const seriesToShow =
-		(hideSeries ?? []).length > 0
-			? pieSeriesElements.filter((serie) => !hideSeries?.includes(serie.name))
-			: pieSeriesElements;
-
-	return seriesToShow.map((element, serieIndex) => {
-		if (customElement) {
-			return customElement({ name: element.name, value: element.value });
-		}
-
-		return (
-			<div className="tooltipSerieContainer" key={`tooltip-${element.name}`}>
-				<div
-					className="tooltipCircle"
-					style={{
-						backgroundColor: element.color ?? theme?.seriesColors?.[serieIndex],
-					}}
-				/>
-				<span className="tooltipText">
-					{`${element.name}: ${isDefined(element.value) ? getFormattedValue(element.value, element.format) : "-"}`}
-				</span>
-			</div>
+) =>
+	rows.map((row) => {
+		const content = customElement ? (
+			customElement({ name: row.name, value: row.value as number })
+		) : (
+			<SerieRow row={row} />
 		);
+
+		return <Fragment key={`tooltip-${row.name}`}>{content}</Fragment>;
 	});
-};
 
 const generateFooter = (
 	elements: Serie[],
@@ -212,13 +261,31 @@ const Tooltip = (props: TooltipProps) => {
 		width = 150,
 		height = 0,
 		customElement = undefined,
+		render = undefined,
 	} = props;
+
+	const autoWidth = render !== undefined && props.width === undefined;
 
 	const ctx = useChartsStructural();
 	const interactive = useChartsInteractive();
 	const mouse = useChartsMouse();
 
 	const theme = useChartsTheme();
+
+	const boxRef = useRef<HTMLDivElement>(null);
+	const [boxSize, setBoxSize] = useState({ width, height: height || 160 });
+
+	useIsomorphicLayoutEffect(() => {
+		const el = boxRef.current;
+		if (!el) return;
+
+		const measured = { width: el.offsetWidth, height: el.offsetHeight };
+		setBoxSize((prev) =>
+			prev.width === measured.width && prev.height === measured.height
+				? prev
+				: measured,
+		);
+	});
 
 	if (!ctx) {
 		warnDev("<Tooltip /> deve essere renderizzato dentro <Chart>.");
@@ -229,7 +296,11 @@ const Tooltip = (props: TooltipProps) => {
 
 	const { hoveredElement: _hoveredElement } = interactive ?? {};
 
-	const { mousePosition: _mousePosition, tooltipVisible } = mouse ?? {};
+	const {
+		mousePosition: _mousePosition,
+		tooltipVisible,
+		overlay,
+	} = mouse ?? {};
 
 	if (!elements) return null;
 
@@ -265,48 +336,65 @@ const Tooltip = (props: TooltipProps) => {
 		cumulatedSeriesValue !== null &&
 		Object.keys(cumulatedSeriesValue)?.length > 0;
 
-	const tooltipHeight = height ? height : showTotal ? 200 : 160;
+	const overlayEl = overlay?.el ?? null;
+	const overlayPointer = overlay?.pointer ?? null;
 
-	const tooltipPosition = calculateTooltipPosition(
-		mousePosition ?? { x: 0, y: 0 },
-		chartXStart,
-		chartXEnd,
-		chartYEnd,
-		width,
-		tooltipHeight,
-	);
+	const tooltipPosition = calculateTooltipPosition({
+		pointer: overlayPointer ?? { x: 0, y: 0 },
+		tooltip: boxSize,
+		bounds: {
+			width: overlay?.width ?? 0,
+			height: overlay?.height ?? 0,
+		},
+	});
 
-	return (
-		<>
-			<foreignObject
-				id={`cts-tooltip-${chartID}`}
-				x={tooltipPosition.x}
-				y={tooltipPosition.y}
-				width={width}
-				height={tooltipHeight}
-				style={{
-					display: tooltipVisible ? "block" : "none",
-					pointerEvents: "none",
-				}}
-			>
+	const hoveredElementIndex = hoveredElement?.elementIndex ?? -1;
+
+	const isTimeSerieTooltip = timeSeriesElements.length > 0;
+
+	const serieRows = isTimeSerieTooltip
+		? buildTimeSerieRows(
+				tooltipRowElements,
+				elements,
+				theme,
+				hoveredElementIndex,
+				reverseOrder,
+				hideSeries,
+			)
+		: buildPieSerieRows(
+				elements.find(isPieSerie),
+				pieSeriesElements,
+				theme,
+				hideSeries,
+			);
+
+	const tooltipBox = (
+		<div
+			ref={boxRef}
+			id={`cts-tooltip-${chartID}`}
+			className="tooltipOverlay"
+			style={{
+				width: autoWidth ? undefined : width,
+				minHeight: height || undefined,
+				transform: `translate(${tooltipPosition.x}px, ${tooltipPosition.y}px)`,
+			}}
+		>
+			{render ? (
+				render({
+					label: hoveredElement?.label ?? "",
+					index: hoveredElementIndex,
+					series: serieRows,
+				})
+			) : (
 				<div className="tooltipContainer">
 					<span className="tooltipTitle">{tooltipTitle}</span>
-					{timeSeriesElements.length > 0
+					{isTimeSerieTooltip
 						? generateTimeSerieContent(
-								tooltipRowElements,
-								elements,
-								theme,
-								hoveredElement,
-								reverseOrder,
-								hideSeries,
+								serieRows,
+								hoveredElementIndex,
 								customElement,
 							)
-						: generatePieSerieContent(
-								pieSeriesElements,
-								theme,
-								hideSeries,
-								customElement,
-							)}
+						: generatePieSerieContent(serieRows, customElement)}
 					{generateFooter(
 						elements,
 						hoveredElement,
@@ -315,7 +403,15 @@ const Tooltip = (props: TooltipProps) => {
 						footer,
 					)}
 				</div>
-			</foreignObject>
+			)}
+		</div>
+	);
+
+	return (
+		<>
+			{tooltipVisible && overlayEl && overlayPointer
+				? createPortal(tooltipBox, overlayEl)
+				: null}
 			{showGrid &&
 			tooltipVisible &&
 			mousePosition &&

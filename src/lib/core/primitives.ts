@@ -265,23 +265,39 @@ export const polarToCartesian = (
 	};
 };
 
-export const calculateTooltipPosition = (
-	svgPoint: { x: number; y: number },
-	chartXStart: number,
-	chartXEnd: number,
-	chartYEnd: number,
-	tooltipWidth: number,
-	tooltipHeight: number,
-) => {
-	const tooltipX =
-		svgPoint.x < (chartXEnd - chartXStart) / 2
-			? svgPoint.x + 50
-			: svgPoint.x - tooltipWidth - 50;
+const clampToBounds = (value: number, max: number) =>
+	max <= 0 ? 0 : Math.min(Math.max(value, 0), max);
 
-	const tooltipY =
-		svgPoint.y < (chartYEnd - 10) / 2
-			? svgPoint.y + 10
-			: svgPoint.y - 20 - tooltipHeight / 2;
+export const calculateTooltipPosition = ({
+	pointer,
+	tooltip,
+	bounds,
+	gap = 16,
+}: {
+	pointer: { x: number; y: number };
+	tooltip: { width: number; height: number };
+	bounds: { width: number; height: number };
+	gap?: number;
+}) => {
+	const after = { x: pointer.x + gap, y: pointer.y + gap };
+	const before = {
+		x: pointer.x - gap - tooltip.width,
+		y: pointer.y - gap - tooltip.height,
+	};
 
-	return { x: tooltipX < 0 ? 0 : tooltipX, y: tooltipY };
+	const fitsAfterX = after.x + tooltip.width <= bounds.width;
+	const fitsBeforeX = before.x >= 0;
+	const fitsAfterY = after.y + tooltip.height <= bounds.height;
+	const fitsBeforeY = before.y >= 0;
+
+	return {
+		x: clampToBounds(
+			fitsAfterX || !fitsBeforeX ? after.x : before.x,
+			bounds.width - tooltip.width,
+		),
+		y: clampToBounds(
+			fitsAfterY || !fitsBeforeY ? after.y : before.y,
+			bounds.height - tooltip.height,
+		),
+	};
 };

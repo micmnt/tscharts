@@ -181,7 +181,7 @@ Asse delle categorie. Ospita anche selezione e click sulle label.
 | `selectedArea` | `string[]` | — | Coppia `[inizio, fine]` di `dataPoints` da evidenziare come intervallo |
 | `selectedAreaColor` | `string` | `"red"` | Colore dell'area selezionata |
 | `selectedAreaOpacity` | `number` | `0.2` | Opacità dell'area selezionata |
-| `scaleType` | `"band" \| "time"` | `"band"` | `"time"` posiziona i punti delle serie **line** proporzionalmente alla data (non all'indice). Vedi [Asse temporale](#asse-temporale) |
+| `scaleType` | `"band" \| "time"` | `"band"` | `"time"` posiziona le marche (linee **e** barre) proporzionalmente alla data, non all'indice. Vedi [Asse temporale](#asse-temporale) |
 | `parseDate` | `(date: string) => number \| Date` | `new Date(d).getTime()` | Converte la stringa `date` in istante. Serve quando `date` non è ISO 8601 (es. `"13/03"`). Solo con `scaleType="time"` |
 | `ticks` | `"data" \| number` | `"data"` | `"data"` = un tick per punto dato alla sua posizione temporale; un numero = N tick equispaziati nel dominio. Solo con `scaleType="time"` |
 | `tickFormat` | `(time: number) => string` | data grezza / `toLocaleDateString` | Formatta l'etichetta di un tick temporale |
@@ -190,9 +190,9 @@ Asse delle categorie. Ospita anche selezione e click sulle label.
 
 Di default l'asse X è **categorico** (`band`): i punti sono equidistanti, uno
 per indice, e il campo `date` è solo un'etichetta. Con `scaleType="time"` l'asse
-diventa **quantitativo**: i punti delle serie `line` si distribuiscono in modo
-proporzionale al tempo, quindi un campionamento irregolare viene mostrato
-fedelmente (due misure ravvicinate restano vicine, un buco grande è largo).
+diventa **quantitativo**: le marche si distribuiscono in modo proporzionale al
+tempo, quindi un campionamento irregolare viene mostrato fedelmente (due misure
+ravvicinate restano vicine, un buco grande è largo).
 
 ```tsx
 const parseDate = (d: string) => new Date(d).getTime();
@@ -205,14 +205,34 @@ const parseDate = (d: string) => new Date(d).getTime();
 </Chart>
 ```
 
+Funziona per tutte le serie temporali: `line`, `bar`, `bar-stacked` e
+`group-bar`. Una linea posiziona il punto sull'istante; una barra viene
+**centrata** sull'istante (un gruppo di barre viene centrato sull'istante nel
+suo insieme), perché a differenza di un punto ha una larghezza propria.
+
+```tsx
+<Chart width={560} height={400} elements={elements} barWidth={14}>
+  <YAxis name="vendite" showLine showName />
+  <Bar name="vendite" />
+  <XAxis scaleType="time" parseDate={parseDate} showLine />
+  <Tooltip />
+</Chart>
+```
+
 Note:
-- Agisce **solo sulle serie `line`**; le barre restano categoriche.
-- Il dominio `[min, max]` è calcolato dalle date delle serie line via `parseDate`
-  (default `new Date(d).getTime()`; passa un `parseDate` custom per formati non
-  ISO come `"13/03"`).
-- L'hover aggancia il **punto dato più vicino nel tempo**.
-- `ticks="data"` mostra un tick per punto; `ticks={N}` mostra N tick equispaziati
-  nel dominio, etichettati con `tickFormat`.
+- Il dominio `[min, max]` è calcolato dalle date di **tutte** le serie temporali
+  via `parseDate` (default `new Date(d).getTime()`; passa un `parseDate` custom
+  per formati non ISO come `"13/03"`).
+- La larghezza della barra resta quella di `<Chart barWidth>`: non si adatta
+  all'intervallo temporale. Su date molto ravvicinate le barre possono
+  sovrapporsi — riduci `barWidth`.
+- L'hover aggancia il **punto dato più vicino nel tempo**; con
+  `<Tooltip intersect>` l'area sensibile di una barra è la barra stessa.
+- `ticks="data"` mostra un tick per istante presente nel grafico (unione delle
+  date di tutte le serie); `ticks={N}` mostra N tick equispaziati nel dominio,
+  etichettati con `tickFormat`.
+- Non si applica ai grafici **orizzontali** (`<Bar horizontal>` /
+  `<Line horizontal>`): lì l'asse X porta i valori, non il tempo.
 
 ### `<Bar>`
 
@@ -369,10 +389,58 @@ Linea di soglia orizzontale o verticale sovrapposta al grafico.
 | `showGrid` | `boolean` | `false` | Mostra le linee guida (verticale/orizzontale) sul punto in hover |
 | `intersect` | `boolean` | `false` | `false`: il tooltip segue la colonna più vicina (prossimità). `true`: compare solo quando il mouse è sopra la barra/gruppo. Non si applica ai grafici orizzontali |
 | `hideSeries` | `string[]` | `[]` | Nomi delle serie da escludere dal tooltip |
-| `width` / `height` | `number` | `150` / auto (`160`–`200`) | Dimensioni del riquadro tooltip |
+| `width` | `number` | `150` | Larghezza del riquadro tooltip |
+| `height` | `number` | — | Altezza **minima** del riquadro; di default l'altezza segue il contenuto |
 | `footer` | `(series: Serie[], hoveredElementIndex: number) => ReactNode` | — | Contenuto custom in fondo al tooltip, al posto del totale calcolato |
 | `cumulatedSeriesValue` | `{ series: string[]; label: string; format?: (value: number) => string }` | — | Se presente, mostra la somma dei valori delle `series` indicate con l'etichetta `label` |
-| `customElement` | `(props) => ReactNode` | — | Sostituisce completamente il rendering di riga per ogni serie nel tooltip |
+| `customElement` | `(props) => ReactNode` | — | Sostituisce il rendering di **riga** per ogni serie nel tooltip |
+| `render` | `(props: TooltipRenderProps) => ReactNode` | — | Sostituisce **l'intero** riquadro: vedi [Tooltip custom](#tooltip-custom) |
+
+#### Tooltip custom
+
+`customElement` cambia la singola riga, ma lascia contenitore, titolo e footer
+della libreria. Con **`render`** disegni tu tutto il riquadro: resta a carico
+della libreria solo *quando* mostrarlo e *dove* metterlo (ribaltamento ai bordi
+e clamp nel contenitore).
+
+```tsx
+<Tooltip
+  render={({ label, index, series }) => (
+    <div className="mio-tooltip">
+      <strong>{label}</strong>
+      {series.map((row) => (
+        <div key={row.name}>
+          <span style={{ background: row.color }} />
+          {row.name}: {row.formatted}
+        </div>
+      ))}
+    </div>
+  )}
+/>
+```
+
+`TooltipRenderProps`:
+
+| Campo | Tipo | Descrizione |
+|-------|------|-------------|
+| `label` | `string` | Etichetta del punto in hover (la `date` della serie / il `dataPoint`) |
+| `index` | `number` | Indice del dato in hover (`-1` se non c'è) |
+| `series` | `TooltipSerieRow[]` | Una riga per serie, già risolta sul punto in hover |
+
+`TooltipSerieRow`: `name`, `value` (`number \| null` se il dato manca),
+`formatted` (il valore con il `format` della serie applicato, `"-"` se manca),
+`color` (colore della serie o del tema) e `serie` (la serie di origine, per
+risalire ai dati grezzi con `serie.data[index]`). L'ordine e i filtri di
+`reverseOrder` / `hideSeries` sono già applicati.
+
+Note:
+- Con `render` valorizzata, `title`, `footer`, `customElement` e
+  `cumulatedSeriesValue` non vengono usati: quel contenuto lo produci tu.
+- Senza `width` esplicita il riquadro prende la larghezza del contenuto (con
+  `render` è di solito quello che si vuole); passando `width` torni al riquadro
+  a larghezza fissa.
+- L'overlay è `pointer-events: none`: il tooltip è informativo, il contenuto
+  custom non può essere cliccato.
 
 ## Trasformazione dati
 

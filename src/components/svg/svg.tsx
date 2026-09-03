@@ -108,9 +108,32 @@ const Svg = (props: SVGProps) => {
 	} | null>(null);
 	const [tooltipVisible, setTooltipVisible] = useState(false);
 
+	const [overlayEl, setOverlayEl] = useState<HTMLDivElement | null>(null);
+	const [overlayPointer, setOverlayPointer] = useState<{
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	} | null>(null);
+
+	useEffect(() => {
+		setOverlayEl(containerRef.current);
+	}, [containerRef]);
+
 	const mouseValue = useMemo(
-		() => ({ mousePosition, tooltipVisible }),
-		[mousePosition, tooltipVisible],
+		() => ({
+			mousePosition,
+			tooltipVisible,
+			overlay: {
+				el: overlayEl,
+				pointer: overlayPointer
+					? { x: overlayPointer.x, y: overlayPointer.y }
+					: null,
+				width: overlayPointer?.width ?? 0,
+				height: overlayPointer?.height ?? 0,
+			},
+		}),
+		[mousePosition, tooltipVisible, overlayEl, overlayPointer],
 	);
 
 	const flatChildren = useMemo(() => flattenChildren(children), [children]);
@@ -229,6 +252,11 @@ const Svg = (props: SVGProps) => {
 
 	const hoverableSerie = ctxElements?.find(isTimeSerie);
 
+	const hasBarLikeSerie = !!ctxElements?.some(
+		(el) =>
+			el.type === "bar" || el.type === "bar-stacked" || el.type === "group-bar",
+	);
+
 	const handleMouseLeave = () => {
 		setTooltipVisible(false);
 	};
@@ -249,6 +277,18 @@ const Svg = (props: SVGProps) => {
 				};
 
 				setMousePosition(svgPoint);
+
+				const containerRect = containerRef.current?.getBoundingClientRect();
+				setOverlayPointer(
+					containerRect
+						? {
+								x: clientX - containerRect.left,
+								y: clientY - containerRect.top,
+								width: containerRect.width,
+								height: containerRect.height,
+							}
+						: null,
+				);
 
 				if (!ctxHorizontal && hoverableSerie) {
 					const serieData = hoverableSerie.data;
@@ -283,15 +323,25 @@ const Svg = (props: SVGProps) => {
 						});
 						center = timeScale.position(times[hoveredIndex] ?? 0);
 
-						const neighborGaps = [
-							times[hoveredIndex - 1],
-							times[hoveredIndex + 1],
-						]
-							.filter((t): t is number => isDefined(t))
-							.map((t) => Math.abs(timeScale.position(t) - center));
-						halfWidth = neighborGaps.length
-							? Math.min(...neighborGaps) / 2
-							: (padding ?? 0);
+						if (hasBarLikeSerie) {
+							halfWidth =
+								getCategorySpacing(
+									ctxElements ?? [],
+									ctxGlobalConfig,
+									padding ?? 0,
+								) -
+								(padding ?? 0) / 2;
+						} else {
+							const neighborGaps = [
+								times[hoveredIndex - 1],
+								times[hoveredIndex + 1],
+							]
+								.filter((t): t is number => isDefined(t))
+								.map((t) => Math.abs(timeScale.position(t) - center));
+							halfWidth = neighborGaps.length
+								? Math.min(...neighborGaps) / 2
+								: (padding ?? 0);
+						}
 					} else {
 						const xSpace = getCategorySpacing(
 							ctxElements ?? [],
@@ -341,11 +391,13 @@ const Svg = (props: SVGProps) => {
 		[
 			svgRef,
 			dispatch,
+			containerRef,
 			chartXStart,
 			chartXEnd,
 			chartYEnd,
 			ctxHorizontal,
 			hoverableSerie,
+			hasBarLikeSerie,
 			ctxElements,
 			ctxGlobalConfig,
 			padding,

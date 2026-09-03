@@ -10,7 +10,11 @@ const meta: Meta<typeof TimeAxisExample> = {
 				component: [
 					"## Usage",
 					"",
-					'Asse X temporale: `scaleType="time"` posiziona i punti in base alla data (non all\'indice). `parseDate` converte la stringa.',
+					'Asse X temporale: `scaleType="time"` posiziona le marche in base alla data (non all\'indice). `parseDate` converte la stringa.',
+					"",
+					"Vale sia per le linee sia per le barre: una barra viene **centrata**",
+					"sull'istante del suo dato, quindi date ravvicinate producono barre",
+					"ravvicinate (regola la larghezza con `<Chart barWidth>`).",
 					"",
 					"```tsx",
 					'import { Chart, Line, XAxis, YAxis } from "tscharts";',
@@ -40,4 +44,8 @@ export const AllDataPoints: Story = {
 
 export const EvenlySpacedTicks: Story = {
 	args: { ticks: 6 },
+};
+
+export const Bars: Story = {
+	args: { ticks: "data", serieType: "bar" },
 };
