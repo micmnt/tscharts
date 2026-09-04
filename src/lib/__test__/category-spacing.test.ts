@@ -1,17 +1,31 @@
 import { describe, expect, it } from "vitest";
+import type { ChartState, Serie } from "../../types";
 import { getCategorySpacing } from "../core";
+import type { GlobalConfig } from "../globalConfig";
 
 const padding = 20;
+
+const makeCtx = (elements: unknown[], globalConfig?: GlobalConfig) =>
+	({
+		elements: elements as Serie[],
+		globalConfig,
+		chartXStart: 50,
+		chartXEnd: 450,
+		chartYEnd: 360,
+		chartYMiddle: 180,
+		width: 500,
+		height: 400,
+	}) as unknown as ChartState;
 
 describe("getCategorySpacing", () => {
 	it("bar semplice senza barWidth: ritorna padding", () => {
 		const bar = { name: "a", type: "bar", data: [] };
-		expect(getCategorySpacing([bar], undefined, padding)).toBe(padding);
+		expect(getCategorySpacing(makeCtx([bar]), padding)).toBe(padding);
 	});
 
 	it("bar semplice con barWidth: (barWidth + padding) / 2", () => {
 		const bar = { name: "a", type: "bar", data: [] };
-		expect(getCategorySpacing([bar], { barWidth: 30 }, padding)).toBe(
+		expect(getCategorySpacing(makeCtx([bar], { barWidth: 30 }), padding)).toBe(
 			(30 + padding) / 2,
 		);
 	});
@@ -21,7 +35,7 @@ describe("getCategorySpacing", () => {
 		const b = { name: "b", type: "group-bar", data: [] };
 		const globalConfig = { barWidth: 15, barGroupGap: 5 };
 
-		const spacing = getCategorySpacing([a, b], globalConfig, padding);
+		const spacing = getCategorySpacing(makeCtx([a, b], globalConfig), padding);
 
 		const slotCount = 2;
 		const groupWidth = slotCount * 15 + (slotCount - 1) * 5;
@@ -37,7 +51,10 @@ describe("getCategorySpacing", () => {
 		const c = { name: "c", type: "group-bar", data: [] };
 		const globalConfig = { barWidth: 15, barGroupGap: 5 };
 
-		const spacing = getCategorySpacing([a, b, c], globalConfig, padding);
+		const spacing = getCategorySpacing(
+			makeCtx([a, b, c], globalConfig),
+			padding,
+		);
 
 		const slotCount = 2;
 		const groupWidth = slotCount * 15 + (slotCount - 1) * 5;
@@ -49,7 +66,10 @@ describe("getCategorySpacing", () => {
 		const line = { name: "l", type: "line", data: [] };
 		const globalConfig = { barWidth: 15, barGroupGap: 5 };
 
-		const spacing = getCategorySpacing([a, line], globalConfig, padding);
+		const spacing = getCategorySpacing(
+			makeCtx([a, line], globalConfig),
+			padding,
+		);
 
 		const slotCount = 1;
 		const groupWidth = slotCount * 15 + (slotCount - 1) * 5;

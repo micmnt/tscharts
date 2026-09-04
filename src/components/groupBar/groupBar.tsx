@@ -5,6 +5,7 @@ import { useSerie } from "../../hooks/useSerie";
 import {
 	generateGroupDataPaths,
 	generateStackedGroupDataPaths,
+	resolveBarWidth,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
 import { isTimeSerie, warnDev } from "../../lib/utils";
@@ -49,7 +50,7 @@ const GroupBar = (props: GroupBarProps) => {
 	const labelColor = props.labelColor ?? "white";
 	const topLabelColor = props.topLabelColor ?? "black";
 
-	const barWidth = ctx?.globalConfig?.barWidth ?? padding;
+	const barWidth = ctx ? resolveBarWidth(ctx, padding) : padding;
 	const barGroupGap = ctx?.globalConfig?.barGroupGap ?? padding / 4;
 
 	const elements = ctx?.elements;

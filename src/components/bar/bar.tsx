@@ -20,6 +20,7 @@ import {
 	getSerieAssociatedThresholds,
 	getSeriesByAxisName,
 	getTimeSerieMaxValue,
+	resolveBarWidth,
 } from "../../lib/core";
 import defaultTheme from "../../lib/defaultTheme";
 import {
@@ -99,7 +100,7 @@ const Bar = (props: BarProps) => {
 	const onBarClick = props.onBarClick;
 	const onBarDrag = props.onBarDrag;
 
-	const barWidth = ctx?.globalConfig?.barWidth ?? padding;
+	const barWidth = ctx ? resolveBarWidth(ctx, padding) : padding;
 	const barOffset = ctx?.globalConfig?.barOffset;
 
 	const elements = ctx?.elements;

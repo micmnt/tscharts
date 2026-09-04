@@ -12,6 +12,7 @@ import {
 	getChartYScale,
 	getEffectiveMaxValue,
 	getValuePosition,
+	resolveBarWidth,
 } from "../lib/core";
 import defaultTheme from "../lib/defaultTheme";
 import { isTimeSerie } from "../lib/utils";
@@ -93,14 +94,14 @@ export function useChartMark(name?: string): ChartMark | null {
 		serie?.type === "bar-stacked" ||
 		serie?.type === "group-bar";
 	const xSpacing = globalConfig?.barWidth
-		? Number(globalConfig.barWidth) / 2
+		? resolveBarWidth(ctx, padding) / 2
 		: padding;
 	const bandScale = createBandScale({
 		start: chartXStart,
 		end: chartXEnd,
 		count: categoryCount,
 		firstOffset: isBarLike
-			? getCategorySpacing(elements ?? [], globalConfig, padding)
+			? getCategorySpacing(ctx, padding)
 			: padding / 2 + xSpacing,
 	});
 
@@ -127,7 +128,7 @@ export function useChartMark(name?: string): ChartMark | null {
 	const hStart = chartXStart + hOffset;
 	const hEnd = chartXEnd - 8;
 	const barHeight = globalConfig?.barWidth
-		? Number(globalConfig.barWidth)
+		? resolveBarWidth(ctx, padding)
 		: padding;
 	const yBand = createBandScale({
 		start: 0,

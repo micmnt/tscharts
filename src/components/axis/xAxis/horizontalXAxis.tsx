@@ -1,5 +1,8 @@
 import { Fragment } from "react";
-import { DEFAULT_HORIZONTAL_BAR_OFFSET } from "../../../lib/core";
+import {
+	DEFAULT_HORIZONTAL_BAR_OFFSET,
+	resolveBarWidth,
+} from "../../../lib/core";
 import { isTimeSerie } from "../../../lib/utils";
 import type { TimeSerieEl } from "../../../types";
 import type { XAxisProps } from "../axisProps";
@@ -74,7 +77,7 @@ const HorizontalXAxis = (props: XAxisProps) => {
 				ySpacing +
 				(isBarLikeSerie
 					? (ctx?.globalConfig?.barWidth
-							? Number(ctx.globalConfig.barWidth)
+							? resolveBarWidth(ctx, padding)
 							: padding) / 2
 					: 0) +
 				labelYOffset,

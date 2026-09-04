@@ -71,7 +71,7 @@ Componente radice: fornisce il contesto condiviso (dimensioni, dati, tema) a tut
 | `children` | `ReactNode` | — (richiesta) | I componenti figli del grafico (`XAxis`, `YAxis`, `Bar`, `Line`, ...) |
 | `name` | `string` | `"chart"` | Nome usato per generare l'id univoco del grafico |
 | `flatMax` | `boolean` | `true` | Arrotonda per eccesso il valore massimo degli assi all'ordine di grandezza superiore (es. 1234 → 2000) invece di usarlo esatto |
-| `barWidth` | `number` | `padding` del tema | Larghezza delle barre in px, condivisa da tutte le serie bar/group-bar |
+| `barWidth` | `number \| "auto"` | `padding` del tema | Larghezza delle barre in px, condivisa da tutte le serie bar/group-bar. `"auto"` la ricava dallo spazio disponibile, vedi [Larghezza automatica](#larghezza-automatica-delle-barre) |
 | `barGroupGap` | `number` | `padding / 4` | Spazio tra le barre di uno stesso gruppo (group-bar) |
 | `barOffset` | `number` | — | Offset orizzontale delle barre (usato dai grafici a barre orizzontali) |
 | `style` | `CSSProperties` | — | Stile CSS applicato all'elemento `<svg>` |
@@ -223,9 +223,11 @@ Note:
 - Il dominio `[min, max]` è calcolato dalle date di **tutte** le serie temporali
   via `parseDate` (default `new Date(d).getTime()`; passa un `parseDate` custom
   per formati non ISO come `"13/03"`).
-- La larghezza della barra resta quella di `<Chart barWidth>`: non si adatta
-  all'intervallo temporale. Su date molto ravvicinate le barre possono
-  sovrapporsi — riduci `barWidth`.
+- La larghezza della barra resta quella di `<Chart barWidth>`: con un valore
+  fisso non si adatta all'intervallo temporale e su date molto ravvicinate le
+  barre possono sovrapporsi. Con `barWidth="auto"` la larghezza diventa una
+  frazione della **distanza minima fra due date**, quindi il problema non si
+  pone.
 - L'hover aggancia il **punto dato più vicino nel tempo**; con
   `<Tooltip intersect>` l'area sensibile di una barra è la barra stessa.
 - `ticks="data"` mostra un tick per istante presente nel grafico (unione delle
@@ -253,6 +255,38 @@ Note:
 
 > Larghezza (`barWidth`) e offset (`barOffset`) delle barre sono props di
 > **`<Chart>`**.
+
+#### Larghezza automatica delle barre
+
+Con un `barWidth` numerico la larghezza è fissa: se le categorie aumentano le
+barre finiscono per sovrapporsi, se diminuiscono restano sottili in mezzo a molto
+spazio vuoto. Con **`barWidth="auto"`** la larghezza viene ricavata dallo spazio
+disponibile — una frazione (70%) del passo fra due categorie — e si adatta da
+sola al variare dei dati o delle dimensioni del grafico.
+
+```tsx
+<Chart width={520} height={400} elements={elements} barWidth="auto">
+  <YAxis name="vendite" showLine />
+  <Bar name="vendite" />
+  <XAxis dataPoints={dataPoints} showLine />
+</Chart>
+```
+
+Il passo di riferimento dipende dal tipo di grafico:
+
+| Caso | Passo usato |
+|------|-------------|
+| barre verticali (scala `band`) | larghezza dell'area / numero di categorie |
+| barre orizzontali | altezza dell'area / numero di categorie |
+| `<XAxis scaleType="time">` | distanza minima fra due date adiacenti |
+| `group-bar` | come sopra, poi diviso fra le barre del gruppo (gap incluso) |
+
+Note:
+- Non c'è un tetto massimo: con poche categorie le barre diventano larghe. Se
+  vuoi un limite, passa un numero — `"auto"` e valore fisso sono alternativi.
+- La larghezza risolta è condivisa da tutto il grafico: barre, area sensibile
+  dell'hover, tooltip in modalità `intersect` e `useChartMark` usano lo stesso
+  valore.
 
 ### `<GroupBar>`
 

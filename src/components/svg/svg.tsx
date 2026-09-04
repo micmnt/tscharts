@@ -244,11 +244,7 @@ const Svg = (props: SVGProps) => {
 	const { svgRef, chartXStart, chartXEnd, chartYEnd, width, height } =
 		ctx ?? {};
 
-	const {
-		elements: ctxElements,
-		globalConfig: ctxGlobalConfig,
-		horizontal: ctxHorizontal,
-	} = ctx ?? {};
+	const { elements: ctxElements, horizontal: ctxHorizontal } = ctx ?? {};
 
 	const hoverableSerie = ctxElements?.find(isTimeSerie);
 
@@ -290,7 +286,7 @@ const Svg = (props: SVGProps) => {
 						: null,
 				);
 
-				if (!ctxHorizontal && hoverableSerie) {
+				if (ctx && !ctxHorizontal && hoverableSerie) {
 					const serieData = hoverableSerie.data;
 
 					const timeScale =
@@ -325,12 +321,7 @@ const Svg = (props: SVGProps) => {
 
 						if (hasBarLikeSerie) {
 							halfWidth =
-								getCategorySpacing(
-									ctxElements ?? [],
-									ctxGlobalConfig,
-									padding ?? 0,
-								) -
-								(padding ?? 0) / 2;
+								getCategorySpacing(ctx, padding ?? 0) - (padding ?? 0) / 2;
 						} else {
 							const neighborGaps = [
 								times[hoveredIndex - 1],
@@ -343,11 +334,7 @@ const Svg = (props: SVGProps) => {
 								: (padding ?? 0);
 						}
 					} else {
-						const xSpace = getCategorySpacing(
-							ctxElements ?? [],
-							ctxGlobalConfig,
-							padding ?? 0,
-						);
+						const xSpace = getCategorySpacing(ctx, padding ?? 0);
 						const xScale = createBandScale({
 							start: chartXStart,
 							end: chartXEnd,
@@ -395,16 +382,12 @@ const Svg = (props: SVGProps) => {
 			chartXStart,
 			chartXEnd,
 			chartYEnd,
+			ctx,
 			ctxHorizontal,
 			hoverableSerie,
 			hasBarLikeSerie,
-			ctxElements,
-			ctxGlobalConfig,
 			padding,
 			intersect,
-			ctx?.scaleType,
-			ctx?.timeDomain,
-			ctx?.parseDate,
 		],
 	);
 

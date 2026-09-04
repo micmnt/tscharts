@@ -33,7 +33,7 @@ export type ChartProps = {
 	flatMax?: boolean;
 	ariaLabel?: string;
 
-	barWidth?: number;
+	barWidth?: number | "auto";
 	barGroupGap?: number;
 	barOffset?: number;
 

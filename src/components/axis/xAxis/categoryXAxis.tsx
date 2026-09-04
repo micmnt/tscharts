@@ -4,6 +4,7 @@ import {
 	generateXAxis,
 	getCategorySpacing,
 	NEGATIVE_CHART_X_AXIS_OFFSET_MULTIPLIER,
+	resolveBarWidth,
 } from "../../../lib/core";
 import { isTimeSerie } from "../../../lib/utils";
 import type { TimeSerieEl } from "../../../types";
@@ -43,14 +44,7 @@ const CategoryXAxis = (props: XAxisProps) => {
 	if (!ctx || !theme) return null;
 
 	const { padding } = theme;
-	const {
-		chartXEnd,
-		chartXStart,
-		chartYEnd,
-		elements,
-		globalConfig,
-		hasTooltip,
-	} = ctx;
+	const { chartXEnd, chartXStart, chartYEnd, elements, hasTooltip } = ctx;
 
 	const hoveredElement = interactive?.hoveredElement;
 
@@ -71,7 +65,7 @@ const CategoryXAxis = (props: XAxisProps) => {
 	const serie = elements?.find(isTimeSerie) ?? { data: [] };
 	const serieData = serie.data as TimeSerieEl[];
 
-	const xSpacing = getCategorySpacing(elements ?? [], globalConfig, padding);
+	const xSpacing = getCategorySpacing(ctx, padding);
 
 	const xScale = createBandScale({
 		start: chartXStart,
@@ -120,7 +114,10 @@ const CategoryXAxis = (props: XAxisProps) => {
 	}
 
 	const xPoints = labels.map((label, labelIndex) => {
-		const hoverRectWidth = ctx?.globalConfig?.barWidth ?? xScale.step - padding;
+		const hoverRectWidth =
+			ctx?.globalConfig?.barWidth !== undefined
+				? resolveBarWidth(ctx, padding)
+				: xScale.step - padding;
 
 		const hoverRectX = label.x - hoverRectWidth / 2;
 

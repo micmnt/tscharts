@@ -4,6 +4,33 @@ Tutte le modifiche rilevanti a questo progetto sono documentate qui.
 Il formato si ispira a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/)
 e il progetto segue il [Semantic Versioning](https://semver.org/lang/it/).
 
+## [Unreleased]
+
+### Added
+
+- **`<Chart barWidth="auto">`**: larghezza delle barre calcolata dallo spazio
+  disponibile invece che fissa. E' una frazione (70%) del passo fra due
+  categorie, quindi le barre si stringono quando i dati crescono e si allargano
+  quando calano, senza mai sovrapporsi. Il passo e' la larghezza dell'area diviso
+  il numero di categorie; sulle barre orizzontali si misura sull'asse Y e con
+  `<XAxis scaleType="time">` diventa la **distanza minima fra due date** — il che
+  rimuove il caveat sulle barre sovrapposte introdotto in 1.4.0. Per le
+  `group-bar` la frazione viene divisa fra le barre del gruppo, gap incluso.
+  Nessun tetto massimo: con poche categorie le barre diventano larghe, se vuoi un
+  limite passa un numero. Il valore risolto e' condiviso da barre, area sensibile
+  dell'hover, tooltip `intersect` e `useChartMark`, che leggono tutti lo stesso
+  risolutore. Default invariato (`padding` del tema quando `barWidth` e' omessa).
+  Vedi [README](./README.md#larghezza-automatica-delle-barre) e la story
+  *Bar Chart/Auto barWidth*.
+
+### Internal
+
+- **Larghezza barre risolta in un unico punto** (`resolveBarWidth`): prima veniva
+  ricavata da `globalConfig.barWidth` in sette posti indipendenti (generatori,
+  `getCategorySpacing`, assi, `useChartMark`, componenti), che con `"auto"`
+  sarebbero potuti divergere. `getCategorySpacing` ora riceve il contesto del
+  grafico invece di `(elements, globalConfig, padding)`.
+
 ## [1.4.0] - 2026-09-03
 
 ### Added

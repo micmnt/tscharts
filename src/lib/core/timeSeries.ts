@@ -226,7 +226,7 @@ export const generateNegativeDataPaths = (
 	} = ctx;
 
 	const xSpacing = globalConfig?.barWidth
-		? Number(globalConfig?.barWidth) / 2
+		? resolveBarWidth(ctx, padding) / 2
 		: padding;
 
 	const xScale = createBandScale({
@@ -378,7 +378,7 @@ export const generateDataPaths = (
 	} = ctx;
 
 	const xSpacing = globalConfig?.barWidth
-		? Number(globalConfig?.barWidth) / 2
+		? resolveBarWidth(ctx, padding) / 2
 		: padding;
 
 	const xScale = createBandScale({
@@ -502,16 +502,90 @@ const getGroupWidth = (
 	return slotCount * barWidth + Math.max(0, slotCount - 1) * barGap;
 };
 
+const AUTO_BAR_WIDTH_RATIO = 0.7;
+
+const getCategoryCount = (elements: Serie[] | undefined) => {
+	const lengths = (elements ?? [])
+		.filter(isTimeSerie)
+		.map((el) => el.data.length);
+
+	return lengths.length > 0 ? Math.max(...lengths) : 0;
+};
+
+const getMinTimeStep = (ctx: ChartState, padding: number) => {
+	const timeScale = getChartTimeScale({ ...ctx, padding });
+	if (!timeScale) return null;
+
+	const times = Array.from(
+		new Set(
+			(ctx.elements ?? [])
+				.filter(isTimeSerie)
+				.flatMap((el) =>
+					el.data.map((point) => normalizeTime(point.date, ctx.parseDate)),
+				)
+				.filter((time) => !Number.isNaN(time)),
+		),
+	).sort((a, b) => a - b);
+
+	if (times.length < 2) return null;
+
+	let min = Number.POSITIVE_INFINITY;
+	for (let i = 1; i < times.length; i++) {
+		min = Math.min(
+			min,
+			timeScale.position(times[i]) - timeScale.position(times[i - 1]),
+		);
+	}
+
+	return Number.isFinite(min) && min > 0 ? min : null;
+};
+
+const getCategoryStep = (ctx: ChartState, padding: number) => {
+	const count = getCategoryCount(ctx.elements);
+	if (count < 1) return padding;
+
+	if (ctx.horizontal) return (ctx.chartYEnd - padding) / count;
+
+	if (ctx.scaleType === "time") {
+		const timeStep = getMinTimeStep(ctx, padding);
+		if (timeStep !== null) return timeStep;
+	}
+
+	return (ctx.chartXEnd - ctx.chartXStart) / count;
+};
+
+export const resolveBarWidth = (ctx: ChartState, padding: number): number => {
+	const configured = ctx.globalConfig?.barWidth;
+
+	if (configured === undefined) return padding;
+	if (configured !== "auto") return Number(configured);
+
+	const slotCount = Math.max(1, getGroupBarSlotCount(ctx.elements ?? []));
+	const barGroupGap = ctx.globalConfig?.barGroupGap
+		? Number(ctx.globalConfig.barGroupGap)
+		: padding / 4;
+
+	const groupWidth = getCategoryStep(ctx, padding) * AUTO_BAR_WIDTH_RATIO;
+	const width =
+		slotCount > 1
+			? (groupWidth - barGroupGap * (slotCount - 1)) / slotCount
+			: groupWidth;
+
+	return Math.max(1, width);
+};
+
 export const getCategorySpacing = (
-	elements: Serie[],
-	globalConfig: GlobalConfig | undefined,
+	ctx: ChartState,
 	padding: number,
 ): number => {
+	const elements = ctx.elements ?? [];
+	const globalConfig: GlobalConfig | undefined = ctx.globalConfig;
+
 	const hasGroupBar = elements.some((el) => el.type === "group-bar");
 
 	if (hasGroupBar) {
 		const barWidth = globalConfig?.barWidth
-			? Number(globalConfig.barWidth)
+			? resolveBarWidth(ctx, padding)
 			: padding;
 		const barGroupGap = globalConfig?.barGroupGap
 			? Number(globalConfig.barGroupGap)
@@ -520,7 +594,7 @@ export const getCategorySpacing = (
 	}
 
 	return globalConfig?.barWidth
-		? (Number(globalConfig.barWidth) + padding) / 2
+		? (resolveBarWidth(ctx, padding) + padding) / 2
 		: padding;
 };
 

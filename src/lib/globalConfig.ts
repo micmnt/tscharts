@@ -1,26 +1,23 @@
 export type GlobalConfig = {
-	barWidth?: number;
+	barWidth?: number | "auto";
 	barGroupGap?: number;
 	barOffset?: number;
 };
 
 export type ChartLayoutConfig = GlobalConfig;
 
-const LAYOUT_KEYS = [
-	"barWidth",
-	"barGroupGap",
-	"barOffset",
-] as const satisfies readonly (keyof ChartLayoutConfig)[];
-
 export const computeGlobalConfig = (
 	layoutConfig?: ChartLayoutConfig,
 ): GlobalConfig => {
 	const result: GlobalConfig = {};
-	if (layoutConfig) {
-		for (const key of LAYOUT_KEYS) {
-			const value = layoutConfig[key];
-			if (value !== undefined) result[key] = value;
-		}
-	}
+	if (!layoutConfig) return result;
+
+	if (layoutConfig.barWidth !== undefined)
+		result.barWidth = layoutConfig.barWidth;
+	if (layoutConfig.barGroupGap !== undefined)
+		result.barGroupGap = layoutConfig.barGroupGap;
+	if (layoutConfig.barOffset !== undefined)
+		result.barOffset = layoutConfig.barOffset;
+
 	return result;
 };
